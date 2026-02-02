@@ -1,1 +1,4 @@
 project_id = "qiejhdddxpwvgcywrdnx"
+
+[functions.validate-tenant]
+verify_jwt = false

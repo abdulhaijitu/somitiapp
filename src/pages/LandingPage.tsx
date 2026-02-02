@@ -1,6 +1,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { 
   Users, 
   CreditCard, 
@@ -60,10 +61,15 @@ export function LandingPage() {
             <span className="text-xl font-bold text-foreground">Somiti</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/super-admin" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Admin
+            </Link>
             <LanguageToggle />
-            <Button variant="ghost" size="sm">
-              {t('auth.login')}
-            </Button>
+            <Link to="/dashboard">
+              <Button variant="ghost" size="sm">
+                {t('auth.login')}
+              </Button>
+            </Link>
             <Button size="sm" className="bg-gradient-primary hover:opacity-90">
               {t('auth.signup')}
             </Button>

@@ -7,6 +7,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
+import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
 import { DashboardOverview } from "@/pages/dashboard/DashboardOverview";
 import { MembersPage } from "@/pages/dashboard/MembersPage";
 import { PaymentsPage } from "@/pages/dashboard/PaymentsPage";
@@ -14,6 +15,11 @@ import { ReportsPage } from "@/pages/dashboard/ReportsPage";
 import { NoticesPage } from "@/pages/dashboard/NoticesPage";
 import { ConstitutionPage } from "@/pages/dashboard/ConstitutionPage";
 import { SettingsPage } from "@/pages/dashboard/SettingsPage";
+import { SuperAdminDashboard } from "@/pages/super-admin/SuperAdminDashboard";
+import { TenantsManagementPage } from "@/pages/super-admin/TenantsManagementPage";
+import { SubscriptionsManagementPage } from "@/pages/super-admin/SubscriptionsManagementPage";
+import { AuditLogsPage } from "@/pages/super-admin/AuditLogsPage";
+import { SuperAdminSettingsPage } from "@/pages/super-admin/SuperAdminSettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +28,15 @@ function DashboardWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <DashboardLayout>{children}</DashboardLayout>
+    </LanguageProvider>
+  );
+}
+
+// Super Admin wrapper component
+function SuperAdminWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <SuperAdminLayout>{children}</SuperAdminLayout>
     </LanguageProvider>
   );
 }
@@ -35,7 +50,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           
-          {/* Dashboard routes */}
+          {/* Tenant Dashboard routes */}
           <Route
             path="/dashboard"
             element={
@@ -90,6 +105,48 @@ const App = () => (
               <DashboardWrapper>
                 <SettingsPage />
               </DashboardWrapper>
+            }
+          />
+          
+          {/* Super Admin routes */}
+          <Route
+            path="/super-admin"
+            element={
+              <SuperAdminWrapper>
+                <SuperAdminDashboard />
+              </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/tenants"
+            element={
+              <SuperAdminWrapper>
+                <TenantsManagementPage />
+              </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/subscriptions"
+            element={
+              <SuperAdminWrapper>
+                <SubscriptionsManagementPage />
+              </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/audit-logs"
+            element={
+              <SuperAdminWrapper>
+                <AuditLogsPage />
+              </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/settings"
+            element={
+              <SuperAdminWrapper>
+                <SuperAdminSettingsPage />
+              </SuperAdminWrapper>
             }
           />
           
