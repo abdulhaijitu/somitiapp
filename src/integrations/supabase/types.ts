@@ -14,16 +14,190 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          plan: string
+          start_date: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          plan?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          plan?: string
+          start_date?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          default_language: string
+          deleted_at: string | null
+          id: string
+          name: string
+          name_bn: string | null
+          status: Database["public"]["Enums"]["tenant_status"]
+          subdomain: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_language?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          name_bn?: string | null
+          status?: Database["public"]["Enums"]["tenant_status"]
+          subdomain: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_language?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          name_bn?: string | null
+          status?: Database["public"]["Enums"]["tenant_status"]
+          subdomain?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_tenant_by_subdomain: {
+        Args: { _subdomain: string }
+        Returns: {
+          created_at: string
+          default_language: string
+          deleted_at: string | null
+          id: string
+          name: string
+          name_bn: string | null
+          status: Database["public"]["Enums"]["tenant_status"]
+          subdomain: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tenants"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      validate_tenant_subscription: {
+        Args: { _tenant_id: string }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin" | "manager" | "member"
+      subscription_status: "active" | "expired" | "cancelled"
+      tenant_status: "active" | "suspended" | "deleted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +324,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin", "manager", "member"],
+      subscription_status: ["active", "expired", "cancelled"],
+      tenant_status: ["active", "suspended", "deleted"],
+    },
   },
 } as const
