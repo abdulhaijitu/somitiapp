@@ -470,7 +470,7 @@ export function MembersPage() {
               </div>
             ) : paginatedMembers.length === 0 ? (
               <EmptyState 
-                icon={UserPlus}
+                icon={<UserPlus className="h-8 w-8" />}
                 title="No members found"
                 description={searchQuery ? "Try adjusting your search query" : "Start by adding your first member"}
                 actionLabel={!searchQuery ? "Add Member" : undefined}
