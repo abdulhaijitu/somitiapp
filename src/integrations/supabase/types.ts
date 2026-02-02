@@ -47,6 +47,203 @@ export type Database = {
         }
         Relationships: []
       }
+      members: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          joined_at: string | null
+          member_number: string | null
+          monthly_amount: number | null
+          name: string
+          name_bn: string | null
+          phone: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_at?: string | null
+          member_number?: string | null
+          monthly_amount?: number | null
+          name: string
+          name_bn?: string | null
+          phone?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          joined_at?: string | null
+          member_number?: string | null
+          monthly_amount?: number | null
+          name?: string
+          name_bn?: string | null
+          phone?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          new_status: Database["public"]["Enums"]["payment_status"] | null
+          payment_id: string
+          performed_by: string | null
+          previous_status: Database["public"]["Enums"]["payment_status"] | null
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_id: string
+          performed_by?: string | null
+          previous_status?: Database["public"]["Enums"]["payment_status"] | null
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["payment_status"] | null
+          payment_id?: string
+          performed_by?: string | null
+          previous_status?: Database["public"]["Enums"]["payment_status"] | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          charged_amount: number | null
+          created_at: string
+          fee: number | null
+          id: string
+          invoice_id: string | null
+          member_id: string
+          metadata: Json | null
+          notes: string | null
+          payment_date: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_type: string
+          payment_url: string | null
+          period_month: number | null
+          period_year: number | null
+          reference: string | null
+          sender_number: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          tenant_id: string
+          transaction_id: string | null
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount: number
+          charged_amount?: number | null
+          created_at?: string
+          fee?: number | null
+          id?: string
+          invoice_id?: string | null
+          member_id: string
+          metadata?: Json | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_type?: string
+          payment_url?: string | null
+          period_month?: number | null
+          period_year?: number | null
+          reference?: string | null
+          sender_number?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          tenant_id: string
+          transaction_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          charged_amount?: number | null
+          created_at?: string
+          fee?: number | null
+          id?: string
+          invoice_id?: string | null
+          member_id?: string
+          metadata?: Json | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_type?: string
+          payment_url?: string | null
+          period_month?: number | null
+          period_year?: number | null
+          reference?: string | null
+          sender_number?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          tenant_id?: string
+          transaction_id?: string | null
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -188,7 +385,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_tenant_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _tenant_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_tenant_id: { Args: { _user_id: string }; Returns: string }
       validate_tenant_subscription: {
         Args: { _tenant_id: string }
         Returns: Json
@@ -196,6 +402,14 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "manager" | "member"
+      payment_method:
+        | "offline"
+        | "bkash"
+        | "nagad"
+        | "rocket"
+        | "card"
+        | "other"
+      payment_status: "pending" | "paid" | "failed" | "cancelled" | "refunded"
       subscription_status: "active" | "expired" | "cancelled"
       tenant_status: "active" | "suspended" | "deleted"
     }
@@ -326,6 +540,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "manager", "member"],
+      payment_method: ["offline", "bkash", "nagad", "rocket", "card", "other"],
+      payment_status: ["pending", "paid", "failed", "cancelled", "refunded"],
       subscription_status: ["active", "expired", "cancelled"],
       tenant_status: ["active", "suspended", "deleted"],
     },
