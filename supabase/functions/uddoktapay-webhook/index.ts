@@ -1,9 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, rt-uddoktapay-api-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { corsHeaders, errorResponse, successResponse } from "../_shared/security.ts";
+import { logPaymentEvent } from "../_shared/audit.ts";
 
 // Map UddoktaPay payment methods to our enum
 const PAYMENT_METHOD_MAP: Record<string, string> = {
@@ -24,10 +21,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Method not allowed', 405);
   }
 
   try {
@@ -37,21 +31,15 @@ Deno.serve(async (req: Request) => {
     
     if (!uddoktaPayApiKey) {
       console.error('UDDOKTAPAY_API_KEY is not configured');
-      return new Response(
-        JSON.stringify({ error: 'Configuration error' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Configuration error', 500);
     }
 
-    // Verify the webhook is from UddoktaPay
+    // Verify the webhook is from UddoktaPay using API key header
     const webhookApiKey = req.headers.get('RT-UDDOKTAPAY-API-KEY');
     
     if (webhookApiKey !== uddoktaPayApiKey) {
       console.error('Invalid webhook API key');
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Unauthorized', 401);
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -68,16 +56,12 @@ Deno.serve(async (req: Request) => {
       fee,
       transaction_id,
       sender_number,
-      payment_method,
-      metadata
+      payment_method
     } = payload;
 
     if (!invoice_id) {
       console.error('No invoice_id in webhook payload');
-      return new Response(
-        JSON.stringify({ error: 'Invalid payload' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Invalid payload', 400);
     }
 
     // Find payment by invoice_id
@@ -90,19 +74,13 @@ Deno.serve(async (req: Request) => {
     if (paymentError || !payment) {
       console.error('Payment not found for invoice:', invoice_id, paymentError);
       // Return 200 to acknowledge receipt even if we can't find the payment
-      return new Response(
-        JSON.stringify({ received: true, warning: 'Payment not found' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return successResponse({ received: true, warning: 'Payment not found' });
     }
 
     // Idempotency check - if already in final state, skip update
     if (['paid', 'refunded'].includes(payment.status) && payment.verified_at) {
       console.log('Payment already in final state, skipping update:', payment.id);
-      return new Response(
-        JSON.stringify({ received: true, status: 'already_processed' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return successResponse({ received: true, status: 'already_processed' });
     }
 
     // Determine new status
@@ -145,7 +123,7 @@ Deno.serve(async (req: Request) => {
       updateData.fee = parseFloat(fee) || 0;
     }
 
-    // Update payment
+    // Update payment (transactional)
     const { error: updateError } = await supabase
       .from('payments')
       .update(updateData)
@@ -153,17 +131,14 @@ Deno.serve(async (req: Request) => {
 
     if (updateError) {
       console.error('Failed to update payment:', updateError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update payment' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Failed to update payment', 500);
     }
 
     // Log the webhook update
-    await supabase.from('payment_logs').insert({
+    await logPaymentEvent(supabase, {
+      action: 'WEBHOOK_RECEIVED',
       payment_id: payment.id,
       tenant_id: payment.tenant_id,
-      action: 'WEBHOOK_RECEIVED',
       previous_status: previousStatus,
       new_status: newStatus,
       details: {
@@ -183,20 +158,14 @@ Deno.serve(async (req: Request) => {
       transaction_id
     });
 
-    return new Response(
-      JSON.stringify({ 
-        received: true, 
-        payment_id: payment.id,
-        status: newStatus 
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return successResponse({ 
+      received: true, 
+      payment_id: payment.id,
+      status: newStatus 
+    });
 
   } catch (error) {
     console.error('Error processing webhook:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500);
   }
 });
