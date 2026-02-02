@@ -1,13 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { 
+  performSecurityCheck, 
+  errorResponse, 
+  successResponse, 
+  corsHeaders 
+} from "../_shared/security.ts";
+import { logAdminAction } from "../_shared/audit.ts";
 
 interface ReportRequest {
   report_type: 'monthly' | 'yearly' | 'member';
-  tenant_id: string;
   start_date?: string;
   end_date?: string;
   member_id?: string;
@@ -36,78 +37,41 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Method not allowed', 405);
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-    // Verify authorization
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Create authenticated client to get user
-    const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
-      global: { headers: { Authorization: authHeader } }
+    // Security check - require admin role and valid subscription
+    // Tenant is resolved server-side from user's roles - NEVER trust client
+    const securityResult = await performSecurityCheck(req, {
+      requireAuth: true,
+      requireTenant: true,
+      allowedRoles: ['admin'], // Reports are admin-only
+      checkSubscription: true,
+      rateLimitType: 'api'
     });
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: userData, error: userError } = await supabaseAuth.auth.getUser(token);
-    
-    if (userError || !userData.user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!securityResult.success) {
+      return errorResponse(securityResult.error!, securityResult.status || 403);
     }
 
-    const userId = userData.user.id;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { context, supabase } = securityResult;
+    const userId = context!.userId;
+    const tenantId = context!.tenantId!; // Guaranteed by security check
 
-    // Parse request body
+    // Parse request body - tenant_id NOT accepted from client
     const body: ReportRequest = await req.json();
-    const { report_type, tenant_id, start_date, end_date, member_id, format } = body;
+    const { report_type, start_date, end_date, member_id, format } = body;
 
-    if (!report_type || !tenant_id) {
-      return new Response(
-        JSON.stringify({ error: 'report_type and tenant_id are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (!report_type) {
+      return errorResponse('report_type is required', 400);
     }
 
-    // Verify user is admin for this tenant
-    const { data: userRole, error: roleError } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId)
-      .eq('tenant_id', tenant_id)
-      .in('role', ['admin', 'super_admin'])
-      .maybeSingle();
-
-    // Check if super admin
-    const { data: isSuperAdmin } = await supabase.rpc('is_super_admin', { _user_id: userId });
-    
-    if (!userRole && !isSuperAdmin) {
-      return new Response(
-        JSON.stringify({ error: 'You do not have permission to generate reports' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Build query
-    let query = supabase
+    // Build query - always scoped to user's tenant (server-resolved)
+    let query = supabase!
       .from('payments')
       .select('*, members(name, name_bn)')
-      .eq('tenant_id', tenant_id)
+      .eq('tenant_id', tenantId)
       .eq('status', 'paid')
       .order('payment_date', { ascending: false });
 
@@ -119,8 +83,19 @@ Deno.serve(async (req: Request) => {
       query = query.lte('payment_date', end_date);
     }
 
-    // Apply member filter
+    // Apply member filter (verify member belongs to tenant)
     if (member_id) {
+      // First verify member exists in tenant
+      const { data: member } = await supabase!
+        .from('members')
+        .select('id')
+        .eq('id', member_id)
+        .eq('tenant_id', tenantId)
+        .single();
+
+      if (!member) {
+        return errorResponse('Member not found in your organization', 404);
+      }
       query = query.eq('member_id', member_id);
     }
 
@@ -128,10 +103,7 @@ Deno.serve(async (req: Request) => {
 
     if (paymentsError) {
       console.error('Error fetching payments:', paymentsError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch payment data' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Failed to fetch payment data', 500);
     }
 
     const paymentsData = payments as PaymentData[];
@@ -172,6 +144,15 @@ Deno.serve(async (req: Request) => {
       summary.by_month[monthKey].amount += Number(p.amount);
     });
 
+    // Log report generation
+    await logAdminAction(supabase!, {
+      user_id: userId,
+      tenant_id: tenantId,
+      action_description: `Generated ${report_type} report`,
+      entity_type: 'payment',
+      ip_address: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    });
+
     // Generate report based on format
     if (format === 'csv') {
       // Generate CSV
@@ -202,36 +183,29 @@ Deno.serve(async (req: Request) => {
     }
 
     // Return JSON report
-    return new Response(
-      JSON.stringify({
-        success: true,
-        report_type,
-        generated_at: new Date().toISOString(),
-        filters: {
-          start_date,
-          end_date,
-          member_id
-        },
-        summary,
-        payments: paymentsData.map(p => ({
-          id: p.id,
-          date: p.payment_date || p.created_at,
-          member_name: p.members?.name,
-          member_name_bn: p.members?.name_bn,
-          amount: p.amount,
-          method: p.payment_method,
-          type: p.payment_type,
-          period: p.period_month && p.period_year ? `${p.period_month}/${p.period_year}` : null
-        }))
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return successResponse({
+      report_type,
+      generated_at: new Date().toISOString(),
+      filters: {
+        start_date,
+        end_date,
+        member_id
+      },
+      summary,
+      payments: paymentsData.map(p => ({
+        id: p.id,
+        date: p.payment_date || p.created_at,
+        member_name: p.members?.name,
+        member_name_bn: p.members?.name_bn,
+        amount: p.amount,
+        method: p.payment_method,
+        type: p.payment_type,
+        period: p.period_month && p.period_year ? `${p.period_month}/${p.period_year}` : null
+      }))
+    });
 
   } catch (error) {
     console.error('Error in generate-report:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500);
   }
 });

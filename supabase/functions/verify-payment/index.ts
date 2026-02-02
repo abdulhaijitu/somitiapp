@@ -1,9 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
+import { 
+  performSecurityCheck, 
+  errorResponse, 
+  successResponse, 
+  corsHeaders 
+} from "../_shared/security.ts";
+import { logPaymentEvent, logSecurityViolation } from "../_shared/audit.ts";
 
 const UDDOKTAPAY_VERIFY_URL = 'https://pay.uddoktapay.com/api/verify-payment';
 
@@ -26,40 +28,56 @@ Deno.serve(async (req: Request) => {
   }
 
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Method not allowed', 405);
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const uddoktaPayApiKey = Deno.env.get('UDDOKTAPAY_API_KEY');
     
     if (!uddoktaPayApiKey) {
       console.error('UDDOKTAPAY_API_KEY is not configured');
-      return new Response(
-        JSON.stringify({ error: 'Payment gateway not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Payment gateway not configured', 500);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Security check - require auth but allow viewing any payment user has access to
+    const securityResult = await performSecurityCheck(req, {
+      requireAuth: true,
+      requireTenant: false, // We'll verify against the payment's tenant
+      checkSubscription: false, // Allow verification even with expired subscription
+      rateLimitType: 'api'
+    });
+
+    if (!securityResult.success) {
+      if (securityResult.status === 429) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        await logSecurityViolation(supabase, {
+          action: 'RATE_LIMIT_EXCEEDED',
+          user_id: securityResult.context?.userId,
+          ip_address: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+          resource: 'verify-payment'
+        });
+      }
+      return errorResponse(securityResult.error!, securityResult.status || 403);
+    }
+
+    const { context, supabase } = securityResult;
+    const userId = context!.userId;
+    const userTenantId = context!.tenantId;
+    const isSuperAdmin = context!.isSuperAdmin;
 
     // Parse request body
     const body = await req.json();
     const { invoice_id, reference } = body;
 
     if (!invoice_id && !reference) {
-      return new Response(
-        JSON.stringify({ error: 'invoice_id or reference is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('invoice_id or reference is required', 400);
     }
 
     // Find payment record
-    let paymentQuery = supabase.from('payments').select('*');
+    let paymentQuery = supabase!.from('payments').select('*');
     
     if (invoice_id) {
       paymentQuery = paymentQuery.eq('invoice_id', invoice_id);
@@ -71,32 +89,35 @@ Deno.serve(async (req: Request) => {
 
     if (paymentError || !payment) {
       console.error('Payment not found:', paymentError);
-      return new Response(
-        JSON.stringify({ error: 'Payment not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Payment not found', 404);
+    }
+
+    // Verify user has access to this payment's tenant
+    if (!isSuperAdmin && payment.tenant_id !== userTenantId) {
+      await logSecurityViolation(supabase!, {
+        action: 'PERMISSION_DENIED',
+        user_id: userId,
+        tenant_id: userTenantId,
+        ip_address: req.headers.get('x-forwarded-for')?.split(',')[0]?.trim(),
+        resource: 'verify-payment',
+        attempted_action: `access_payment_${payment.id}`
+      });
+      return errorResponse('Access denied', 403);
     }
 
     // If already verified successfully, return cached result (idempotent)
     if (payment.status === 'paid' && payment.verified_at) {
       console.log('Payment already verified:', payment.id);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          status: 'paid',
-          payment_id: payment.id,
-          already_verified: true
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return successResponse({
+        status: 'paid',
+        payment_id: payment.id,
+        already_verified: true
+      });
     }
 
     // If no invoice_id, payment wasn't properly initiated
     if (!payment.invoice_id) {
-      return new Response(
-        JSON.stringify({ error: 'Payment was not properly initiated' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Payment was not properly initiated', 400);
     }
 
     // Call UddoktaPay verify API
@@ -115,10 +136,7 @@ Deno.serve(async (req: Request) => {
 
     if (!verifyResponse.ok) {
       console.error('UddoktaPay verify error:', verifyResult);
-      return new Response(
-        JSON.stringify({ error: 'Failed to verify payment' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return errorResponse('Failed to verify payment', 500);
     }
 
     console.log('UddoktaPay verify result:', verifyResult);
@@ -165,24 +183,22 @@ Deno.serve(async (req: Request) => {
         updateData.fee = parseFloat(verifyResult.fee) || 0;
       }
 
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabase!
         .from('payments')
         .update(updateData)
         .eq('id', payment.id);
 
       if (updateError) {
         console.error('Failed to update payment:', updateError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to update payment status' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return errorResponse('Failed to update payment status', 500);
       }
 
       // Log the verification
-      await supabase.from('payment_logs').insert({
+      await logPaymentEvent(supabase!, {
+        action: 'PAYMENT_VERIFIED',
         payment_id: payment.id,
         tenant_id: payment.tenant_id,
-        action: 'PAYMENT_VERIFIED',
+        user_id: userId,
         previous_status: previousStatus,
         new_status: newStatus,
         details: {
@@ -199,23 +215,16 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        status: newStatus,
-        payment_id: payment.id,
-        transaction_id: verifyResult.transaction_id,
-        payment_method: verifyResult.payment_method,
-        amount: verifyResult.amount
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return successResponse({
+      status: newStatus,
+      payment_id: payment.id,
+      transaction_id: verifyResult.transaction_id,
+      payment_method: verifyResult.payment_method,
+      amount: verifyResult.amount
+    });
 
   } catch (error) {
     console.error('Error in verify-payment:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return errorResponse('Internal server error', 500);
   }
 });
