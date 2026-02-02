@@ -11,6 +11,8 @@ import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
 import { DashboardOverview } from "@/pages/dashboard/DashboardOverview";
 import { MembersPage } from "@/pages/dashboard/MembersPage";
 import { PaymentsPage } from "@/pages/dashboard/PaymentsPage";
+import { PaymentSuccessPage } from "@/pages/dashboard/PaymentSuccessPage";
+import { PaymentCancelledPage } from "@/pages/dashboard/PaymentCancelledPage";
 import { ReportsPage } from "@/pages/dashboard/ReportsPage";
 import { NoticesPage } from "@/pages/dashboard/NoticesPage";
 import { ConstitutionPage } from "@/pages/dashboard/ConstitutionPage";
@@ -73,6 +75,22 @@ const App = () => (
               <DashboardWrapper>
                 <PaymentsPage />
               </DashboardWrapper>
+            }
+          />
+          <Route
+            path="/dashboard/payments/success"
+            element={
+              <LanguageProvider>
+                <PaymentSuccessPage />
+              </LanguageProvider>
+            }
+          />
+          <Route
+            path="/dashboard/payments/cancelled"
+            element={
+              <LanguageProvider>
+                <PaymentCancelledPage />
+              </LanguageProvider>
             }
           />
           <Route
