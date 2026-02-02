@@ -552,7 +552,7 @@ export function PaymentsPage() {
           <div className="p-0">
             {paginatedPayments.length === 0 ? (
               <EmptyState
-                icon={CreditCard}
+                icon={<CreditCard className="h-8 w-8" />}
                 title="No payments found"
                 description={searchQuery || dateFrom || dateTo ? "Try adjusting your filters" : "Start by recording your first payment"}
                 actionLabel={!searchQuery && !dateFrom && !dateTo ? "Add Payment" : undefined}

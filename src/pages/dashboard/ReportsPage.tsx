@@ -439,7 +439,7 @@ export function ReportsPage() {
                 <TabsContent value="breakdown" className="mt-0">
                   {sortedMonthlyData.length === 0 ? (
                     <EmptyState
-                      icon={Calendar}
+                      icon={<Calendar className="h-8 w-8" />}
                       title="No monthly data"
                       description="No payment data found for the selected period"
                     />
@@ -493,7 +493,7 @@ export function ReportsPage() {
                 <TabsContent value="transactions" className="mt-0">
                   {reportData.payments.length === 0 ? (
                     <EmptyState
-                      icon={FileBarChart}
+                      icon={<FileBarChart className="h-8 w-8" />}
                       title="No transactions"
                       description="No payment transactions found for the selected period"
                     />
@@ -542,7 +542,7 @@ export function ReportsPage() {
         <Card className="border-border">
           <CardContent className="py-12">
             <EmptyState
-              icon={FileBarChart}
+              icon={<FileBarChart className="h-8 w-8" />}
               title="Generate a Report"
               description="Select a report type, configure filters, and click Generate Report to view financial data"
               actionLabel="Generate Monthly Report"

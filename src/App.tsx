@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
+import { MemberLayout } from "@/components/layouts/MemberLayout";
 import { DashboardOverview } from "@/pages/dashboard/DashboardOverview";
 import { MembersPage } from "@/pages/dashboard/MembersPage";
 import { PaymentsPage } from "@/pages/dashboard/PaymentsPage";
@@ -22,6 +23,11 @@ import { TenantsManagementPage } from "@/pages/super-admin/TenantsManagementPage
 import { SubscriptionsManagementPage } from "@/pages/super-admin/SubscriptionsManagementPage";
 import { AuditLogsPage } from "@/pages/super-admin/AuditLogsPage";
 import { SuperAdminSettingsPage } from "@/pages/super-admin/SuperAdminSettingsPage";
+import { MemberDashboard } from "@/pages/member/MemberDashboard";
+import { MemberPaymentsPage } from "@/pages/member/MemberPaymentsPage";
+import { MemberDuesPage } from "@/pages/member/MemberDuesPage";
+import { MemberNoticesPage } from "@/pages/member/MemberNoticesPage";
+import { MemberConstitutionPage } from "@/pages/member/MemberConstitutionPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +45,15 @@ function SuperAdminWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <SuperAdminLayout>{children}</SuperAdminLayout>
+    </LanguageProvider>
+  );
+}
+
+// Member Portal wrapper component
+function MemberWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <LanguageProvider>
+      <MemberLayout>{children}</MemberLayout>
     </LanguageProvider>
   );
 }
@@ -123,6 +138,48 @@ const App = () => (
               <DashboardWrapper>
                 <SettingsPage />
               </DashboardWrapper>
+            }
+          />
+          
+          {/* Member Portal routes */}
+          <Route
+            path="/member"
+            element={
+              <MemberWrapper>
+                <MemberDashboard />
+              </MemberWrapper>
+            }
+          />
+          <Route
+            path="/member/payments"
+            element={
+              <MemberWrapper>
+                <MemberPaymentsPage />
+              </MemberWrapper>
+            }
+          />
+          <Route
+            path="/member/dues"
+            element={
+              <MemberWrapper>
+                <MemberDuesPage />
+              </MemberWrapper>
+            }
+          />
+          <Route
+            path="/member/notices"
+            element={
+              <MemberWrapper>
+                <MemberNoticesPage />
+              </MemberWrapper>
+            }
+          />
+          <Route
+            path="/member/constitution"
+            element={
+              <MemberWrapper>
+                <MemberConstitutionPage />
+              </MemberWrapper>
             }
           />
           
