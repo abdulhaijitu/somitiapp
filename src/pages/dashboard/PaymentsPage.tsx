@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -9,11 +9,16 @@ import {
   Search, 
   MoreHorizontal,
   Calendar,
-  Filter,
   Download,
   RefreshCw,
   ExternalLink,
-  Eye
+  Eye,
+  AlertCircle,
+  CreditCard,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 import {
   Table,
@@ -29,14 +34,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useOnlinePayment } from '@/hooks/useOnlinePayment';
 import { CreatePaymentDialog } from '@/components/payments/CreatePaymentDialog';
 import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
-import { format } from 'date-fns';
+import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+import { EmptyState } from '@/components/common/EmptyState';
+import { format, isAfter, startOfMonth, subMonths } from 'date-fns';
 
 interface Payment {
   id: string;
@@ -70,8 +84,8 @@ interface Member {
   monthly_amount: number | null;
 }
 
-// Mock tenant_id for now - in production this would come from context
 const MOCK_TENANT_ID = '00000000-0000-0000-0000-000000000000';
+const PAGE_SIZE = 20;
 
 export function PaymentsPage() {
   const { t, language } = useLanguage();
@@ -83,12 +97,20 @@ export function PaymentsPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'online' | 'offline'>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  
   const [stats, setStats] = useState({
     thisMonth: 0,
     totalCollected: 0,
     outstanding: 0,
-    pendingCount: 0
+    pendingCount: 0,
+    overdueCount: 0
   });
 
   useEffect(() => {
@@ -104,43 +126,53 @@ export function PaymentsPage() {
         .from('payments')
         .select('*, members(id, name, name_bn)')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(500);
 
       if (error) {
         console.error('Error loading payments:', error);
-        // Show mock data if no real data
         return;
       }
 
       setPayments(data || []);
-
-      // Calculate stats
-      const now = new Date();
-      const thisMonthPayments = (data || []).filter(p => {
-        const date = new Date(p.payment_date || p.created_at);
-        return date.getMonth() === now.getMonth() && 
-               date.getFullYear() === now.getFullYear() &&
-               p.status === 'paid';
-      });
-      
-      const totalPaid = (data || [])
-        .filter(p => p.status === 'paid')
-        .reduce((sum, p) => sum + Number(p.amount), 0);
-      
-      const pendingPayments = (data || []).filter(p => p.status === 'pending');
-
-      setStats({
-        thisMonth: thisMonthPayments.reduce((sum, p) => sum + Number(p.amount), 0),
-        totalCollected: totalPaid,
-        outstanding: pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0),
-        pendingCount: pendingPayments.length
-      });
-
+      calculateStats(data || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateStats = (paymentsData: Payment[]) => {
+    const now = new Date();
+    const thisMonthStart = startOfMonth(now);
+    const lastMonthStart = startOfMonth(subMonths(now, 1));
+
+    const thisMonthPayments = paymentsData.filter(p => {
+      const date = new Date(p.payment_date || p.created_at);
+      return date >= thisMonthStart && p.status === 'paid';
+    });
+    
+    const totalPaid = paymentsData
+      .filter(p => p.status === 'paid')
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+    
+    const pendingPayments = paymentsData.filter(p => p.status === 'pending');
+
+    const overduePayments = pendingPayments.filter(p => {
+      if (p.period_month && p.period_year) {
+        const periodDate = new Date(p.period_year, p.period_month - 1, 1);
+        return isAfter(lastMonthStart, periodDate);
+      }
+      return isAfter(lastMonthStart, new Date(p.created_at));
+    });
+
+    setStats({
+      thisMonth: thisMonthPayments.reduce((sum, p) => sum + Number(p.amount), 0),
+      totalCollected: totalPaid,
+      outstanding: pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0),
+      pendingCount: pendingPayments.length,
+      overdueCount: overduePayments.length
+    });
   };
 
   const loadMembers = async () => {
@@ -235,7 +267,6 @@ export function PaymentsPage() {
 
     if (result.success && result.payment_url) {
       setIsCreateOpen(false);
-      // Redirect to payment page
       redirectToPayment(result.payment_url);
     }
   };
@@ -267,20 +298,111 @@ export function PaymentsPage() {
     }
   };
 
-  const filteredPayments = payments.filter(payment => {
-    const memberName = payment.members?.name?.toLowerCase() || '';
-    const memberNameBn = payment.members?.name_bn?.toLowerCase() || '';
-    const reference = payment.reference?.toLowerCase() || '';
+  const handleRetryPayment = async (payment: Payment) => {
+    if (!payment.members) {
+      toast({
+        title: 'Cannot Retry',
+        description: 'Missing payment information',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const result = await createPayment({
+      tenant_id: payment.tenant_id,
+      member_id: payment.member_id,
+      amount: Number(payment.amount),
+      period_month: payment.period_month || new Date().getMonth() + 1,
+      period_year: payment.period_year || new Date().getFullYear(),
+      full_name: payment.members.name
+    });
+
+    if (result.success && result.payment_url) {
+      redirectToPayment(result.payment_url);
+    }
+  };
+
+  const isOverdue = (payment: Payment) => {
+    if (payment.status !== 'pending') return false;
+    const lastMonth = startOfMonth(subMonths(new Date(), 1));
     
-    const matchesSearch = 
-      memberName.includes(searchQuery.toLowerCase()) ||
-      memberNameBn.includes(searchQuery.toLowerCase()) ||
-      reference.includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+    if (payment.period_month && payment.period_year) {
+      const periodDate = new Date(payment.period_year, payment.period_month - 1, 1);
+      return isAfter(lastMonth, periodDate);
+    }
+    return isAfter(lastMonth, new Date(payment.created_at));
+  };
+
+  const filteredAndSortedPayments = useMemo(() => {
+    let result = [...payments];
+
+    if (statusFilter !== 'all') {
+      result = result.filter(p => p.status === statusFilter);
+    }
+
+    if (typeFilter !== 'all') {
+      result = result.filter(p => p.payment_type === typeFilter);
+    }
+
+    if (dateFrom) {
+      result = result.filter(p => {
+        const date = new Date(p.payment_date || p.created_at);
+        return date >= dateFrom;
+      });
+    }
+    if (dateTo) {
+      result = result.filter(p => {
+        const date = new Date(p.payment_date || p.created_at);
+        return date <= dateTo;
+      });
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => 
+        p.members?.name.toLowerCase().includes(query) ||
+        p.members?.name_bn?.toLowerCase().includes(query) ||
+        p.reference?.toLowerCase().includes(query) ||
+        p.invoice_id?.toLowerCase().includes(query) ||
+        p.transaction_id?.toLowerCase().includes(query)
+      );
+    }
+
+    result.sort((a, b) => {
+      let comparison = 0;
+      
+      if (sortBy === 'date') {
+        comparison = new Date(a.payment_date || a.created_at).getTime() - new Date(b.payment_date || b.created_at).getTime();
+      } else if (sortBy === 'amount') {
+        comparison = Number(a.amount) - Number(b.amount);
+      }
+
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [payments, statusFilter, typeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(filteredAndSortedPayments.length / PAGE_SIZE);
+  const paginatedPayments = filteredAndSortedPayments.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const toggleSort = (column: 'date' | 'amount') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
+
+  const handleDateRangeChange = (from: Date | undefined, to: Date | undefined) => {
+    setDateFrom(from);
+    setDateTo(to);
+    setCurrentPage(1);
+  };
 
   if (loading) {
     return (
@@ -289,7 +411,8 @@ export function PaymentsPage() {
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -327,101 +450,277 @@ export function PaymentsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-4">
         <Card className="border-border">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">This Month</div>
             <div className="mt-1 text-2xl font-bold text-foreground">
               ৳ {stats.thisMonth.toLocaleString()}
             </div>
-            <div className="mt-1 text-xs text-success">+12% from last month</div>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">Total Collected</div>
-            <div className="mt-1 text-2xl font-bold text-foreground">
+            <div className="mt-1 text-2xl font-bold text-success">
               ৳ {stats.totalCollected.toLocaleString()}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">This year</div>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">Outstanding</div>
-            <div className="mt-1 text-2xl font-bold text-destructive">
+            <div className="mt-1 text-2xl font-bold text-warning">
               ৳ {stats.outstanding.toLocaleString()}
             </div>
             <div className="mt-1 text-xs text-muted-foreground">{stats.pendingCount} pending</div>
           </CardContent>
         </Card>
+        <Card className="border-border border-destructive/20 bg-destructive/5">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              Overdue
+            </div>
+            <div className="mt-1 text-2xl font-bold text-destructive">
+              {stats.overdueCount}
+            </div>
+            <div className="mt-1 text-xs text-muted-foreground">payments past due</div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Tabs and table */}
+      {/* Filters bar */}
       <Card className="border-border">
-        <Tabs defaultValue="all" className="w-full" onValueChange={setStatusFilter}>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="paid">{t('payments.paid')}</TabsTrigger>
-                <TabsTrigger value="pending">{t('payments.pending')}</TabsTrigger>
-                <TabsTrigger value="failed">Failed</TabsTrigger>
-              </TabsList>
-              <div className="flex gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input 
-                    placeholder={t('common.search')} 
-                    className="w-64 pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" size="icon" onClick={loadPayments}>
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              </div>
+        <CardContent className="py-4">
+          <div className="flex flex-wrap gap-4 items-center">
+            <DateRangeFilter
+              from={dateFrom}
+              to={dateTo}
+              onRangeChange={handleDateRangeChange}
+            />
+            
+            <Select value={typeFilter} onValueChange={(v) => {
+              setTypeFilter(v as 'all' | 'online' | 'offline');
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Payment type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All types</SelectItem>
+                <SelectItem value="online">Online only</SelectItem>
+                <SelectItem value="offline">Offline only</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input 
+                placeholder={t('common.search')} 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
+
+            <Button variant="outline" size="icon" onClick={loadPayments}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs and table */}
+      <Card className="border-border overflow-hidden">
+        <Tabs defaultValue="all" className="w-full" onValueChange={(v) => {
+          setStatusFilter(v);
+          setCurrentPage(1);
+        }}>
+          <CardHeader className="pb-3">
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="paid">{t('payments.paid')}</TabsTrigger>
+              <TabsTrigger value="pending">{t('payments.pending')}</TabsTrigger>
+              <TabsTrigger value="failed">Failed</TabsTrigger>
+            </TabsList>
           </CardHeader>
-          <CardContent className="p-0">
-            <TabsContent value="all" className="m-0">
-              <PaymentsTable 
-                payments={filteredPayments} 
-                language={language}
-                onVerify={handleVerifyPayment}
-                isVerifying={isVerifying}
-                t={t}
+          
+          <div className="p-0">
+            {paginatedPayments.length === 0 ? (
+              <EmptyState
+                icon={CreditCard}
+                title="No payments found"
+                description={searchQuery || dateFrom || dateTo ? "Try adjusting your filters" : "Start by recording your first payment"}
+                actionLabel={!searchQuery && !dateFrom && !dateTo ? "Add Payment" : undefined}
+                onAction={!searchQuery && !dateFrom && !dateTo ? () => setIsCreateOpen(true) : undefined}
               />
-            </TabsContent>
-            <TabsContent value="paid" className="m-0">
-              <PaymentsTable 
-                payments={filteredPayments} 
-                language={language}
-                onVerify={handleVerifyPayment}
-                isVerifying={isVerifying}
-                t={t}
-              />
-            </TabsContent>
-            <TabsContent value="pending" className="m-0">
-              <PaymentsTable 
-                payments={filteredPayments} 
-                language={language}
-                onVerify={handleVerifyPayment}
-                isVerifying={isVerifying}
-                t={t}
-              />
-            </TabsContent>
-            <TabsContent value="failed" className="m-0">
-              <PaymentsTable 
-                payments={filteredPayments} 
-                language={language}
-                onVerify={handleVerifyPayment}
-                isVerifying={isVerifying}
-                t={t}
-              />
-            </TabsContent>
-          </CardContent>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-card z-10">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead>Reference</TableHead>
+                        <TableHead>Member</TableHead>
+                        <TableHead>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-1 -ml-3 h-8"
+                            onClick={() => toggleSort('date')}
+                          >
+                            {t('payments.date')}
+                            <ArrowUpDown className="h-3 w-3" />
+                          </Button>
+                        </TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead>{t('payments.method')}</TableHead>
+                        <TableHead className="text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="gap-1 h-8"
+                            onClick={() => toggleSort('amount')}
+                          >
+                            {t('payments.amount')}
+                            <ArrowUpDown className="h-3 w-3" />
+                          </Button>
+                        </TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedPayments.map((payment) => {
+                        const overdue = isOverdue(payment);
+                        return (
+                          <TableRow 
+                            key={payment.id} 
+                            className={`table-row-hover ${overdue ? 'bg-destructive/5' : ''}`}
+                          >
+                            <TableCell className="font-mono text-sm">
+                              <div className="flex items-center gap-2">
+                                {overdue && (
+                                  <AlertCircle className="h-4 w-4 text-destructive" />
+                                )}
+                                {payment.reference || payment.invoice_id?.substring(0, 12) || '-'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`font-medium ${language === 'bn' && payment.members?.name_bn ? 'font-bengali' : ''}`}>
+                                {language === 'bn' && payment.members?.name_bn 
+                                  ? payment.members.name_bn 
+                                  : payment.members?.name || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <Calendar className="h-4 w-4" />
+                                {payment.payment_date 
+                                  ? format(new Date(payment.payment_date), 'MMM d, yyyy')
+                                  : format(new Date(payment.created_at), 'MMM d, yyyy')}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {payment.period_month && payment.period_year
+                                ? `${payment.period_month}/${payment.period_year}`
+                                : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <PaymentMethodBadge 
+                                method={payment.payment_method} 
+                                type={payment.payment_type} 
+                              />
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ৳ {Number(payment.amount).toLocaleString()}
+                            </TableCell>
+                            <TableCell>
+                              <PaymentStatusBadge status={payment.status} />
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem className="gap-2">
+                                    <Eye className="h-4 w-4" />
+                                    View Details
+                                  </DropdownMenuItem>
+                                  {payment.payment_type === 'online' && payment.status === 'pending' && (
+                                    <DropdownMenuItem 
+                                      className="gap-2"
+                                      onClick={() => handleVerifyPayment(payment)}
+                                      disabled={isVerifying}
+                                    >
+                                      <RefreshCw className="h-4 w-4" />
+                                      Verify Payment
+                                    </DropdownMenuItem>
+                                  )}
+                                  {payment.status === 'failed' && (
+                                    <DropdownMenuItem 
+                                      className="gap-2"
+                                      onClick={() => handleRetryPayment(payment)}
+                                    >
+                                      <RotateCcw className="h-4 w-4" />
+                                      Retry Payment
+                                    </DropdownMenuItem>
+                                  )}
+                                  {payment.payment_type === 'online' && payment.invoice_id && payment.status === 'pending' && (
+                                    <DropdownMenuItem className="gap-2">
+                                      <ExternalLink className="h-4 w-4" />
+                                      Copy Payment Link
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, filteredAndSortedPayments.length)} of {filteredAndSortedPayments.length}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => p - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <span className="text-sm text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => p + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </Tabs>
       </Card>
 
@@ -434,116 +733,6 @@ export function PaymentsPage() {
         onCreateOnlinePayment={handleCreateOnlinePayment}
         isSubmitting={isCreating}
       />
-    </div>
-  );
-}
-
-// Separated table component for reuse
-function PaymentsTable({ 
-  payments, 
-  language, 
-  onVerify,
-  isVerifying,
-  t 
-}: { 
-  payments: Payment[];
-  language: string;
-  onVerify: (payment: Payment) => void;
-  isVerifying: boolean;
-  t: (key: string) => string;
-}) {
-  if (payments.length === 0) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        No payments found
-      </div>
-    );
-  }
-
-  return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead>Reference</TableHead>
-            <TableHead>Member</TableHead>
-            <TableHead>{t('payments.date')}</TableHead>
-            <TableHead>{t('payments.method')}</TableHead>
-            <TableHead className="text-right">{t('payments.amount')}</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {payments.map((payment) => (
-            <TableRow key={payment.id} className="table-row-hover">
-              <TableCell className="font-mono text-sm">
-                {payment.reference || payment.invoice_id?.substring(0, 12) || '-'}
-              </TableCell>
-              <TableCell>
-                <span className={`font-medium ${language === 'bn' && payment.members?.name_bn ? 'font-bengali' : ''}`}>
-                  {language === 'bn' && payment.members?.name_bn 
-                    ? payment.members.name_bn 
-                    : payment.members?.name || '-'}
-                </span>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  {payment.payment_date 
-                    ? format(new Date(payment.payment_date), 'MMM d, yyyy')
-                    : format(new Date(payment.created_at), 'MMM d, yyyy')}
-                </div>
-              </TableCell>
-              <TableCell>
-                <PaymentMethodBadge 
-                  method={payment.payment_method} 
-                  type={payment.payment_type} 
-                />
-              </TableCell>
-              <TableCell className="text-right font-medium">
-                ৳ {Number(payment.amount).toLocaleString()}
-              </TableCell>
-              <TableCell>
-                <PaymentStatusBadge status={payment.status} />
-              </TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="gap-2">
-                      <Eye className="h-4 w-4" />
-                      View Details
-                    </DropdownMenuItem>
-                    {payment.payment_type === 'online' && payment.status === 'pending' && (
-                      <>
-                        <DropdownMenuItem 
-                          className="gap-2"
-                          onClick={() => onVerify(payment)}
-                          disabled={isVerifying}
-                        >
-                          <RefreshCw className="h-4 w-4" />
-                          Verify Payment
-                        </DropdownMenuItem>
-                        {payment.invoice_id && (
-                          <DropdownMenuItem className="gap-2">
-                            <ExternalLink className="h-4 w-4" />
-                            Resend Link
-                          </DropdownMenuItem>
-                        )}
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
     </div>
   );
 }
