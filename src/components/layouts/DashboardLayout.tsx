@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   Menu,
   Loader2,
+  CalendarClock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -31,6 +32,7 @@ const navItems = [
   { key: 'nav.dashboard', icon: LayoutDashboard, href: '/dashboard' },
   { key: 'nav.members', icon: Users, href: '/dashboard/members' },
   { key: 'nav.payments', icon: CreditCard, href: '/dashboard/payments' },
+  { key: 'nav.dues', icon: CalendarClock, href: '/dashboard/dues' },
   { key: 'nav.reports', icon: FileBarChart, href: '/dashboard/reports', requiredRole: 'admin' },
   { key: 'nav.notices', icon: Bell, href: '/dashboard/notices' },
   { key: 'nav.constitution', icon: BookOpen, href: '/dashboard/constitution' },

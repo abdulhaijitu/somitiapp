@@ -18,6 +18,7 @@ import { ReportsPage } from "@/pages/dashboard/ReportsPage";
 import { NoticesPage } from "@/pages/dashboard/NoticesPage";
 import { ConstitutionPage } from "@/pages/dashboard/ConstitutionPage";
 import { SettingsPage } from "@/pages/dashboard/SettingsPage";
+import { DuesPage } from "@/pages/dashboard/DuesPage";
 import { SuperAdminDashboard } from "@/pages/super-admin/SuperAdminDashboard";
 import { SuperAdminLoginPage } from "@/pages/super-admin/SuperAdminLoginPage";
 import { TenantsManagementPage } from "@/pages/super-admin/TenantsManagementPage";
@@ -185,6 +186,14 @@ const App = () => (
             element={
               <DashboardWrapper>
                 <SettingsPage />
+              </DashboardWrapper>
+            }
+          />
+          <Route
+            path="/dashboard/dues"
+            element={
+              <DashboardWrapper>
+                <DuesPage />
               </DashboardWrapper>
             }
           />
