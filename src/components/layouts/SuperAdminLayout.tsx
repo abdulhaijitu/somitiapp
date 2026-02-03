@@ -1,5 +1,8 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard,
   Building2,
@@ -15,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/super-admin' },
@@ -32,8 +35,23 @@ interface SuperAdminLayoutProps {
 }
 
 export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: 'Logged Out',
+        description: 'You have been signed out successfully.',
+      });
+      navigate('/super-admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -103,16 +121,16 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
 
         {/* Bottom section */}
         <div className="border-t border-sidebar-border p-2">
-          <NavLink
-            to="/"
+          <button
+            onClick={handleLogout}
             className={cn(
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
               collapsed && "justify-center px-2"
             )}
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!collapsed && <span>Exit Admin</span>}
-          </NavLink>
+            {!collapsed && <span>Logout</span>}
+          </button>
         </div>
       </aside>
 
