@@ -9,6 +9,8 @@ import { ImpersonationBanner } from '@/components/common/ImpersonationBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { NoIndexSEO } from '@/components/common/SEO';
 import { MobileBottomNav, BottomNavItem } from '@/components/common/MobileBottomNav';
+import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
+import { usePWAInstall, usePWAPromptEligibility } from '@/hooks/usePWAInstall';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +57,23 @@ const bottomNavItems: BottomNavItem[] = [
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+}
+
+// PWA Install Prompt Wrapper for logged-in users
+function PWAInstallPromptWrapper() {
+  const location = useLocation();
+  const isEligible = usePWAPromptEligibility(location.pathname);
+  const { isPromptVisible, installApp, dismissForNow } = usePWAInstall(true); // Always logged in inside dashboard
+
+  if (!isEligible) return null;
+
+  return (
+    <PWAInstallPrompt
+      isVisible={isPromptVisible}
+      onInstall={installApp}
+      onDismiss={dismissForNow}
+    />
+  );
 }
 
 function DashboardLayoutContent({ children }: DashboardLayoutProps) {
@@ -283,6 +302,9 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       {!hideBottomNav && <MobileBottomNav items={bottomNavItems} />}
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPromptWrapper />
     </div>
   );
 }
