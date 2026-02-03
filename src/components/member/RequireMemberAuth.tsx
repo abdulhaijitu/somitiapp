@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { Loader2, Users } from 'lucide-react';
 
 interface RequireMemberAuthProps {
@@ -9,12 +10,19 @@ interface RequireMemberAuthProps {
 
 export function RequireMemberAuth({ children }: RequireMemberAuthProps) {
   const navigate = useNavigate();
+  const { isImpersonating, target } = useImpersonation();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    // If impersonating as member, bypass auth check
+    if (isImpersonating && target?.type === 'member') {
+      setIsAuthorized(true);
+      setIsLoading(false);
+      return;
+    }
     checkMemberAccess();
-  }, []);
+  }, [isImpersonating, target]);
 
   const checkMemberAccess = async () => {
     try {

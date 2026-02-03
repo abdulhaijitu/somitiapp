@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { Loader2, Building2 } from 'lucide-react';
 
 interface RequireTenantAuthProps {
@@ -9,12 +10,19 @@ interface RequireTenantAuthProps {
 
 export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
   const navigate = useNavigate();
+  const { isImpersonating, target } = useImpersonation();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
+    // If impersonating as tenant admin, bypass auth check
+    if (isImpersonating && target?.type === 'tenant_admin') {
+      setIsAuthorized(true);
+      setIsLoading(false);
+      return;
+    }
     checkTenantAccess();
-  }, []);
+  }, [isImpersonating, target]);
 
   const checkTenantAccess = async () => {
     try {
