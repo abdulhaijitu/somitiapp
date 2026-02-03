@@ -24,7 +24,8 @@ import {
   XCircle,
   Clock4,
   Send,
-  Pencil
+  Pencil,
+  Users
 } from 'lucide-react';
 import {
   Table,
@@ -56,6 +57,8 @@ import { CreatePaymentDialog } from '@/components/payments/CreatePaymentDialog';
 import { EditPaymentDialog } from '@/components/payments/EditPaymentDialog';
 import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
+import { BulkPaymentWizard } from '@/components/payments/BulkPaymentWizard';
+import { PermissionGate } from '@/components/common/PermissionGate';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { format, isAfter, startOfMonth, subMonths } from 'date-fns';
@@ -128,6 +131,7 @@ export function PaymentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isBulkWizardOpen, setIsBulkWizardOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [approvingPaymentId, setApprovingPaymentId] = useState<string | null>(null);
@@ -668,6 +672,16 @@ export function PaymentsPage() {
             <Download className="h-4 w-4" />
             {t('common.export')}
           </Button>
+          <PermissionGate requiredRole="manager" showAccessDenied={false}>
+            <Button 
+              variant="outline"
+              className="gap-2"
+              onClick={() => setIsBulkWizardOpen(true)}
+            >
+              <Users className="h-4 w-4" />
+              {language === 'bn' ? 'বাল্ক পেমেন্ট' : 'Bulk Payments'}
+            </Button>
+          </PermissionGate>
           <Button 
             className="gap-2 bg-gradient-primary hover:opacity-90"
             onClick={() => setIsCreateOpen(true)}
@@ -1035,6 +1049,13 @@ export function PaymentsPage() {
         payment={editingPayment}
         onSave={handleSavePayment}
         isSubmitting={isUpdating}
+      />
+
+      {/* Bulk Payment Wizard */}
+      <BulkPaymentWizard
+        open={isBulkWizardOpen}
+        onOpenChange={setIsBulkWizardOpen}
+        onSuccess={loadPayments}
       />
     </div>
   );
