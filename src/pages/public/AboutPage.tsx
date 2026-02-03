@@ -1,5 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SEO } from '@/components/common/SEO';
+import { ScrollAnimation } from '@/components/common/ScrollAnimation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +71,7 @@ export function AboutPage() {
       <section className="relative overflow-hidden py-16 md:py-24">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="container relative mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
+          <ScrollAnimation animation="fade-up" className="mx-auto max-w-3xl text-center">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'আমাদের গল্প' : 'Our Story'}
             </Badge>
@@ -84,7 +85,7 @@ export function AboutPage() {
                 ? 'আমরা বাংলাদেশের হাজার হাজার সমিতি, সংগঠন এবং কমিউনিটি গ্রুপকে আধুনিক প্রযুক্তি দিয়ে ক্ষমতায়িত করতে প্রতিশ্রুতিবদ্ধ।'
                 : 'We\'re on a mission to empower thousands of somitis, associations, and community groups in Bangladesh with modern technology.'}
             </p>
-          </div>
+          </ScrollAnimation>
         </div>
       </section>
 
@@ -93,40 +94,44 @@ export function AboutPage() {
         <div className="container mx-auto px-4">
           <div className="grid gap-8 md:grid-cols-2">
             {/* Mission */}
-            <Card className="relative overflow-hidden">
-              <div className="absolute top-0 left-0 h-1 w-full bg-gradient-primary" />
-              <CardContent className="p-8">
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                  <Target className="h-7 w-7 text-primary" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  {language === 'bn' ? 'আমাদের মিশন' : 'Our Mission'}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {language === 'bn' 
-                    ? 'বাংলাদেশের প্রতিটি সমিতিকে স্বচ্ছ, দক্ষ এবং সদস্য-বান্ধব আর্থিক ব্যবস্থাপনা প্রদান করা। আমরা চাই প্রতিটি সদস্য তাদের অবদানের হিসাব সহজেই দেখতে পারুক এবং প্রতিটি প্রশাসক নিরবচ্ছিন্নভাবে তাদের সমিতি পরিচালনা করতে পারুক।'
-                    : 'To provide every somiti in Bangladesh with transparent, efficient, and member-friendly financial management. We want every member to easily track their contributions and every administrator to manage their somiti seamlessly.'}
-                </p>
-              </CardContent>
-            </Card>
+            <ScrollAnimation animation="fade-right">
+              <Card className="relative overflow-hidden h-full">
+                <div className="absolute top-0 left-0 h-1 w-full bg-gradient-primary" />
+                <CardContent className="p-8">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                    <Target className="h-7 w-7 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-4">
+                    {language === 'bn' ? 'আমাদের মিশন' : 'Our Mission'}
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {language === 'bn' 
+                      ? 'বাংলাদেশের প্রতিটি সমিতিকে স্বচ্ছ, দক্ষ এবং সদস্য-বান্ধব আর্থিক ব্যবস্থাপনা প্রদান করা। আমরা চাই প্রতিটি সদস্য তাদের অবদানের হিসাব সহজেই দেখতে পারুক এবং প্রতিটি প্রশাসক নিরবচ্ছিন্নভাবে তাদের সমিতি পরিচালনা করতে পারুক।'
+                      : 'To provide every somiti in Bangladesh with transparent, efficient, and member-friendly financial management. We want every member to easily track their contributions and every administrator to manage their somiti seamlessly.'}
+                  </p>
+                </CardContent>
+              </Card>
+            </ScrollAnimation>
 
             {/* Vision */}
-            <Card className="relative overflow-hidden">
-              <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-accent to-primary" />
-              <CardContent className="p-8">
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
-                  <Eye className="h-7 w-7 text-accent" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  {language === 'bn' ? 'আমাদের ভিশন' : 'Our Vision'}
-                </h2>
-                <p className="text-muted-foreground leading-relaxed">
-                  {language === 'bn' 
-                    ? 'এমন একটি বাংলাদেশ যেখানে প্রতিটি কমিউনিটি গ্রুপ, সমবায় সমিতি, এবং সংগঠন ডিজিটাল টুল ব্যবহার করে তাদের সদস্যদের আরও ভালোভাবে সেবা দিতে পারে। আমরা বিশ্বাস করি প্রযুক্তি কমিউনিটি বন্ধনকে আরও শক্তিশালী করতে পারে।'
-                    : 'A Bangladesh where every community group, cooperative society, and association uses digital tools to better serve their members. We believe technology can strengthen community bonds and build trust.'}
-                </p>
-              </CardContent>
-            </Card>
+            <ScrollAnimation animation="fade-left">
+              <Card className="relative overflow-hidden h-full">
+                <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-accent to-primary" />
+                <CardContent className="p-8">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10">
+                    <Eye className="h-7 w-7 text-accent" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-4">
+                    {language === 'bn' ? 'আমাদের ভিশন' : 'Our Vision'}
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {language === 'bn' 
+                      ? 'এমন একটি বাংলাদেশ যেখানে প্রতিটি কমিউনিটি গ্রুপ, সমবায় সমিতি, এবং সংগঠন ডিজিটাল টুল ব্যবহার করে তাদের সদস্যদের আরও ভালোভাবে সেবা দিতে পারে। আমরা বিশ্বাস করি প্রযুক্তি কমিউনিটি বন্ধনকে আরও শক্তিশালী করতে পারে।'
+                      : 'A Bangladesh where every community group, cooperative society, and association uses digital tools to better serve their members. We believe technology can strengthen community bonds and build trust.'}
+                  </p>
+                </CardContent>
+              </Card>
+            </ScrollAnimation>
           </div>
         </div>
       </section>
@@ -135,39 +140,41 @@ export function AboutPage() {
       <section className="py-12 md:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl">
-            <div className="text-center mb-12">
+            <ScrollAnimation animation="fade-up" className="text-center mb-12">
               <h2 className="text-3xl font-bold text-foreground md:text-4xl">
                 {language === 'bn' ? 'কেন আমরা এটি তৈরি করলাম' : 'Why We Built This'}
               </h2>
-            </div>
+            </ScrollAnimation>
             
-            <div className="prose prose-lg max-w-none text-muted-foreground">
-              {language === 'bn' ? (
-                <>
-                  <p>
-                    বাংলাদেশে লক্ষ লক্ষ সমিতি, সমবায়, এবং কমিউনিটি গ্রুপ রয়েছে যারা এখনও কাগজ-ভিত্তিক হিসাব-নিকাশ ব্যবহার করে। এই পুরনো পদ্ধতিতে অনেক সমস্যা আছে - হিসাবের গড়মিল, স্বচ্ছতার অভাব, এবং সদস্যদের মধ্যে অবিশ্বাস।
-                  </p>
-                  <p>
-                    আমরা দেখেছি কিভাবে একটি সহজ ডিজিটাল সমাধান এই সমস্যাগুলো সমাধান করতে পারে। প্রতিটি সদস্য তাদের মোবাইল থেকে তাদের পেমেন্ট দেখতে পারে, প্রতিটি প্রশাসক রিয়েল-টাইম রিপোর্ট পেতে পারে, এবং পুরো সিস্টেম স্বচ্ছ থাকে।
-                  </p>
-                  <p>
-                    এটাই আমাদের লক্ষ্য - বাংলাদেশের সমিতিগুলোকে আধুনিক, স্বচ্ছ, এবং দক্ষ করে তোলা।
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    Bangladesh has millions of somitis, cooperatives, and community groups that still rely on paper-based accounting. This outdated system causes many problems - accounting errors, lack of transparency, and distrust among members.
-                  </p>
-                  <p>
-                    We've seen how a simple digital solution can solve these issues. Every member can view their payments from their mobile, every administrator can get real-time reports, and the entire system stays transparent.
-                  </p>
-                  <p>
-                    That's our goal - to make Bangladesh's somitis modern, transparent, and efficient.
-                  </p>
-                </>
-              )}
-            </div>
+            <ScrollAnimation animation="fade-up" delay={100}>
+              <div className="prose prose-lg max-w-none text-muted-foreground">
+                {language === 'bn' ? (
+                  <>
+                    <p>
+                      বাংলাদেশে লক্ষ লক্ষ সমিতি, সমবায়, এবং কমিউনিটি গ্রুপ রয়েছে যারা এখনও কাগজ-ভিত্তিক হিসাব-নিকাশ ব্যবহার করে। এই পুরনো পদ্ধতিতে অনেক সমস্যা আছে - হিসাবের গড়মিল, স্বচ্ছতার অভাব, এবং সদস্যদের মধ্যে অবিশ্বাস।
+                    </p>
+                    <p>
+                      আমরা দেখেছি কিভাবে একটি সহজ ডিজিটাল সমাধান এই সমস্যাগুলো সমাধান করতে পারে। প্রতিটি সদস্য তাদের মোবাইল থেকে তাদের পেমেন্ট দেখতে পারে, প্রতিটি প্রশাসক রিয়েল-টাইম রিপোর্ট পেতে পারে, এবং পুরো সিস্টেম স্বচ্ছ থাকে।
+                    </p>
+                    <p>
+                      এটাই আমাদের লক্ষ্য - বাংলাদেশের সমিতিগুলোকে আধুনিক, স্বচ্ছ, এবং দক্ষ করে তোলা।
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      Bangladesh has millions of somitis, cooperatives, and community groups that still rely on paper-based accounting. This outdated system causes many problems - accounting errors, lack of transparency, and distrust among members.
+                    </p>
+                    <p>
+                      We've seen how a simple digital solution can solve these issues. Every member can view their payments from their mobile, every administrator can get real-time reports, and the entire system stays transparent.
+                    </p>
+                    <p>
+                      That's our goal - to make Bangladesh's somitis modern, transparent, and efficient.
+                    </p>
+                  </>
+                )}
+              </div>
+            </ScrollAnimation>
           </div>
         </div>
       </section>
@@ -175,7 +182,7 @@ export function AboutPage() {
       {/* Our Values */}
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'আমাদের মূল্যবোধ' : 'Our Values'}
             </h2>
@@ -184,23 +191,25 @@ export function AboutPage() {
                 ? 'যে নীতিগুলো আমাদের কাজকে পরিচালিত করে'
                 : 'The principles that guide everything we do'}
             </p>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {values.map((value, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-6">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                    <value.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {language === 'bn' ? value.titleBn : value.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {language === 'bn' ? value.descriptionBn : value.description}
-                  </p>
-                </CardContent>
-              </Card>
+              <ScrollAnimation key={index} animation="zoom-in" delay={index * 100}>
+                <Card className="text-center h-full hover:shadow-lg transition-shadow duration-300">
+                  <CardContent className="p-6">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                      <value.icon className="h-7 w-7 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {language === 'bn' ? value.titleBn : value.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {language === 'bn' ? value.descriptionBn : value.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -209,13 +218,13 @@ export function AboutPage() {
       {/* Milestones */}
       <section className="py-12 md:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'আমাদের যাত্রা' : 'Our Journey'}
             </h2>
-          </div>
+          </ScrollAnimation>
           
-          <div className="mx-auto max-w-2xl">
+          <ScrollAnimation animation="fade-up" delay={100} className="mx-auto max-w-2xl">
             <div className="relative">
               {/* Timeline line */}
               <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border md:left-1/2 md:-translate-x-1/2" />
@@ -243,37 +252,39 @@ export function AboutPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </ScrollAnimation>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
-          <div className="mx-auto max-w-2xl rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 p-8 md:p-12">
-            <Building2 className="mx-auto h-12 w-12 text-primary mb-4" />
-            <h2 className="text-2xl font-bold text-foreground md:text-3xl">
-              {language === 'bn' ? 'আপনার সমিতিকে আধুনিক করুন' : 'Modernize Your Somiti Today'}
-            </h2>
-            <p className="mt-4 text-muted-foreground">
-              {language === 'bn' 
-                ? 'আমাদের সাথে যোগাযোগ করুন এবং দেখুন কিভাবে আমরা আপনার সমিতিকে সাহায্য করতে পারি।'
-                : 'Get in touch with us and see how we can help your organization thrive.'}
-            </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <Link to="/contact">
-                <Button size="lg" className="bg-gradient-primary shadow-glow gap-2">
-                  {language === 'bn' ? 'যোগাযোগ করুন' : 'Contact Us'}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline">
-                  {language === 'bn' ? 'মূল্য দেখুন' : 'View Pricing'}
-                </Button>
-              </Link>
+          <ScrollAnimation animation="zoom-in">
+            <div className="mx-auto max-w-2xl rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 p-8 md:p-12">
+              <Building2 className="mx-auto h-12 w-12 text-primary mb-4" />
+              <h2 className="text-2xl font-bold text-foreground md:text-3xl">
+                {language === 'bn' ? 'আপনার সমিতিকে আধুনিক করুন' : 'Modernize Your Somiti Today'}
+              </h2>
+              <p className="mt-4 text-muted-foreground">
+                {language === 'bn' 
+                  ? 'আমাদের সাথে যোগাযোগ করুন এবং দেখুন কিভাবে আমরা আপনার সমিতিকে সাহায্য করতে পারি।'
+                  : 'Get in touch with us and see how we can help your organization thrive.'}
+              </p>
+              <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+                <Link to="/contact">
+                  <Button size="lg" className="bg-gradient-primary shadow-glow gap-2">
+                    {language === 'bn' ? 'যোগাযোগ করুন' : 'Contact Us'}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button size="lg" variant="outline">
+                    {language === 'bn' ? 'মূল্য দেখুন' : 'View Pricing'}
+                  </Button>
+                </Link>
+              </div>
             </div>
-          </div>
+          </ScrollAnimation>
         </div>
       </section>
     </>
