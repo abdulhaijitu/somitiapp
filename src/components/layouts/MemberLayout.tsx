@@ -6,6 +6,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ImpersonationBanner } from '@/components/common/ImpersonationBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { NoIndexSEO } from '@/components/common/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -112,6 +113,9 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
+      {/* SEO - Prevent indexing of member pages */}
+      <NoIndexSEO title="Member Portal" />
+      
       {/* Impersonation Banner */}
       <ImpersonationBanner />
       
