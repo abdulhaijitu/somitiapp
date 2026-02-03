@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 
 // Mock data for the dashboard
 const recentPayments = [
@@ -64,6 +65,9 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Onboarding Checklist - shows for new tenants */}
+      <OnboardingChecklist />
+
       {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground lg:text-3xl">

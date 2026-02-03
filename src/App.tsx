@@ -23,11 +23,14 @@ import { TenantsManagementPage } from "@/pages/super-admin/TenantsManagementPage
 import { SubscriptionsManagementPage } from "@/pages/super-admin/SubscriptionsManagementPage";
 import { AuditLogsPage } from "@/pages/super-admin/AuditLogsPage";
 import { SuperAdminSettingsPage } from "@/pages/super-admin/SuperAdminSettingsPage";
+import { SystemMonitoringPage } from "@/pages/super-admin/SystemMonitoringPage";
 import { MemberDashboard } from "@/pages/member/MemberDashboard";
 import { MemberPaymentsPage } from "@/pages/member/MemberPaymentsPage";
 import { MemberDuesPage } from "@/pages/member/MemberDuesPage";
 import { MemberNoticesPage } from "@/pages/member/MemberNoticesPage";
 import { MemberConstitutionPage } from "@/pages/member/MemberConstitutionPage";
+import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
+import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 
 const queryClient = new QueryClient();
 
@@ -221,7 +224,33 @@ const App = () => (
             element={
               <SuperAdminWrapper>
                 <SuperAdminSettingsPage />
+          </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/monitoring"
+            element={
+              <SuperAdminWrapper>
+                <SystemMonitoringPage />
               </SuperAdminWrapper>
+            }
+          />
+          
+          {/* Legal Pages */}
+          <Route
+            path="/terms"
+            element={
+              <LanguageProvider>
+                <TermsOfServicePage />
+              </LanguageProvider>
+            }
+          />
+          <Route
+            path="/privacy"
+            element={
+              <LanguageProvider>
+                <PrivacyPolicyPage />
+              </LanguageProvider>
             }
           />
           
