@@ -64,75 +64,186 @@ export function LandingPage() {
         {...pageConfigs.home}
         structuredData={getOrganizationSchema()}
       />
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
+      
+      {/* Enhanced Header with Glassmorphism */}
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-primary">
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
               <Shield className="h-5 w-5 text-primary-foreground" />
+              <div className="absolute -inset-0.5 rounded-xl bg-gradient-primary opacity-30 blur-sm" />
             </div>
-            <span className="text-xl font-bold text-foreground">Somiti</span>
+            <div>
+              <span className="text-xl font-bold tracking-tight text-foreground">Somiti</span>
+              <span className="ml-1 text-xs font-medium text-primary">App</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/pitch" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-6 md:flex">
+            <Link to="/pitch" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               Investors
             </Link>
-            <Link to="/mobile-roadmap" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/mobile-roadmap" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               Roadmap
             </Link>
-            <Link to="/super-admin" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            <Link to="/super-admin" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
               Admin
             </Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
             <LanguageToggle />
             <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="font-medium">
                 {t('auth.login')}
               </Button>
             </Link>
-            <Button size="sm" className="bg-gradient-primary hover:opacity-90">
+            <Button size="sm" className="bg-gradient-primary font-medium shadow-glow hover:opacity-90">
               {t('auth.signup')}
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-24 md:py-32">
+      {/* Enhanced Hero Section */}
+      <section className="relative overflow-hidden py-20 md:py-32 lg:py-40">
+        {/* Animated Background Elements */}
         <div className="absolute inset-0 bg-gradient-subtle" />
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute left-1/4 top-1/4 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute inset-0">
+          {/* Gradient Orbs */}
+          <div className="absolute left-1/4 top-1/4 h-96 w-96 animate-pulse rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 animate-pulse rounded-full bg-accent/10 blur-3xl" style={{ animationDelay: '1s' }} />
+          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-info/10 blur-3xl" style={{ animationDelay: '2s' }} />
+          
+          {/* Grid Pattern */}
+          <div 
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+              backgroundSize: '60px 60px'
+            }}
+          />
         </div>
-        <div className="container relative mx-auto px-4 text-center">
-          <div className="mx-auto max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
+        
+        <div className="container relative mx-auto px-4">
+          <div className="mx-auto max-w-4xl text-center">
+            {/* Animated Badge */}
+            <div className="mb-8 inline-flex animate-fade-in items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary backdrop-blur-sm">
+              <div className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </div>
               <Smartphone className="h-4 w-4" />
               <span>Mobile-first platform for Bangladesh</span>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
-              {t('landing.hero.title')}
+            
+            {/* Main Headline with Animation */}
+            <h1 className="animate-slide-up text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="block">{t('landing.hero.title').split(' ').slice(0, 3).join(' ')}</span>
+              <span className="mt-2 block bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                {t('landing.hero.title').split(' ').slice(3).join(' ') || 'Somiti'}
+              </span>
             </h1>
-            <p className="mx-auto max-w-xl text-lg text-muted-foreground md:text-xl">
+            
+            {/* Subheadline */}
+            <p className="mx-auto mt-6 max-w-2xl animate-slide-up text-lg text-muted-foreground sm:text-xl" style={{ animationDelay: '100ms' }}>
               {t('landing.hero.subtitle')}
             </p>
-            <div className="flex flex-col items-center gap-4 pt-4 sm:flex-row sm:justify-center">
+            
+            {/* CTA Buttons */}
+            <div className="mt-10 flex animate-slide-up flex-col items-center gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '200ms' }}>
               <Button 
                 size="lg" 
-                className="gap-2 bg-gradient-primary px-8 hover:opacity-90 shadow-glow"
+                className="group relative gap-2 overflow-hidden bg-gradient-primary px-8 py-6 text-base font-semibold shadow-glow transition-all hover:shadow-xl"
                 onClick={() => trackCTA('hero_get_started')}
               >
-                {t('landing.hero.cta')}
-                <ArrowRight className="h-4 w-4" />
+                <span className="relative z-10">{t('landing.hero.cta')}</span>
+                <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                <div className="absolute inset-0 -z-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 transition-opacity group-hover:opacity-100" />
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="gap-2 px-8"
+                className="gap-2 border-2 px-8 py-6 text-base font-semibold transition-all hover:bg-primary/5"
                 onClick={() => trackCTA('hero_view_demo')}
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-5 w-5" />
                 View Demo
               </Button>
+            </div>
+            
+            {/* Trust Indicators */}
+            <div className="mt-12 flex animate-slide-up flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-muted-foreground" style={{ animationDelay: '300ms' }}>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span>Free to start</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <span>বাংলা supported</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Hero Visual - Dashboard Preview */}
+          <div className="relative mx-auto mt-16 max-w-5xl animate-slide-up" style={{ animationDelay: '400ms' }}>
+            <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 opacity-50 blur-2xl" />
+            <div className="glass-card relative overflow-hidden rounded-2xl border-2 border-border/50 p-1 shadow-2xl">
+              <div className="rounded-xl bg-card">
+                {/* Mock Browser Chrome */}
+                <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="h-3 w-3 rounded-full bg-destructive/60" />
+                    <div className="h-3 w-3 rounded-full bg-warning/60" />
+                    <div className="h-3 w-3 rounded-full bg-success/60" />
+                  </div>
+                  <div className="mx-auto flex h-7 w-64 items-center justify-center rounded-md bg-background text-xs text-muted-foreground">
+                    app.somiti.com
+                  </div>
+                </div>
+                
+                {/* Dashboard Preview Content */}
+                <div className="grid gap-4 p-6 md:grid-cols-3">
+                  {/* Stat Cards */}
+                  <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <div className="mb-2 text-xs font-medium text-muted-foreground">Total Members</div>
+                    <div className="flex items-end justify-between">
+                      <span className="text-2xl font-bold text-foreground">2,847</span>
+                      <span className="text-xs font-medium text-success">+12%</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <div className="mb-2 text-xs font-medium text-muted-foreground">This Month</div>
+                    <div className="flex items-end justify-between">
+                      <span className="text-2xl font-bold text-primary">৳1.2M</span>
+                      <span className="text-xs font-medium text-success">+8%</span>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-muted/20 p-4">
+                    <div className="mb-2 text-xs font-medium text-muted-foreground">Dues Collected</div>
+                    <div className="flex items-end justify-between">
+                      <span className="text-2xl font-bold text-success">94%</span>
+                      <span className="text-xs font-medium text-success">+3%</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Chart Placeholder */}
+                <div className="mx-6 mb-6 flex h-32 items-end justify-between gap-2 rounded-xl border border-border bg-muted/10 p-4">
+                  {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((height, i) => (
+                    <div 
+                      key={i} 
+                      className="w-full rounded-t bg-gradient-to-t from-primary/40 to-primary transition-all hover:from-primary/60 hover:to-primary"
+                      style={{ height: `${height}%` }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
