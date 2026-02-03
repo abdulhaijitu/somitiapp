@@ -286,6 +286,89 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="border-y border-border bg-muted/30 py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+              <span>⭐</span>
+              <span>Trusted by 100+ Somitis</span>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              What Our Users Say
+            </h2>
+            <p className="mt-4 text-muted-foreground">
+              Real feedback from somiti administrators across Bangladesh
+            </p>
+          </div>
+          
+          <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Testimonial 1 */}
+            <div className="group relative rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+              <div className="mb-4 flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-warning">⭐</span>
+                ))}
+              </div>
+              <p className="text-foreground leading-relaxed">
+                "আমাদের সমিতির সকল হিসাব এখন অনেক সহজ হয়ে গেছে। আগে এক্সেলে করতে অনেক সময় লাগতো, এখন এক ক্লিকে সব রিপোর্ট পাই।"
+              </p>
+              <div className="mt-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold">
+                  মো
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">মো: রফিকুল ইসলাম</p>
+                  <p className="text-sm text-muted-foreground">সভাপতি, গ্রাম উন্নয়ন সমিতি</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="group relative rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+              <div className="mb-4 flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-warning">⭐</span>
+                ))}
+              </div>
+              <p className="text-foreground leading-relaxed">
+                "The OTP-based member login is brilliant! Our members can now check their dues and payment history from their phones anytime."
+              </p>
+              <div className="mt-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10 text-accent font-semibold">
+                  SA
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">Sadia Ahmed</p>
+                  <p className="text-sm text-muted-foreground">Secretary, Dhaka Women's Cooperative</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="group relative rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg md:col-span-2 lg:col-span-1">
+              <div className="mb-4 flex gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <span key={i} className="text-warning">⭐</span>
+                ))}
+              </div>
+              <p className="text-foreground leading-relaxed">
+                "bKash integration এর জন্য পেমেন্ট নেওয়া অনেক সহজ। সদস্যরা নিজেরাই পেমেন্ট করতে পারে, আমাদের আর হাতে টাকা সামলাতে হয় না।"
+              </p>
+              <div className="mt-6 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10 text-success font-semibold">
+                  কা
+                </div>
+                <div>
+                  <p className="font-semibold text-foreground">কামরুল হাসান</p>
+                  <p className="text-sm text-muted-foreground">কোষাধ্যক্ষ, চট্টগ্রাম ব্যবসায়ী সমিতি</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
