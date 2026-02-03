@@ -54,7 +54,7 @@ export function StatCard({
             {title}
           </p>
           <p className={cn(
-            "text-3xl font-bold tracking-tight",
+            "text-2xl lg:text-3xl font-bold tracking-tight",
             variant === "primary" ? "text-primary-foreground" : "text-foreground"
           )}>
             {value}

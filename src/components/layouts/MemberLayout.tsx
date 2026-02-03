@@ -7,8 +7,9 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { ImpersonationBanner } from '@/components/common/ImpersonationBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { NoIndexSEO } from '@/components/common/SEO';
+import { MobileBottomNav, BottomNavItem } from '@/components/common/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import {
   Home,
@@ -25,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 const navItems = [
   { key: 'member.dashboard', label: 'My Dashboard', labelBn: 'আমার ড্যাশবোর্ড', icon: Home, href: '/member' },
@@ -33,6 +34,15 @@ const navItems = [
   { key: 'member.dues', label: 'My Dues', labelBn: 'আমার বকেয়া', icon: Receipt, href: '/member/dues' },
   { key: 'member.notices', label: 'Notices', labelBn: 'নোটিশ', icon: Bell, href: '/member/notices' },
   { key: 'member.constitution', label: 'Constitution', labelBn: 'সংবিধান', icon: BookOpen, href: '/member/constitution' },
+];
+
+// Bottom nav items for member portal (max 5)
+const bottomNavItems: BottomNavItem[] = [
+  { key: 'member.dashboard', label: 'Home', labelBn: 'হোম', icon: Home, href: '/member', end: true },
+  { key: 'member.payments', label: 'Payments', labelBn: 'পেমেন্ট', icon: CreditCard, href: '/member/payments' },
+  { key: 'member.dues', label: 'Dues', labelBn: 'বকেয়া', icon: Receipt, href: '/member/dues' },
+  { key: 'member.notices', label: 'Notices', labelBn: 'নোটিশ', icon: Bell, href: '/member/notices' },
+  { key: 'member.constitution', label: 'More', labelBn: 'আরও', icon: BookOpen, href: '/member/constitution' },
 ];
 
 interface MemberLayoutProps {
@@ -46,10 +56,17 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   
   // When impersonating as member, skip auth checks and show member portal
   const isViewingAsMember = isImpersonating && impersonationTarget?.type === 'member';
+
+  // Check if we should hide bottom nav (full-screen forms, payment pages)
+  const hideBottomNav = useMemo(() => {
+    const hideRoutes = ['/member/payment-redirect'];
+    return hideRoutes.some(route => location.pathname.startsWith(route));
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -119,20 +136,21 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
       {/* Impersonation Banner */}
       <ImpersonationBanner />
       
-      {/* Mobile Header */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
+      {/* Mobile Header - Simplified for bottom nav */}
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-lg px-4 lg:hidden">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <User className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-semibold text-foreground font-bengali">{tenantName}</span>
+          <span className="font-semibold text-foreground font-bengali truncate max-w-[150px]">{tenantName}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <NotificationCenter />
           <LanguageToggle />
           <Button
             variant="ghost"
             size="icon"
+            className="h-10 w-10"
             onClick={() => setMobileOpen(!mobileOpen)}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -140,7 +158,7 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
         </div>
       </header>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Drawer - Now for logout/settings only */}
       {mobileOpen && (
         <>
           <div 
@@ -153,7 +171,7 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
                 <NavLink
                   key={item.key}
                   to={item.href}
-                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-foreground/80 transition-colors hover:bg-muted"
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-foreground/80 transition-colors active:bg-muted/70"
                   activeClassName="bg-primary/10 text-primary"
                   onClick={() => setMobileOpen(false)}
                   end={item.href === '/member'}
@@ -165,7 +183,7 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors active:bg-destructive/10 disabled:opacity-50"
               >
                 {isLoggingOut ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -235,7 +253,11 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto">
+        <main className={cn(
+          "flex-1 overflow-auto",
+          // Add bottom padding for mobile nav
+          !hideBottomNav && "pb-bottom-nav lg:pb-0"
+        )}>
           <div className="container max-w-5xl mx-auto p-4 lg:p-8">
             <ErrorBoundary>
               {children}
@@ -243,6 +265,9 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      {!hideBottomNav && <MobileBottomNav items={bottomNavItems} />}
     </div>
   );
 }
