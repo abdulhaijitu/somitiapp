@@ -285,4 +285,37 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground));
   }
+
+  /* Safe area for mobile devices (notch, home indicator) */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Content padding when bottom nav is visible */
+  .pb-bottom-nav {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0));
+  }
+
+  /* Touch-friendly minimum size */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Disable hover effects on touch devices */
+  @media (hover: none) {
+    .hover-none\:no-hover:hover {
+      background-color: inherit;
+      color: inherit;
+    }
+  }
+
+  /* Press feedback animation */
+  .press-feedback {
+    @apply active:scale-[0.97] transition-transform duration-100;
+  }
 }

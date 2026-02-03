@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
@@ -52,6 +52,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { MemberStatusBadge } from '@/components/members/MemberStatusBadge';
+import { MemberCard } from '@/components/members/MemberCard';
 import { CreateMemberDialog } from '@/components/members/CreateMemberDialog';
 import { EditMemberDialog } from '@/components/members/EditMemberDialog';
 import { MemberProfileSheet } from '@/components/members/MemberProfileSheet';
@@ -59,6 +60,9 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTableSkeleton } from '@/components/common/DataTableSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useAdvanceBalances } from '@/hooks/useAdvanceBalance';
+import { useDebounce } from '@/hooks/useDebounce';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 
 interface Member {
@@ -86,10 +90,12 @@ export function MembersPage() {
   const { tenant } = useTenant();
   const { startImpersonation } = useImpersonation();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearch = useDebounce(searchQuery, 300); // Debounce search for performance
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'joined_at' | 'dues'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -359,9 +365,9 @@ const handleCreateMember = async (data: {
       result = result.filter(m => m.status === statusFilter);
     }
 
-    // Filter by search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    // Filter by search (use debounced value)
+    if (debouncedSearch) {
+      const query = debouncedSearch.toLowerCase();
       result = result.filter(m => 
         m.name.toLowerCase().includes(query) ||
         m.name_bn?.toLowerCase().includes(query) ||
@@ -386,7 +392,7 @@ const handleCreateMember = async (data: {
     });
 
     return result;
-  }, [members, statusFilter, searchQuery, sortBy, sortOrder]);
+  }, [members, statusFilter, debouncedSearch, sortBy, sortOrder]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAndSortedMembers.length / PAGE_SIZE);
@@ -498,20 +504,101 @@ const handleCreateMember = async (data: {
           <CardContent className="p-0">
             {loading ? (
               <div className="p-4">
-                <DataTableSkeleton columns={7} rows={5} />
+                {isMobile ? (
+                  // Mobile skeleton
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Card key={i}>
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Skeleton className="h-10 w-10 rounded-full" />
+                            <div className="flex-1">
+                              <Skeleton className="h-4 w-32 mb-1" />
+                              <Skeleton className="h-3 w-24" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-16 w-full" />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <DataTableSkeleton columns={7} rows={5} />
+                )}
               </div>
             ) : paginatedMembers.length === 0 ? (
               <EmptyState 
                 icon={<UserPlus className="h-8 w-8" />}
-                title="No members found"
-                description={searchQuery ? "Try adjusting your search query" : "Start by adding your first member"}
-                actionLabel={!searchQuery ? "Add Member" : undefined}
+                title={language === 'bn' ? 'কোনো সদস্য পাওয়া যায়নি' : 'No members found'}
+                description={searchQuery 
+                  ? (language === 'bn' ? 'সার্চ পরিবর্তন করে দেখুন' : 'Try adjusting your search query') 
+                  : (language === 'bn' ? 'আপনার প্রথম সদস্য যোগ করুন' : 'Start by adding your first member')}
+                actionLabel={!searchQuery ? (language === 'bn' ? 'সদস্য যোগ করুন' : 'Add Member') : undefined}
                 onAction={!searchQuery ? () => setIsCreateOpen(true) : undefined}
               />
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <Table>
+                {/* Mobile Card View */}
+                {isMobile ? (
+                  <div className="p-4 space-y-3">
+                    {paginatedMembers.map((member) => (
+                      <MemberCard
+                        key={member.id}
+                        member={member}
+                        language={language as 'en' | 'bn'}
+                        advanceBalance={getAdvanceBalance(member.id)}
+                        onCardClick={() => openProfile(member)}
+                        dropdownContent={
+                          <>
+                            <DropdownMenuItem onClick={() => handleViewAsMember(member)} className="gap-2 text-primary">
+                              <LogIn className="h-4 w-4" />
+                              {language === 'bn' ? 'সদস্য হিসেবে দেখুন' : 'View as Member'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => openProfile(member)} className="gap-2">
+                              <Eye className="h-4 w-4" />
+                              {language === 'bn' ? 'প্রোফাইল দেখুন' : 'View Profile'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(member)} className="gap-2">
+                              <Edit className="h-4 w-4" />
+                              {t('common.edit')}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {member.status === 'active' ? (
+                              <>
+                                <DropdownMenuItem 
+                                  onClick={() => openStatusConfirm(member, 'deactivate')}
+                                  className="gap-2"
+                                >
+                                  <UserX className="h-4 w-4" />
+                                  {language === 'bn' ? 'নিষ্ক্রিয় করুন' : 'Deactivate'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => openStatusConfirm(member, 'suspend')}
+                                  className="gap-2 text-destructive focus:text-destructive"
+                                >
+                                  <UserX className="h-4 w-4" />
+                                  {language === 'bn' ? 'স্থগিত করুন' : 'Suspend'}
+                                </DropdownMenuItem>
+                              </>
+                            ) : (
+                              <DropdownMenuItem 
+                                onClick={() => openStatusConfirm(member, 'activate')}
+                                className="gap-2 text-success focus:text-success"
+                              >
+                                <UserCheck className="h-4 w-4" />
+                                {language === 'bn' ? 'পুনরায় সক্রিয় করুন' : 'Reactivate'}
+                              </DropdownMenuItem>
+                            )}
+                          </>
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  // Desktop Table View
+                  <div className="overflow-x-auto">
+                    <Table>
                     <TableHeader className="sticky top-0 bg-card z-10">
                       <TableRow className="hover:bg-transparent">
                         <TableHead className="w-[250px]">
@@ -670,6 +757,7 @@ const handleCreateMember = async (data: {
                     </TableBody>
                   </Table>
                 </div>
+                )}
 
                 {/* Pagination */}
                 {totalPages > 1 && (
