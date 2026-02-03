@@ -135,6 +135,31 @@ Deno.serve(async (req: Request) => {
       return errorResponse('Failed to update payment', 500);
     }
 
+    // If payment is successful, reconcile with dues and handle advance balance
+    if (newStatus === 'paid') {
+      try {
+        // Call reconcile-payment function internally
+        const reconcileUrl = `${supabaseUrl}/functions/v1/reconcile-payment`;
+        const reconcileResponse = await fetch(reconcileUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ payment_id: payment.id })
+        });
+        
+        if (!reconcileResponse.ok) {
+          console.error('Reconciliation failed:', await reconcileResponse.text());
+        } else {
+          console.log('Payment reconciled successfully');
+        }
+      } catch (reconcileError) {
+        console.error('Error calling reconcile-payment:', reconcileError);
+        // Don't fail the webhook for reconciliation errors
+      }
+    }
+
     // Log the webhook update
     await logPaymentEvent(supabase, {
       action: 'WEBHOOK_RECEIVED',

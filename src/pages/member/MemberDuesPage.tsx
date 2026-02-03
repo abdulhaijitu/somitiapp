@@ -22,6 +22,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
 import { useMemberPaymentRequest } from '@/hooks/useMemberPaymentRequest';
+import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
+import { AdvanceBalanceCard } from '@/components/members/AdvanceBalanceCard';
 
 interface DueWithContribution {
   id: string;
@@ -117,6 +119,12 @@ export function MemberDuesPage() {
     },
     enabled: !!memberData?.id && !!tenant?.id
   });
+
+  // Get advance balance
+  const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
+    memberData?.id || null,
+    tenant?.id || null
+  );
 
   const formatCurrency = (amount: number) => {
     return language === 'bn' 
@@ -251,6 +259,11 @@ export function MemberDuesPage() {
                   : `You have ${duesData.overdueCount} overdue due(s) totaling ${formatCurrency(duesData.overdueAmount)}. Please clear them at your earliest convenience.`}
               </AlertDescription>
             </Alert>
+          )}
+
+          {/* Advance Balance Card */}
+          {advanceBalance > 0 && (
+            <AdvanceBalanceCard advanceBalance={advanceBalance} loading={balanceLoading} />
           )}
 
           {/* Summary Cards */}

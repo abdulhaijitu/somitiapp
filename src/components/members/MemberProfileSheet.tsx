@@ -22,12 +22,14 @@ import {
   Calendar, 
   CreditCard,
   TrendingUp,
-  AlertCircle
+  AlertCircle,
+  Wallet
 } from 'lucide-react';
 import { MemberStatusBadge } from './MemberStatusBadge';
 import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { format } from 'date-fns';
+import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
 
 interface Member {
   id: string;
@@ -79,6 +81,12 @@ export function MemberProfileSheet({
     totalDue: 0,
     paymentCount: 0
   });
+
+  // Get advance balance for this member
+  const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
+    member?.id || null,
+    member?.tenant_id || tenant?.id || null
+  );
 
   useEffect(() => {
     if (member && open) {
@@ -254,11 +262,29 @@ export function MemberProfileSheet({
                 </div>
               </div>
 
+              {/* Advance Balance */}
+              {advanceBalance > 0 && (
+                <div className="rounded-lg border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+                  <div className="flex items-center gap-2 text-sm text-primary">
+                    <Wallet className="h-4 w-4" />
+                    {language === 'bn' ? 'অগ্রিম ব্যালেন্স' : 'Advance Balance'}
+                  </div>
+                  <p className="mt-1 text-xl font-bold text-primary">
+                    ৳ {advanceBalance.toLocaleString()}
+                  </p>
+                  <p className="mt-1 text-xs text-primary/70">
+                    {language === 'bn' 
+                      ? 'ভবিষ্যৎ চাঁদার সাথে সমন্বয় হবে' 
+                      : 'Will be applied to future dues'}
+                  </p>
+                </div>
+              )}
+
               {stats.totalDue > 0 && (
                 <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
                   <div className="flex items-center gap-2 text-sm text-destructive">
                     <AlertCircle className="h-4 w-4" />
-                    Outstanding Dues
+                    {language === 'bn' ? 'বকেয়া' : 'Outstanding Dues'}
                   </div>
                   <p className="mt-1 text-xl font-bold text-destructive">
                     ৳ {stats.totalDue.toLocaleString()}

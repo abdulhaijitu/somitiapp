@@ -156,6 +156,7 @@ export type Database = {
       }
       dues: {
         Row: {
+          advance_from_balance: number | null
           amount: number
           contribution_type_id: string
           created_at: string
@@ -169,6 +170,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          advance_from_balance?: number | null
           amount: number
           contribution_type_id: string
           created_at?: string
@@ -182,6 +184,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          advance_from_balance?: number | null
           amount?: number
           contribution_type_id?: string
           created_at?: string
@@ -211,6 +214,51 @@ export type Database = {
           },
           {
             foreignKeyName: "dues_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      member_balances: {
+        Row: {
+          advance_balance: number
+          created_at: string
+          id: string
+          last_reconciled_at: string | null
+          member_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          advance_balance?: number
+          created_at?: string
+          id?: string
+          last_reconciled_at?: string | null
+          member_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          advance_balance?: number
+          created_at?: string
+          id?: string
+          last_reconciled_at?: string | null
+          member_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_balances_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_balances_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -507,8 +555,61 @@ export type Database = {
           },
         ]
       }
+      payment_reconciliation_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          member_id: string
+          payment_id: string
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          member_id: string
+          payment_id: string
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          member_id?: string
+          payment_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_reconciliation_logs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_reconciliation_logs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_reconciliation_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
+          advance_applied: number | null
           amount: number
           charged_amount: number | null
           contribution_type_id: string | null
@@ -535,6 +636,7 @@ export type Database = {
           verified_at: string | null
         }
         Insert: {
+          advance_applied?: number | null
           amount: number
           charged_amount?: number | null
           contribution_type_id?: string | null
@@ -561,6 +663,7 @@ export type Database = {
           verified_at?: string | null
         }
         Update: {
+          advance_applied?: number | null
           amount?: number
           charged_amount?: number | null
           contribution_type_id?: string | null

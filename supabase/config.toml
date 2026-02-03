@@ -35,3 +35,24 @@ verify_jwt = false
 
 [functions.member-session]
 verify_jwt = false
+
+[functions.reconcile-payment]
+verify_jwt = false
+
+[functions.apply-advance-to-due]
+verify_jwt = false
+
+[functions.migrate-advance-balances]
+verify_jwt = false
+
+[functions.member-request-payment]
+verify_jwt = false
+
+[functions.approve-payment-request]
+verify_jwt = false
+
+[functions.create-tenant]
+verify_jwt = false
+
+[functions.add-tenant-admin]
+verify_jwt = false

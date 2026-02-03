@@ -146,34 +146,101 @@ Deno.serve(async (req) => {
 
         const existingMemberIds = new Set((existingDues || []).map(d => d.member_id));
 
-        // Prepare dues to insert
-        const duesToInsert = members
-          .filter(member => !existingMemberIds.has(member.id))
-          .map(member => ({
-            tenant_id: setting.tenant_id,
-            member_id: member.id,
-            contribution_type_id: setting.contribution_type_id,
-            amount: setting.fixed_amount,
-            due_month: dueMonthStr,
-            status: 'unpaid',
-            generated_at: now.toISOString()
-          }));
+        // Get member balances for advance application
+        const { data: memberBalances } = await supabase
+          .from('member_balances')
+          .select('member_id, advance_balance')
+          .eq('tenant_id', setting.tenant_id)
+          .gt('advance_balance', 0);
 
+        const balanceMap = new Map(
+          (memberBalances || []).map(b => [b.member_id, Number(b.advance_balance)])
+        );
+
+        // Prepare dues to insert
+        const membersToProcess = members.filter(member => !existingMemberIds.has(member.id));
+        
         result.dues_skipped = existingMemberIds.size;
 
-        if (duesToInsert.length > 0) {
+        if (membersToProcess.length > 0) {
           // Insert in batches of 100
           const batchSize = 100;
-          for (let i = 0; i < duesToInsert.length; i += batchSize) {
-            const batch = duesToInsert.slice(i, i + batchSize);
-            const { error: insertError } = await supabase
+          for (let i = 0; i < membersToProcess.length; i += batchSize) {
+            const batch = membersToProcess.slice(i, i + batchSize);
+            
+            // Prepare dues with advance consideration
+            const duesToInsert = batch.map(member => {
+              const advanceBalance = balanceMap.get(member.id) || 0;
+              const dueAmount = Number(setting.fixed_amount);
+              const advanceToApply = Math.min(advanceBalance, dueAmount);
+              
+              let status: 'unpaid' | 'partial' | 'paid' = 'unpaid';
+              if (advanceToApply >= dueAmount) {
+                status = 'paid';
+              } else if (advanceToApply > 0) {
+                status = 'partial';
+              }
+
+              return {
+                tenant_id: setting.tenant_id,
+                member_id: member.id,
+                contribution_type_id: setting.contribution_type_id,
+                amount: setting.fixed_amount,
+                paid_amount: advanceToApply,
+                advance_from_balance: advanceToApply,
+                due_month: dueMonthStr,
+                status,
+                generated_at: now.toISOString()
+              };
+            });
+
+            const { error: insertError, data: insertedDues } = await supabase
               .from('dues')
-              .insert(batch);
+              .insert(duesToInsert)
+              .select('id, member_id, advance_from_balance');
 
             if (insertError) {
               result.errors.push(`Batch insert failed: ${insertError.message}`);
             } else {
               result.dues_created += batch.length;
+
+              // Update member balances for those who had advance applied
+              if (insertedDues) {
+                for (const due of insertedDues) {
+                  const advanceApplied = Number(due.advance_from_balance) || 0;
+                  if (advanceApplied > 0) {
+                    const currentBalance = balanceMap.get(due.member_id) || 0;
+                    const newBalance = currentBalance - advanceApplied;
+                    
+                    await supabase
+                      .from('member_balances')
+                      .update({ 
+                        advance_balance: newBalance,
+                        last_reconciled_at: now.toISOString()
+                      })
+                      .eq('tenant_id', setting.tenant_id)
+                      .eq('member_id', due.member_id);
+
+                    // Log the advance application
+                    await supabase
+                      .from('payment_reconciliation_logs')
+                      .insert({
+                        tenant_id: setting.tenant_id,
+                        payment_id: due.id, // Using due_id
+                        member_id: due.member_id,
+                        action: 'ADVANCE_AUTO_APPLIED',
+                        details: {
+                          due_id: due.id,
+                          due_month: dueMonthStr,
+                          advance_applied: advanceApplied,
+                          previous_balance: currentBalance,
+                          new_balance: newBalance,
+                          applied_at: now.toISOString()
+                        }
+                      });
+                  }
+                }
+              }
             }
           }
         }

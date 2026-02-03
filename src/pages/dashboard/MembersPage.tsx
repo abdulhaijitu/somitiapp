@@ -23,7 +23,8 @@ import {
   UserCheck,
   ChevronLeft,
   ChevronRight,
-  LogIn
+  LogIn,
+  Wallet
 } from 'lucide-react';
 import {
   Table,
@@ -48,6 +49,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { MemberStatusBadge } from '@/components/members/MemberStatusBadge';
 import { CreateMemberDialog } from '@/components/members/CreateMemberDialog';
@@ -56,6 +58,7 @@ import { MemberProfileSheet } from '@/components/members/MemberProfileSheet';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { DataTableSkeleton } from '@/components/common/DataTableSkeleton';
 import { EmptyState } from '@/components/common/EmptyState';
+import { useAdvanceBalances } from '@/hooks/useAdvanceBalance';
 import { format } from 'date-fns';
 
 interface Member {
@@ -100,6 +103,9 @@ export function MembersPage() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [confirmAction, setConfirmAction] = useState<'activate' | 'deactivate' | 'suspend' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Get advance balances for all members
+  const { balances: advanceBalances, getBalance: getAdvanceBalance, refetch: refetchBalances } = useAdvanceBalances(tenant?.id || null);
 
   useEffect(() => {
     loadMembers();
@@ -544,6 +550,9 @@ const handleCreateMember = async (data: {
                             <ArrowUpDown className="h-3 w-3" />
                           </Button>
                         </TableHead>
+                        <TableHead className="text-right">
+                          {language === 'bn' ? 'অগ্রিম' : 'Advance'}
+                        </TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -594,6 +603,16 @@ const handleCreateMember = async (data: {
                             <span className={(member.dues || 0) > 0 ? 'text-destructive font-medium' : 'text-muted-foreground'}>
                               ৳ {(member.dues || 0).toLocaleString()}
                             </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {getAdvanceBalance(member.id) > 0 ? (
+                              <Badge className="bg-primary/10 text-primary border-primary/30 gap-1">
+                                <Wallet className="h-3 w-3" />
+                                ৳ {getAdvanceBalance(member.id).toLocaleString()}
+                              </Badge>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
                           </TableCell>
                           <TableCell onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
