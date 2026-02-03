@@ -9,10 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Building2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs } from '@/lib/seo';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 export function TenantLoginPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { trackLoginAttempt, trackLoginSuccess, trackLoginFailure } = useAnalytics();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +53,8 @@ export function TenantLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
+    trackLoginAttempt();
+    
     try {
       // Sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -87,6 +90,8 @@ export function TenantLoginPage() {
         throw new Error('Access denied. Tenant Admin privileges required.');
       }
 
+      trackLoginSuccess();
+      
       toast({
         title: 'Login Successful',
         description: 'Welcome to your Dashboard',
@@ -95,6 +100,8 @@ export function TenantLoginPage() {
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
+      trackLoginFailure();
+      
       toast({
         title: 'Login Failed',
         description: error.message || 'Invalid credentials',

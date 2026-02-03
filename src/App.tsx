@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
@@ -87,8 +88,10 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-          <Route path="/" element={<Index />} />
+          <AnalyticsProvider>
+            <AnalyticsSetup />
+            <Routes>
+              <Route path="/" element={<Index />} />
           
           {/* Tenant Login (public) */}
           <Route
@@ -354,9 +357,10 @@ const App = () => (
             }
           />
           
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnalyticsProvider>
         </BrowserRouter>
       </TooltipProvider>
     </ImpersonationProvider>

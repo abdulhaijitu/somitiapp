@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { SEO, getOrganizationSchema } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
+import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { 
   Users, 
   CreditCard, 
@@ -18,6 +19,10 @@ import {
 
 export function LandingPage() {
   const { t } = useLanguage();
+  const { trackCTA } = useAnalytics();
+  
+  // Track scroll depth on landing page
+  useScrollTracking();
 
   const features = [
     {
@@ -109,11 +114,20 @@ export function LandingPage() {
               {t('landing.hero.subtitle')}
             </p>
             <div className="flex flex-col items-center gap-4 pt-4 sm:flex-row sm:justify-center">
-              <Button size="lg" className="gap-2 bg-gradient-primary px-8 hover:opacity-90 shadow-glow">
+              <Button 
+                size="lg" 
+                className="gap-2 bg-gradient-primary px-8 hover:opacity-90 shadow-glow"
+                onClick={() => trackCTA('hero_get_started')}
+              >
                 {t('landing.hero.cta')}
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="lg" className="gap-2 px-8">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="gap-2 px-8"
+                onClick={() => trackCTA('hero_view_demo')}
+              >
                 <FileText className="h-4 w-4" />
                 View Demo
               </Button>
