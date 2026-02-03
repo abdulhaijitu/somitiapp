@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.waive-due]
 verify_jwt = false
+
+[functions.create-bulk-payments]
+verify_jwt = false
