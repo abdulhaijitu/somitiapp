@@ -9,6 +9,7 @@ import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics
 import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import { PublicLayout } from "@/components/layouts/PublicLayout";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { SuperAdminLayout } from "@/components/layouts/SuperAdminLayout";
 import { MemberLayout } from "@/components/layouts/MemberLayout";
@@ -40,6 +41,9 @@ import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { PitchDeckPage } from "@/pages/PitchDeckPage";
 import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
+import { PricingPage } from "@/pages/public/PricingPage";
+import { AboutPage } from "@/pages/public/AboutPage";
+import { ContactPage } from "@/pages/public/ContactPage";
 import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
 import { RequireTenantAuth } from "@/components/tenant/RequireTenantAuth";
 import { RequireMemberAuth } from "@/components/member/RequireMemberAuth";
@@ -92,7 +96,40 @@ const App = () => (
           <AnalyticsProvider>
             <AnalyticsSetup />
             <Routes>
+              {/* Home */}
               <Route path="/" element={<Index />} />
+              
+              {/* Public Pages */}
+              <Route
+                path="/pricing"
+                element={
+                  <LanguageProvider>
+                    <PublicLayout>
+                      <PricingPage />
+                    </PublicLayout>
+                  </LanguageProvider>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <LanguageProvider>
+                    <PublicLayout>
+                      <AboutPage />
+                    </PublicLayout>
+                  </LanguageProvider>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <LanguageProvider>
+                    <PublicLayout>
+                      <ContactPage />
+                    </PublicLayout>
+                  </LanguageProvider>
+                }
+              />
           
           {/* Tenant Login (public) */}
           <Route
