@@ -33,6 +33,7 @@ import { MemberConstitutionPage } from "@/pages/member/MemberConstitutionPage";
 import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { PitchDeckPage } from "@/pages/PitchDeckPage";
+import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
 
 const queryClient = new QueryClient();
 
@@ -268,6 +269,14 @@ const App = () => (
             element={
               <LanguageProvider>
                 <PitchDeckPage />
+              </LanguageProvider>
+            }
+          />
+          <Route
+            path="/mobile-roadmap"
+            element={
+              <LanguageProvider>
+                <MobileRoadmapPage />
               </LanguageProvider>
             }
           />

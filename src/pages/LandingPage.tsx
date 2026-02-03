@@ -64,6 +64,9 @@ export function LandingPage() {
             <Link to="/pitch" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Investors
             </Link>
+            <Link to="/mobile-roadmap" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Roadmap
+            </Link>
             <Link to="/super-admin" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Admin
             </Link>
