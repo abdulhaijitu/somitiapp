@@ -40,24 +40,6 @@ serve(async (req) => {
       );
     }
 
-    // Create client with user's token to verify identity
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    // Verify the JWT and get claims
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
-    
-    if (claimsError || !claimsData?.claims) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized - Invalid token" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const userId = claimsData.claims.sub;
-
     // Create admin client with service role key (bypasses RLS)
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -65,6 +47,20 @@ serve(async (req) => {
         persistSession: false,
       },
     });
+
+    // Verify the JWT using admin client
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !userData?.user) {
+      console.error("Token verification error:", userError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = userData.user.id;
 
     // Verify user has super_admin role
     const { data: roleData, error: roleError } = await supabaseAdmin
@@ -75,6 +71,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (roleError || !roleData) {
+      console.error("Role check error:", roleError);
       return new Response(
         JSON.stringify({ error: "Forbidden - Super Admin access required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -122,6 +119,19 @@ serve(async (req) => {
       );
     }
 
+    // Check if admin email already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const emailExists = existingUsers?.users?.some(
+      (u) => u.email?.toLowerCase() === body.admin_email.toLowerCase()
+    );
+
+    if (emailExists) {
+      return new Response(
+        JSON.stringify({ error: "This email is already registered" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Create tenant
     const { data: tenant, error: tenantError } = await supabaseAdmin
       .from("tenants")
@@ -142,6 +152,8 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log("Tenant created:", tenant.id);
 
     // Create subscription
     const startDate = new Date();
@@ -168,6 +180,8 @@ serve(async (req) => {
       );
     }
 
+    console.log("Subscription created for tenant:", tenant.id);
+
     // Create tenant_usage record
     await supabaseAdmin.from("tenant_usage").insert({
       tenant_id: tenant.id,
@@ -177,6 +191,7 @@ serve(async (req) => {
     });
 
     // Create admin user in Supabase Auth
+    console.log("Creating admin user:", body.admin_email);
     const { data: adminUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: body.admin_email,
       password: body.admin_password,
@@ -199,6 +214,8 @@ serve(async (req) => {
       );
     }
 
+    console.log("Admin user created:", adminUser.user.id);
+
     // Assign admin role to the user
     const { error: roleError2 } = await supabaseAdmin.from("user_roles").insert({
       user_id: adminUser.user.id,
@@ -219,11 +236,14 @@ serve(async (req) => {
       );
     }
 
+    console.log("Admin role assigned to user:", adminUser.user.id);
+
     // Log the action
     await supabaseAdmin.from("audit_logs").insert({
       action: "CREATE_TENANT",
       entity_type: "tenant",
       entity_id: tenant.id,
+      user_id: userId,
       details: {
         name: body.name,
         subdomain: body.subdomain,
