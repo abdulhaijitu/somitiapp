@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/TenantContext';
 import {
   Sheet,
   SheetContent,
@@ -40,6 +41,7 @@ interface Member {
   status: string;
   joined_at?: string | null;
   created_at: string;
+  tenant_id?: string;
 }
 
 interface Payment {
@@ -68,8 +70,10 @@ export function MemberProfileSheet({
   onEdit
 }: MemberProfileSheetProps) {
   const { t, language } = useLanguage();
+  const { tenant } = useTenant();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [monthlyDueAmount, setMonthlyDueAmount] = useState<number>(1000);
   const [stats, setStats] = useState({
     totalPaid: 0,
     totalDue: 0,
@@ -79,8 +83,29 @@ export function MemberProfileSheet({
   useEffect(() => {
     if (member && open) {
       loadPayments();
+      loadMonthlyDueSetting();
     }
   }, [member, open]);
+
+  const loadMonthlyDueSetting = async () => {
+    const tenantId = member?.tenant_id || tenant?.id;
+    if (!tenantId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('monthly_due_settings')
+        .select('fixed_amount')
+        .eq('tenant_id', tenantId)
+        .eq('is_enabled', true)
+        .maybeSingle();
+
+      if (!error && data) {
+        setMonthlyDueAmount(Number(data.fixed_amount));
+      }
+    } catch (error) {
+      console.error('Error loading monthly due setting:', error);
+    }
+  };
 
   const loadPayments = async () => {
     if (!member) return;
@@ -199,7 +224,7 @@ export function MemberProfileSheet({
                     Monthly Amount
                   </div>
                   <p className="mt-1 text-xl font-bold text-foreground">
-                    ৳ {(member.monthly_amount || 1000).toLocaleString()}
+                    ৳ {monthlyDueAmount.toLocaleString()}
                   </p>
                 </div>
                 
