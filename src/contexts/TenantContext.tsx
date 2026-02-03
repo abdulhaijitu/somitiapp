@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 
 export interface Tenant {
   id: string;
@@ -47,6 +48,7 @@ const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const { isImpersonating, target: impersonationTarget } = useImpersonation();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
@@ -119,8 +121,36 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       // Check if super admin
       const isSuperAdminUser = roles?.some(r => r.role === 'super_admin');
       
+      // If super admin is impersonating a tenant, use impersonation target
+      if (isSuperAdminUser && isImpersonating && impersonationTarget?.tenantId) {
+        // Load impersonated tenant data
+        const { data: impersonatedTenant, error: impTenantError } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('id', impersonationTarget.tenantId)
+          .maybeSingle();
+
+        if (impTenantError || !impersonatedTenant) {
+          console.error('Impersonated tenant fetch error:', impTenantError);
+          setError('Failed to load impersonated organization');
+          return;
+        }
+
+        setTenant(impersonatedTenant);
+
+        // Fetch subscription for impersonated tenant
+        const { data: impSubData } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('tenant_id', impersonationTarget.tenantId)
+          .maybeSingle();
+
+        setSubscription(impSubData);
+        return;
+      }
+      
       if (isSuperAdminUser) {
-        // Super admin doesn't need tenant context
+        // Super admin doesn't need tenant context when not impersonating
         setTenant(null);
         setSubscription(null);
         return;
@@ -196,16 +226,16 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, subscriptionDaysRemaining]);
+  }, [toast, subscriptionDaysRemaining, isImpersonating, impersonationTarget]);
 
   const refreshTenantContext = useCallback(async () => {
     await loadTenantContext();
   }, [loadTenantContext]);
 
-  // Initial load
+  // Initial load and reload when impersonation changes
   useEffect(() => {
     loadTenantContext();
-  }, [loadTenantContext]);
+  }, [loadTenantContext, isImpersonating, impersonationTarget?.tenantId]);
 
   // Listen for auth changes
   useEffect(() => {
