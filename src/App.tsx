@@ -32,6 +32,7 @@ import { MemberNoticesPage } from "@/pages/member/MemberNoticesPage";
 import { MemberConstitutionPage } from "@/pages/member/MemberConstitutionPage";
 import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
+import { PitchDeckPage } from "@/pages/PitchDeckPage";
 
 const queryClient = new QueryClient();
 
@@ -259,6 +260,14 @@ const App = () => (
             element={
               <LanguageProvider>
                 <PrivacyPolicyPage />
+              </LanguageProvider>
+            }
+          />
+          <Route
+            path="/pitch"
+            element={
+              <LanguageProvider>
+                <PitchDeckPage />
               </LanguageProvider>
             }
           />

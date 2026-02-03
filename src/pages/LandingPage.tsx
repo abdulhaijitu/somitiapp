@@ -61,6 +61,9 @@ export function LandingPage() {
             <span className="text-xl font-bold text-foreground">Somiti</span>
           </div>
           <div className="flex items-center gap-4">
+            <Link to="/pitch" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Investors
+            </Link>
             <Link to="/super-admin" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Admin
             </Link>
