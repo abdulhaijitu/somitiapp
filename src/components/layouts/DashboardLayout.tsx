@@ -5,6 +5,9 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { SubscriptionBanner } from '@/components/common/SubscriptionBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import {
   LayoutDashboard,
   Users,
@@ -43,6 +46,30 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const { tenant, isLoading, isSubscriptionValid, checkPermission, error, isSuperAdmin } = useTenant();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await supabase.auth.signOut();
+      toast({
+        title: t('auth.logoutSuccess') || 'Logged out',
+        description: t('auth.logoutMessage') || 'You have been successfully logged out',
+      });
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to logout. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -149,13 +176,19 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
           {/* Bottom section */}
           <div className="border-t border-sidebar-border p-2">
             <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50",
                 collapsed && "justify-center px-2"
               )}
             >
-              <LogOut className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span>{t('auth.logout')}</span>}
+              {isLoggingOut ? (
+                <Loader2 className="h-5 w-5 flex-shrink-0 animate-spin" />
+              ) : (
+                <LogOut className="h-5 w-5 flex-shrink-0" />
+              )}
+              {!collapsed && <span>{isLoggingOut ? 'Logging out...' : t('auth.logout')}</span>}
             </button>
           </div>
         </aside>
