@@ -187,27 +187,49 @@ export function LandingPage() {
       </header>
 
       {/* Enhanced Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32 lg:py-40">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 bg-gradient-subtle" />
+      <section className="relative overflow-hidden pt-12 pb-16 md:pt-20 md:pb-24 lg:pt-24 lg:pb-32">
+        {/* Rich Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+        
+        {/* Mesh gradient overlay */}
+        <div 
+          className="absolute inset-0 opacity-40"
+          style={{
+            background: `
+              radial-gradient(ellipse 80% 50% at 20% 40%, hsl(var(--primary) / 0.15), transparent),
+              radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--accent) / 0.12), transparent),
+              radial-gradient(ellipse 50% 30% at 50% 20%, hsl(var(--info) / 0.08), transparent)
+            `
+          }}
+        />
+        
         <div className="absolute inset-0">
-          {/* Animated Gradient Orbs with floating effect */}
-          <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary/15 blur-3xl animate-[pulse_4s_ease-in-out_infinite]" />
-          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-accent/15 blur-3xl animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
-          <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-info/10 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" style={{ animationDelay: '2s' }} />
+          {/* Animated Gradient Orbs */}
+          <div className="absolute left-[10%] top-[15%] h-72 w-72 rounded-full bg-primary/20 blur-[100px] animate-[pulse_4s_ease-in-out_infinite]" />
+          <div className="absolute right-[10%] top-[25%] h-64 w-64 rounded-full bg-accent/15 blur-[80px] animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
+          <div className="absolute left-[40%] bottom-[20%] h-56 w-56 rounded-full bg-info/12 blur-[70px] animate-[pulse_6s_ease-in-out_infinite]" style={{ animationDelay: '2s' }} />
           
-          {/* Floating particles */}
-          <div className="absolute left-[10%] top-[20%] h-3 w-3 rounded-full bg-primary/40 animate-[bounce_3s_ease-in-out_infinite]" />
-          <div className="absolute right-[15%] top-[30%] h-2 w-2 rounded-full bg-accent/50 animate-[bounce_4s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute left-[20%] bottom-[25%] h-2 w-2 rounded-full bg-success/40 animate-[bounce_3.5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
-          <div className="absolute right-[25%] bottom-[35%] h-3 w-3 rounded-full bg-warning/30 animate-[bounce_4.5s_ease-in-out_infinite]" style={{ animationDelay: '1.5s' }} />
+          {/* Floating particles - more subtle */}
+          <div className="absolute left-[8%] top-[25%] h-2 w-2 rounded-full bg-primary/50 animate-float" />
+          <div className="absolute right-[12%] top-[35%] h-1.5 w-1.5 rounded-full bg-accent/60 animate-float" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute left-[15%] bottom-[30%] h-1.5 w-1.5 rounded-full bg-success/50 animate-float" style={{ animationDelay: '1s' }} />
+          <div className="absolute right-[20%] bottom-[40%] h-2 w-2 rounded-full bg-warning/40 animate-float" style={{ animationDelay: '1.5s' }} />
+          <div className="absolute left-[50%] top-[10%] h-1 w-1 rounded-full bg-primary/30 animate-float" style={{ animationDelay: '2s' }} />
           
-          {/* Grid Pattern with subtle animation */}
+          {/* Grid Pattern */}
           <div 
-            className="absolute inset-0 opacity-[0.02]"
+            className="absolute inset-0 opacity-[0.025]"
             style={{
               backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
-              backgroundSize: '50px 50px'
+              backgroundSize: '40px 40px'
+            }}
+          />
+          
+          {/* Diagonal lines accent */}
+          <div 
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(45deg, hsl(var(--primary)), hsl(var(--primary)) 1px, transparent 1px, transparent 60px)',
             }}
           />
         </div>
