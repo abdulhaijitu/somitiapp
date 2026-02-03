@@ -6,6 +6,7 @@ import { SEO, getOrganizationSchema } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
+import { FloatingActions } from '@/components/common/FloatingActions';
 import { 
   Users, 
   CreditCard, 
@@ -254,6 +255,9 @@ export function LandingPage() {
       
       {/* Developer Credit */}
       <DeveloperCredit />
+      
+      {/* Floating Actions */}
+      <FloatingActions />
     </div>
   );
 }
