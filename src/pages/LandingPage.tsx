@@ -191,96 +191,181 @@ export function LandingPage() {
         {/* Animated Background Elements */}
         <div className="absolute inset-0 bg-gradient-subtle" />
         <div className="absolute inset-0">
-          {/* Gradient Orbs */}
-          <div className="absolute left-1/4 top-1/4 h-96 w-96 animate-pulse rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 animate-pulse rounded-full bg-accent/10 blur-3xl" style={{ animationDelay: '1s' }} />
-          <div className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-full bg-info/10 blur-3xl" style={{ animationDelay: '2s' }} />
+          {/* Animated Gradient Orbs with floating effect */}
+          <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-primary/15 blur-3xl animate-[pulse_4s_ease-in-out_infinite]" />
+          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-accent/15 blur-3xl animate-[pulse_5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
+          <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-info/10 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" style={{ animationDelay: '2s' }} />
           
-          {/* Grid Pattern */}
+          {/* Floating particles */}
+          <div className="absolute left-[10%] top-[20%] h-3 w-3 rounded-full bg-primary/40 animate-[bounce_3s_ease-in-out_infinite]" />
+          <div className="absolute right-[15%] top-[30%] h-2 w-2 rounded-full bg-accent/50 animate-[bounce_4s_ease-in-out_infinite]" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute left-[20%] bottom-[25%] h-2 w-2 rounded-full bg-success/40 animate-[bounce_3.5s_ease-in-out_infinite]" style={{ animationDelay: '1s' }} />
+          <div className="absolute right-[25%] bottom-[35%] h-3 w-3 rounded-full bg-warning/30 animate-[bounce_4.5s_ease-in-out_infinite]" style={{ animationDelay: '1.5s' }} />
+          
+          {/* Grid Pattern with subtle animation */}
           <div 
-            className="absolute inset-0 opacity-[0.015]"
+            className="absolute inset-0 opacity-[0.02]"
             style={{
               backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
-              backgroundSize: '60px 60px'
+              backgroundSize: '50px 50px'
             }}
           />
         </div>
         
         <div className="container relative mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            {/* Animated Badge */}
-            <div className="mb-8 inline-flex animate-fade-in items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-medium text-primary backdrop-blur-sm">
-              <div className="relative flex h-2 w-2">
+            {/* Animated Badge with shimmer effect */}
+            <div className="mb-8 inline-flex animate-fade-in items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2.5 text-sm font-medium text-primary backdrop-blur-md shadow-lg shadow-primary/5">
+              <div className="relative flex h-2.5 w-2.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
               </div>
               <Smartphone className="h-4 w-4" />
-              <span>Mobile-first platform for Bangladesh</span>
+              <span className="font-bengali">Mobile-first platform for Bangladesh</span>
             </div>
             
-            {/* Main Headline with Animation */}
-            <h1 className="animate-slide-up text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
-              <span className="block">{t('landing.hero.title').split(' ').slice(0, 3).join(' ')}</span>
-              <span className="mt-2 block bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+            {/* Main Headline with staggered animation */}
+            <h1 className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+              <span 
+                className="block animate-fade-in opacity-0" 
+                style={{ animationDelay: '100ms', animationFillMode: 'forwards' }}
+              >
+                {t('landing.hero.title').split(' ').slice(0, 3).join(' ')}
+              </span>
+              <span 
+                className="mt-2 block bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-fade-in opacity-0"
+                style={{ 
+                  animationDelay: '250ms', 
+                  animationFillMode: 'forwards',
+                  animation: 'fade-in 0.5s ease-out 250ms forwards, gradient-shift 3s ease-in-out infinite'
+                }}
+              >
                 {t('landing.hero.title').split(' ').slice(3).join(' ') || 'Somiti'}
               </span>
             </h1>
             
-            {/* Subheadline */}
-            <p className="mx-auto mt-6 max-w-2xl animate-slide-up text-lg text-muted-foreground sm:text-xl" style={{ animationDelay: '100ms' }}>
+            {/* Subheadline with fade-in */}
+            <p 
+              className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground sm:text-xl animate-fade-in opacity-0" 
+              style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}
+            >
               {t('landing.hero.subtitle')}
             </p>
             
-            {/* CTA Buttons */}
-            <div className="mt-10 flex animate-slide-up flex-col items-center gap-4 sm:flex-row sm:justify-center" style={{ animationDelay: '200ms' }}>
+            {/* CTA Buttons with enhanced hover effects */}
+            <div 
+              className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center animate-fade-in opacity-0" 
+              style={{ animationDelay: '550ms', animationFillMode: 'forwards' }}
+            >
               <Button 
                 size="lg" 
-                className="group relative gap-2 overflow-hidden bg-gradient-primary px-8 py-6 text-base font-semibold shadow-glow transition-all hover:shadow-xl"
+                className="group relative gap-2 overflow-hidden bg-gradient-primary px-8 py-6 text-base font-semibold shadow-glow transition-all duration-300 hover:shadow-xl hover:scale-105"
                 onClick={() => trackCTA('hero_get_started')}
               >
                 <span className="relative z-10">{t('landing.hero.cta')}</span>
-                <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                <div className="absolute inset-0 -z-0 bg-gradient-to-r from-primary to-primary/80 opacity-0 transition-opacity group-hover:opacity-100" />
+                <ArrowRight className="relative z-10 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                {/* Shine effect on hover */}
+                <div className="absolute inset-0 -z-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
               </Button>
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="gap-2 border-2 px-8 py-6 text-base font-semibold transition-all hover:bg-primary/5"
+                className="group gap-2 border-2 px-8 py-6 text-base font-semibold transition-all duration-300 hover:bg-primary/5 hover:border-primary/50 hover:scale-105"
                 onClick={() => trackCTA('hero_view_demo')}
               >
-                <FileText className="h-5 w-5" />
+                <FileText className="h-5 w-5 transition-transform duration-300 group-hover:rotate-6" />
                 View Demo
               </Button>
             </div>
             
-            {/* Trust Indicators */}
-            <div className="mt-12 flex animate-slide-up flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-muted-foreground" style={{ animationDelay: '300ms' }}>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span>Free to start</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span>No credit card required</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <span>বাংলা supported</span>
-              </div>
+            {/* Trust Indicators with staggered animation */}
+            <div 
+              className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-muted-foreground"
+            >
+              {[
+                { icon: CheckCircle2, text: 'Free to start', delay: '700ms' },
+                { icon: CheckCircle2, text: 'No credit card required', delay: '800ms' },
+                { icon: CheckCircle2, text: 'বাংলা supported', delay: '900ms' },
+              ].map((item, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-2 animate-fade-in opacity-0"
+                  style={{ animationDelay: item.delay, animationFillMode: 'forwards' }}
+                >
+                  <item.icon className="h-4 w-4 text-success" />
+                  <span className="font-bengali">{item.text}</span>
+                </div>
+              ))}
             </div>
           </div>
           
-          {/* Hero Visual - AI Generated Dashboard Image */}
-          <div className="relative mx-auto mt-16 max-w-5xl animate-slide-up" style={{ animationDelay: '400ms' }}>
-            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 opacity-60 blur-3xl" />
-            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-              <img 
-                src={heroDashboard} 
-                alt="Somiti Dashboard - Modern financial management interface" 
-                className="w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
-              />
-              {/* Overlay gradient for text readability if needed */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0" />
+          {/* Hero Visual - Enhanced Dashboard Preview */}
+          <div 
+            className="relative mx-auto mt-16 max-w-5xl animate-fade-in opacity-0" 
+            style={{ animationDelay: '1000ms', animationFillMode: 'forwards' }}
+          >
+            {/* Animated glow background */}
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-primary/40 via-accent/30 to-primary/40 opacity-60 blur-3xl animate-[pulse_4s_ease-in-out_infinite]" />
+            
+            {/* Browser mockup frame */}
+            <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-2xl overflow-hidden">
+              {/* Browser header */}
+              <div className="flex items-center gap-2 border-b border-border/50 bg-muted/50 px-4 py-3">
+                <div className="flex gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-destructive/60" />
+                  <div className="h-3 w-3 rounded-full bg-warning/60" />
+                  <div className="h-3 w-3 rounded-full bg-success/60" />
+                </div>
+                <div className="flex-1 flex justify-center">
+                  <div className="flex items-center gap-2 rounded-lg bg-background/50 px-4 py-1.5 text-xs text-muted-foreground">
+                    <Shield className="h-3 w-3 text-success" />
+                    <span>somitiapp.lovable.app</span>
+                  </div>
+                </div>
+                <div className="w-[52px]" /> {/* Spacer for balance */}
+              </div>
+              
+              {/* Dashboard image with hover effect */}
+              <div className="relative overflow-hidden group">
+                <img 
+                  src={heroDashboard} 
+                  alt="Somiti Dashboard - Modern financial management interface" 
+                  className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                />
+                {/* Gradient overlay for depth */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Floating stats cards for visual interest */}
+                <div className="absolute top-4 right-4 hidden md:flex flex-col gap-2 animate-fade-in" style={{ animationDelay: '1300ms', animationFillMode: 'forwards' }}>
+                  <div className="rounded-lg bg-card/90 backdrop-blur-md border border-border/50 px-3 py-2 shadow-lg">
+                    <div className="text-xs text-muted-foreground">Active Members</div>
+                    <div className="text-lg font-bold text-foreground">1,247</div>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-4 left-4 hidden md:block animate-fade-in" style={{ animationDelay: '1500ms', animationFillMode: 'forwards' }}>
+                  <div className="rounded-lg bg-success/90 backdrop-blur-md px-3 py-2 shadow-lg">
+                    <div className="flex items-center gap-2 text-success-foreground">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-sm font-medium">৳45,000 collected today</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative elements around the image */}
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 hidden lg:block">
+              <div className="flex flex-col gap-3">
+                <div className="h-20 w-1 rounded-full bg-gradient-to-b from-primary/0 via-primary/50 to-primary/0" />
+                <div className="h-12 w-1 rounded-full bg-gradient-to-b from-accent/0 via-accent/50 to-accent/0" />
+              </div>
+            </div>
+            <div className="absolute -right-8 top-1/2 -translate-y-1/2 hidden lg:block">
+              <div className="flex flex-col gap-3">
+                <div className="h-12 w-1 rounded-full bg-gradient-to-b from-accent/0 via-accent/50 to-accent/0" />
+                <div className="h-20 w-1 rounded-full bg-gradient-to-b from-primary/0 via-primary/50 to-primary/0" />
+              </div>
             </div>
           </div>
         </div>
