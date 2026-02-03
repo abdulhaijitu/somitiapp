@@ -13,6 +13,11 @@ interface CreateTenantRequest {
   default_language: string;
   subscription_months: number;
   plan?: string;
+  // Admin user info
+  admin_email: string;
+  admin_password: string;
+  admin_name?: string;
+  admin_phone?: string;
 }
 
 serve(async (req) => {
@@ -83,6 +88,13 @@ serve(async (req) => {
     if (!body.name || !body.subdomain) {
       return new Response(
         JSON.stringify({ error: "Name and subdomain are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!body.admin_email || !body.admin_password) {
+      return new Response(
+        JSON.stringify({ error: "Admin email and password are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -164,6 +176,49 @@ serve(async (req) => {
       total_sms_sent: 0,
     });
 
+    // Create admin user in Supabase Auth
+    const { data: adminUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: body.admin_email,
+      password: body.admin_password,
+      email_confirm: true,
+      user_metadata: {
+        name: body.admin_name || 'Tenant Admin',
+        phone: body.admin_phone || null,
+      },
+    });
+
+    if (authError) {
+      console.error("Error creating admin user:", authError);
+      // Rollback tenant creation
+      await supabaseAdmin.from("subscriptions").delete().eq("tenant_id", tenant.id);
+      await supabaseAdmin.from("tenant_usage").delete().eq("tenant_id", tenant.id);
+      await supabaseAdmin.from("tenants").delete().eq("id", tenant.id);
+      return new Response(
+        JSON.stringify({ error: "Failed to create admin user", details: authError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Assign admin role to the user
+    const { error: roleError2 } = await supabaseAdmin.from("user_roles").insert({
+      user_id: adminUser.user.id,
+      tenant_id: tenant.id,
+      role: "admin",
+    });
+
+    if (roleError2) {
+      console.error("Error assigning admin role:", roleError2);
+      // Rollback everything
+      await supabaseAdmin.auth.admin.deleteUser(adminUser.user.id);
+      await supabaseAdmin.from("subscriptions").delete().eq("tenant_id", tenant.id);
+      await supabaseAdmin.from("tenant_usage").delete().eq("tenant_id", tenant.id);
+      await supabaseAdmin.from("tenants").delete().eq("id", tenant.id);
+      return new Response(
+        JSON.stringify({ error: "Failed to assign admin role", details: roleError2.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Log the action
     await supabaseAdmin.from("audit_logs").insert({
       action: "CREATE_TENANT",
@@ -174,6 +229,7 @@ serve(async (req) => {
         subdomain: body.subdomain,
         subscription_months: body.subscription_months,
         plan: body.plan || "standard",
+        admin_email: body.admin_email,
       },
     });
 

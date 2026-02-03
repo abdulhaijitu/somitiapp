@@ -36,14 +36,18 @@ import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { PitchDeckPage } from "@/pages/PitchDeckPage";
 import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
 import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
+import { RequireTenantAuth } from "@/components/tenant/RequireTenantAuth";
+import { TenantLoginPage } from "@/pages/tenant/TenantLoginPage";
 
 const queryClient = new QueryClient();
 
-// Dashboard wrapper component
+// Dashboard wrapper component (with auth protection)
 function DashboardWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
-      <DashboardLayout>{children}</DashboardLayout>
+      <RequireTenantAuth>
+        <DashboardLayout>{children}</DashboardLayout>
+      </RequireTenantAuth>
     </LanguageProvider>
   );
 }
@@ -77,7 +81,17 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           
-          {/* Tenant Dashboard routes */}
+          {/* Tenant Login (public) */}
+          <Route
+            path="/login"
+            element={
+              <LanguageProvider>
+                <TenantLoginPage />
+              </LanguageProvider>
+            }
+          />
+          
+          {/* Tenant Dashboard routes (protected) */}
           <Route
             path="/dashboard"
             element={

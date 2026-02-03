@@ -112,7 +112,7 @@ export function CreateTenantWithAdminDialog({
     try {
       setIsSubmitting(true);
 
-      // Use Edge Function to create tenant (bypasses RLS with service role)
+      // Use Edge Function to create tenant with admin user
       const { data, error: fnError } = await supabase.functions.invoke('create-tenant', {
         body: {
           name: formData.name,
@@ -120,7 +120,12 @@ export function CreateTenantWithAdminDialog({
           subdomain: formData.subdomain.toLowerCase(),
           default_language: formData.default_language,
           subscription_months: formData.subscription_months,
-          plan: 'standard'
+          plan: 'standard',
+          // Admin credentials
+          admin_email: formData.admin_email,
+          admin_password: formData.admin_password,
+          admin_name: formData.admin_name || null,
+          admin_phone: formData.admin_phone || null,
         }
       });
 
