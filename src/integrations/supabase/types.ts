@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_configs: {
+        Row: {
+          addon_type: Database["public"]["Enums"]["addon_type"]
+          created_at: string
+          description: string | null
+          description_bn: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_bn: string | null
+          price: number
+          quantity: number
+          sort_order: number | null
+          unit: string
+          updated_at: string
+          validity_days: number | null
+        }
+        Insert: {
+          addon_type: Database["public"]["Enums"]["addon_type"]
+          created_at?: string
+          description?: string | null
+          description_bn?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_bn?: string | null
+          price: number
+          quantity: number
+          sort_order?: number | null
+          unit: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Update: {
+          addon_type?: Database["public"]["Enums"]["addon_type"]
+          created_at?: string
+          description?: string | null
+          description_bn?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_bn?: string | null
+          price?: number
+          quantity?: number
+          sort_order?: number | null
+          unit?: string
+          updated_at?: string
+          validity_days?: number | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -363,6 +414,72 @@ export type Database = {
           },
         ]
       }
+      plan_configs: {
+        Row: {
+          advanced_reports: boolean | null
+          created_at: string
+          description: string | null
+          description_bn: string | null
+          early_access_features: boolean | null
+          id: string
+          is_popular: boolean | null
+          max_members: number
+          max_members_unlimited: boolean | null
+          monthly_price: number
+          name: string
+          name_bn: string | null
+          online_payments_enabled: boolean | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          report_history_months: number
+          sms_monthly_quota: number
+          sort_order: number | null
+          updated_at: string
+          yearly_price: number | null
+        }
+        Insert: {
+          advanced_reports?: boolean | null
+          created_at?: string
+          description?: string | null
+          description_bn?: string | null
+          early_access_features?: boolean | null
+          id?: string
+          is_popular?: boolean | null
+          max_members?: number
+          max_members_unlimited?: boolean | null
+          monthly_price?: number
+          name: string
+          name_bn?: string | null
+          online_payments_enabled?: boolean | null
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          report_history_months?: number
+          sms_monthly_quota?: number
+          sort_order?: number | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Update: {
+          advanced_reports?: boolean | null
+          created_at?: string
+          description?: string | null
+          description_bn?: string | null
+          early_access_features?: boolean | null
+          id?: string
+          is_popular?: boolean | null
+          max_members?: number
+          max_members_unlimited?: boolean | null
+          monthly_price?: number
+          name?: string
+          name_bn?: string | null
+          online_payments_enabled?: boolean | null
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          report_history_months?: number
+          sms_monthly_quota?: number
+          sort_order?: number | null
+          updated_at?: string
+          yearly_price?: number | null
+        }
+        Relationships: []
+      }
       sms_logs: {
         Row: {
           cost: number | null
@@ -464,7 +581,7 @@ export type Database = {
           created_at: string
           end_date: string
           id: string
-          plan: string
+          plan: Database["public"]["Enums"]["subscription_plan"]
           start_date: string
           status: Database["public"]["Enums"]["subscription_status"]
           tenant_id: string
@@ -474,7 +591,7 @@ export type Database = {
           created_at?: string
           end_date: string
           id?: string
-          plan?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           tenant_id: string
@@ -484,7 +601,7 @@ export type Database = {
           created_at?: string
           end_date?: string
           id?: string
-          plan?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           tenant_id?: string
@@ -493,6 +610,145 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "subscriptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_addons: {
+        Row: {
+          addon_config_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          purchased_at: string
+          quantity_purchased: number
+          quantity_used: number | null
+          tenant_id: string
+        }
+        Insert: {
+          addon_config_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          purchased_at?: string
+          quantity_purchased: number
+          quantity_used?: number | null
+          tenant_id: string
+        }
+        Update: {
+          addon_config_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          purchased_at?: string
+          quantity_purchased?: number
+          quantity_used?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_addons_addon_config_id_fkey"
+            columns: ["addon_config_id"]
+            isOneToOne: false
+            referencedRelation: "addon_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_addons_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_custom_pricing: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          custom_monthly_price: number | null
+          custom_yearly_price: number | null
+          discount_percentage: number | null
+          discount_reason: string | null
+          id: string
+          tenant_id: string
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          custom_monthly_price?: number | null
+          custom_yearly_price?: number | null
+          discount_percentage?: number | null
+          discount_reason?: string | null
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          custom_monthly_price?: number | null
+          custom_yearly_price?: number | null
+          discount_percentage?: number | null
+          discount_reason?: string | null
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_custom_pricing_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_usage: {
+        Row: {
+          id: string
+          member_count: number | null
+          sms_month_reset_at: string
+          sms_used_this_month: number | null
+          tenant_id: string
+          total_payments_processed: number | null
+          total_sms_sent: number | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          member_count?: number | null
+          sms_month_reset_at?: string
+          sms_used_this_month?: number | null
+          tenant_id: string
+          total_payments_processed?: number | null
+          total_sms_sent?: number | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          member_count?: number | null
+          sms_month_reset_at?: string
+          sms_used_this_month?: number | null
+          tenant_id?: string
+          total_payments_processed?: number | null
+          total_sms_sent?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_usage_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: true
             referencedRelation: "tenants"
@@ -573,6 +829,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_tenant_limit: {
+        Args: { _limit_type: string; _tenant_id: string }
+        Returns: Json
+      }
       get_tenant_by_subdomain: {
         Args: { _subdomain: string }
         Returns: {
@@ -593,6 +853,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_tenant_plan_limits: { Args: { _tenant_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -616,6 +877,11 @@ export type Database = {
       }
     }
     Enums: {
+      addon_type:
+        | "sms_bundle"
+        | "member_pack"
+        | "report_history"
+        | "custom_module"
       app_role: "super_admin" | "admin" | "manager" | "member"
       delivery_status: "pending" | "sent" | "delivered" | "failed" | "read"
       notification_channel: "sms" | "in_app" | "email"
@@ -635,6 +901,7 @@ export type Database = {
         | "card"
         | "other"
       payment_status: "pending" | "paid" | "failed" | "cancelled" | "refunded"
+      subscription_plan: "starter" | "standard" | "premium" | "custom"
       subscription_status: "active" | "expired" | "cancelled"
       tenant_status: "active" | "suspended" | "deleted"
     }
@@ -764,6 +1031,12 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      addon_type: [
+        "sms_bundle",
+        "member_pack",
+        "report_history",
+        "custom_module",
+      ],
       app_role: ["super_admin", "admin", "manager", "member"],
       delivery_status: ["pending", "sent", "delivered", "failed", "read"],
       notification_channel: ["sms", "in_app", "email"],
@@ -778,6 +1051,7 @@ export const Constants = {
       ],
       payment_method: ["offline", "bkash", "nagad", "rocket", "card", "other"],
       payment_status: ["pending", "paid", "failed", "cancelled", "refunded"],
+      subscription_plan: ["starter", "standard", "premium", "custom"],
       subscription_status: ["active", "expired", "cancelled"],
       tenant_status: ["active", "suspended", "deleted"],
     },

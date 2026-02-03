@@ -4,21 +4,37 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
+import { TenantBillingCard } from '@/components/billing/TenantBillingCard';
+import { AddOnPurchaseCard } from '@/components/billing/AddOnPurchaseCard';
 import { 
   Settings, 
   Building2, 
   Globe, 
   CreditCard, 
-  Bell,
   Shield,
   MessageSquare
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 export function SettingsPage() {
   const { t, language, toggleLanguage } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  
+  // Default to billing tab if specified in URL
+  const defaultTab = searchParams.get('tab') || 'general';
+
+  const handleUpgradeRequest = () => {
+    toast({
+      title: language === 'bn' ? 'আপগ্রেড অনুরোধ' : 'Upgrade Request',
+      description: language === 'bn' 
+        ? 'আপগ্রেডের জন্য সাপোর্ট টিমের সাথে যোগাযোগ করুন।'
+        : 'Contact support team to upgrade your plan.'
+    });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -31,11 +47,15 @@ export function SettingsPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="general" className="gap-2">
             <Settings className="h-4 w-4" />
             {language === 'bn' ? 'সাধারণ' : 'General'}
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="gap-2">
+            <CreditCard className="h-4 w-4" />
+            {language === 'bn' ? 'বিলিং' : 'Billing'}
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <MessageSquare className="h-4 w-4" />
@@ -111,42 +131,8 @@ export function SettingsPage() {
               </Card>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Security */}
             <div className="space-y-6">
-              {/* Subscription Status */}
-              <Card className="border-primary/30 bg-primary/5">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                      <CreditCard className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">{language === 'bn' ? 'সাবস্ক্রিপশন' : 'Subscription'}</CardTitle>
-                      <CardDescription>{language === 'bn' ? 'সক্রিয় প্ল্যান' : 'Active Plan'}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{language === 'bn' ? 'প্ল্যান' : 'Plan'}</span>
-                      <span className="font-medium text-foreground">Standard</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{language === 'bn' ? 'স্থিতি' : 'Status'}</span>
-                      <span className="rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
-                        {language === 'bn' ? 'সক্রিয়' : 'Active'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{language === 'bn' ? 'পরবর্তী বিলিং' : 'Next Billing'}</span>
-                      <span className="font-medium text-foreground">Feb 1, 2024</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Security */}
               <Card className="border-border">
                 <CardHeader>
                   <div className="flex items-center gap-3">
@@ -166,6 +152,13 @@ export function SettingsPage() {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <TenantBillingCard onRequestUpgrade={handleUpgradeRequest} />
+            <AddOnPurchaseCard />
           </div>
         </TabsContent>
 

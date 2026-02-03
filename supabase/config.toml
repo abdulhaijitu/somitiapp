@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.send-reminder]
 verify_jwt = false
+
+[functions.check-plan-limit]
+verify_jwt = false
