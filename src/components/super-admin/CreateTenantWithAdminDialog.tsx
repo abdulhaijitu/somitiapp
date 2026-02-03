@@ -197,17 +197,17 @@ Please change your password after first login.
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         {step === 'form' ? (
           <>
-            <DialogHeader>
+            <DialogHeader className="flex-shrink-0">
               <DialogTitle>Create New Tenant with Admin</DialogTitle>
               <DialogDescription>
                 Set up a new somiti organization with admin account credentials
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 py-4 overflow-y-auto flex-1">
               {/* Organization Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -356,7 +356,7 @@ Please change your password after first login.
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="flex-shrink-0 pt-4 border-t">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
