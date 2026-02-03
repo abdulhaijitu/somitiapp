@@ -23,7 +23,8 @@ import {
   CheckCircle2,
   XCircle,
   Clock4,
-  Send
+  Send,
+  Pencil
 } from 'lucide-react';
 import {
   Table,
@@ -38,6 +39,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Select,
@@ -51,6 +53,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useOnlinePayment } from '@/hooks/useOnlinePayment';
 import { CreatePaymentDialog } from '@/components/payments/CreatePaymentDialog';
+import { EditPaymentDialog } from '@/components/payments/EditPaymentDialog';
 import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
@@ -121,6 +124,9 @@ export function PaymentsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<Payment | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [approvingPaymentId, setApprovingPaymentId] = useState<string | null>(null);
   
   const [stats, setStats] = useState({
@@ -230,6 +236,72 @@ export function PaymentsPage() {
     const success = await rejectPayment(payment.id);
     if (success) {
       loadPayments();
+    }
+  };
+
+  const handleEditPayment = (payment: Payment) => {
+    setEditingPayment(payment);
+    setIsEditOpen(true);
+  };
+
+  const handleSavePayment = async (data: {
+    id: string;
+    amount: number;
+    status: string;
+    period_month: number | null;
+    period_year: number | null;
+    notes: string;
+  }) => {
+    if (!tenant?.id) return;
+
+    setIsUpdating(true);
+    try {
+      const updateData: Record<string, any> = {
+        amount: data.amount,
+        status: data.status,
+        period_month: data.period_month,
+        period_year: data.period_year,
+        notes: data.notes || null,
+        updated_at: new Date().toISOString()
+      };
+
+      // If status changed to 'paid', set payment_date
+      if (data.status === 'paid' && editingPayment?.status !== 'paid') {
+        updateData.payment_date = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('payments')
+        .update(updateData)
+        .eq('id', data.id)
+        .eq('tenant_id', tenant.id);
+
+      if (error) {
+        toast({
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' ? 'পেমেন্ট আপডেট করতে সমস্যা হয়েছে' : 'Failed to update payment',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      toast({
+        title: language === 'bn' ? 'সফল' : 'Success',
+        description: language === 'bn' ? 'পেমেন্ট সফলভাবে আপডেট হয়েছে' : 'Payment updated successfully'
+      });
+
+      setIsEditOpen(false);
+      setEditingPayment(null);
+      loadPayments();
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' ? 'একটি অপ্রত্যাশিত ত্রুটি হয়েছে' : 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -761,8 +833,16 @@ export function PaymentsPage() {
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem className="gap-2">
                                       <Eye className="h-4 w-4" />
-                                      View Details
+                                      {language === 'bn' ? 'বিস্তারিত দেখুন' : 'View Details'}
                                     </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="gap-2"
+                                      onClick={() => handleEditPayment(payment)}
+                                    >
+                                      <Pencil className="h-4 w-4" />
+                                      {language === 'bn' ? 'সম্পাদনা' : 'Edit Payment'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
                                     {payment.payment_type === 'online' && payment.status === 'pending' && (
                                       <DropdownMenuItem 
                                         className="gap-2"
@@ -770,7 +850,7 @@ export function PaymentsPage() {
                                         disabled={isVerifying}
                                       >
                                         <RefreshCw className="h-4 w-4" />
-                                        Verify Payment
+                                        {language === 'bn' ? 'যাচাই করুন' : 'Verify Payment'}
                                       </DropdownMenuItem>
                                     )}
                                     {payment.status === 'failed' && (
@@ -779,7 +859,7 @@ export function PaymentsPage() {
                                         onClick={() => handleRetryPayment(payment)}
                                       >
                                         <RotateCcw className="h-4 w-4" />
-                                        Retry Payment
+                                        {language === 'bn' ? 'পুনরায় চেষ্টা' : 'Retry Payment'}
                                       </DropdownMenuItem>
                                     )}
                                     {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
@@ -794,7 +874,7 @@ export function PaymentsPage() {
                                         }}
                                       >
                                         <ExternalLink className="h-4 w-4" />
-                                        Copy Payment Link
+                                        {language === 'bn' ? 'লিংক কপি করুন' : 'Copy Payment Link'}
                                       </DropdownMenuItem>
                                     )}
                                     {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
@@ -803,7 +883,7 @@ export function PaymentsPage() {
                                         onClick={() => window.open(payment.payment_url!, '_blank')}
                                       >
                                         <Send className="h-4 w-4" />
-                                        Open Payment Page
+                                        {language === 'bn' ? 'পেমেন্ট পেজ খুলুন' : 'Open Payment Page'}
                                       </DropdownMenuItem>
                                     )}
                                   </DropdownMenuContent>
@@ -860,6 +940,18 @@ export function PaymentsPage() {
         onCreateOfflinePayment={handleCreateOfflinePayment}
         onCreateOnlinePayment={handleCreateOnlinePayment}
         isSubmitting={isCreating}
+      />
+
+      {/* Edit Payment Dialog */}
+      <EditPaymentDialog
+        open={isEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) setEditingPayment(null);
+        }}
+        payment={editingPayment}
+        onSave={handleSavePayment}
+        isSubmitting={isUpdating}
       />
     </div>
   );
