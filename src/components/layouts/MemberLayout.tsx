@@ -9,6 +9,7 @@ import { NotificationCenter } from '@/components/notifications/NotificationCente
 import { NoIndexSEO } from '@/components/common/SEO';
 import { MobileBottomNav, BottomNavItem } from '@/components/common/MobileBottomNav';
 import { PWAInstallPrompt } from '@/components/common/PWAInstallPrompt';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { usePWAInstall, usePWAPromptEligibility } from '@/hooks/usePWAInstall';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -283,6 +284,9 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
             </ErrorBoundary>
           </div>
         </main>
+        
+        {/* Developer Credit - Hidden on mobile to avoid overlap with bottom nav */}
+        <DeveloperCredit className="hidden lg:block" />
       </div>
 
       {/* Mobile Bottom Navigation */}

@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs } from '@/lib/seo';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -94,6 +95,9 @@ export function ForgotPasswordPage() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Developer Credit */}
+        <DeveloperCredit className="absolute bottom-0 left-0 right-0" />
       </div>
     );
   }
@@ -148,6 +152,9 @@ export function ForgotPasswordPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Developer Credit */}
+      <DeveloperCredit className="absolute bottom-0 left-0 right-0" />
     </div>
   );
 }
