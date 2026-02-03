@@ -27,13 +27,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log("=== CREATE TENANT FUNCTION STARTED ===");
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // Verify the caller is a super admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
+      console.error("No Authorization header provided");
       return new Response(
         JSON.stringify({ error: "Unauthorized - No token provided" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -61,6 +63,7 @@ serve(async (req) => {
     }
 
     const userId = userData.user.id;
+    console.log("Authenticated user:", userId);
 
     // Verify user has super_admin role
     const { data: roleData, error: roleError } = await supabaseAdmin
@@ -71,15 +74,23 @@ serve(async (req) => {
       .maybeSingle();
 
     if (roleError || !roleData) {
-      console.error("Role check error:", roleError);
+      console.error("Role check error:", roleError, "roleData:", roleData);
       return new Response(
         JSON.stringify({ error: "Forbidden - Super Admin access required" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    console.log("Super Admin role verified");
+
     // Parse request body
     const body: CreateTenantRequest = await req.json();
+    console.log("Request body received:", { 
+      name: body.name, 
+      subdomain: body.subdomain, 
+      admin_email: body.admin_email,
+      has_password: !!body.admin_password 
+    });
 
     // Validation
     if (!body.name || !body.subdomain) {
@@ -152,8 +163,7 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    console.log("Tenant created:", tenant.id);
+    console.log("Tenant created successfully:", tenant.id, tenant.subdomain);
 
     // Create subscription
     const startDate = new Date();
@@ -191,7 +201,10 @@ serve(async (req) => {
     });
 
     // Create admin user in Supabase Auth
-    console.log("Creating admin user:", body.admin_email);
+    console.log("=== CREATING ADMIN USER ===");
+    console.log("Admin email:", body.admin_email);
+    console.log("Has password:", !!body.admin_password);
+    
     const { data: adminUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: body.admin_email,
       password: body.admin_password,
@@ -203,7 +216,9 @@ serve(async (req) => {
     });
 
     if (authError) {
-      console.error("Error creating admin user:", authError);
+      console.error("=== ERROR CREATING ADMIN USER ===");
+      console.error("Auth error message:", authError.message);
+      console.error("Auth error details:", JSON.stringify(authError));
       // Rollback tenant creation
       await supabaseAdmin.from("subscriptions").delete().eq("tenant_id", tenant.id);
       await supabaseAdmin.from("tenant_usage").delete().eq("tenant_id", tenant.id);
@@ -214,9 +229,15 @@ serve(async (req) => {
       );
     }
 
-    console.log("Admin user created:", adminUser.user.id);
+    console.log("=== ADMIN USER CREATED SUCCESSFULLY ===");
+    console.log("Admin user ID:", adminUser.user.id);
+    console.log("Admin user email:", adminUser.user.email);
 
     // Assign admin role to the user
+    console.log("=== ASSIGNING ADMIN ROLE ===");
+    console.log("User ID:", adminUser.user.id);
+    console.log("Tenant ID:", tenant.id);
+    
     const { error: roleError2 } = await supabaseAdmin.from("user_roles").insert({
       user_id: adminUser.user.id,
       tenant_id: tenant.id,
@@ -224,7 +245,9 @@ serve(async (req) => {
     });
 
     if (roleError2) {
-      console.error("Error assigning admin role:", roleError2);
+      console.error("=== ERROR ASSIGNING ADMIN ROLE ===");
+      console.error("Role error message:", roleError2.message);
+      console.error("Role error details:", JSON.stringify(roleError2));
       // Rollback everything
       await supabaseAdmin.auth.admin.deleteUser(adminUser.user.id);
       await supabaseAdmin.from("subscriptions").delete().eq("tenant_id", tenant.id);
@@ -236,7 +259,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("Admin role assigned to user:", adminUser.user.id);
+    console.log("=== ADMIN ROLE ASSIGNED SUCCESSFULLY ===");
 
     // Log the action
     await supabaseAdmin.from("audit_logs").insert({
