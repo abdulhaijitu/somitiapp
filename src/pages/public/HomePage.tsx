@@ -17,6 +17,10 @@ import {
 import heroDashboard from '@/assets/hero-dashboard.png';
 import appLogo from '@/assets/logo.png';
 import logoIcon from '@/assets/logo-icon.png';
+import memberManagementImg from '@/assets/features/member-management.png';
+import paymentTrackingImg from '@/assets/features/payment-tracking.png';
+import reportsAnalyticsImg from '@/assets/features/reports-analytics.png';
+import notificationsImg from '@/assets/features/notifications.png';
 import grameenLogo from '@/assets/partners/grameen-logo.png';
 import bracLogo from '@/assets/partners/brac-logo.png';
 import asaLogo from '@/assets/partners/asa-logo.png';
@@ -53,6 +57,7 @@ export function HomePage() {
       description: language === 'bn' 
         ? 'সব সদস্যের তথ্য এক জায়গায় পরিচালনা করুন।'
         : 'Add, manage, and track all your somiti members in one place.',
+      image: memberManagementImg,
     },
     {
       icon: CreditCard,
@@ -60,6 +65,7 @@ export function HomePage() {
       description: language === 'bn'
         ? 'অনলাইন ও অফলাইন পেমেন্ট সহজে ট্র্যাক করুন।'
         : 'Track online and offline payments with detailed histories.',
+      image: paymentTrackingImg,
     },
     {
       icon: BarChart3,
@@ -67,6 +73,7 @@ export function HomePage() {
       description: language === 'bn'
         ? 'মাসিক ও বার্ষিক রিপোর্ট তৈরি ও এক্সপোর্ট করুন।'
         : 'Generate monthly and yearly financial reports with exports.',
+      image: reportsAnalyticsImg,
     },
     {
       icon: Bell,
@@ -74,6 +81,7 @@ export function HomePage() {
       description: language === 'bn'
         ? 'SMS ও অ্যাপ নোটিফিকেশন দিয়ে সদস্যদের জানান।'
         : 'Keep members informed with SMS and in-app notifications.',
+      image: notificationsImg,
     },
   ];
 
@@ -350,7 +358,7 @@ export function HomePage() {
       {/* Features Section */}
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'বৈশিষ্ট্যসমূহ' : 'Features'}
             </Badge>
@@ -364,17 +372,44 @@ export function HomePage() {
             </p>
           </div>
           
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* Feature Items with Screenshots */}
+          <div className="space-y-20">
             {features.map((feature, index) => (
-              <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
-                <CardContent className="p-6">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+              <div 
+                key={index} 
+                className={`grid gap-8 lg:gap-12 items-center lg:grid-cols-2 ${
+                  index % 2 === 1 ? 'lg:grid-flow-dense' : ''
+                }`}
+              >
+                {/* Text Content */}
+                <div className={`space-y-4 ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
                     <feature.icon className="h-7 w-7 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
+                  <h3 className="text-2xl font-bold text-foreground md:text-3xl">{feature.title}</h3>
+                  <p className="text-lg text-muted-foreground">{feature.description}</p>
+                  <ul className="space-y-2 pt-2">
+                    {getFeaturePoints(feature.title, language).map((point, i) => (
+                      <li key={i} className="flex items-center gap-2 text-muted-foreground">
+                        <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                {/* Screenshot */}
+                <div className={`relative ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                  <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 opacity-50 blur-2xl" />
+                  <div className="relative rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title} 
+                      className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                    />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -588,4 +623,44 @@ function StatsSection({ language }: { language: string }) {
       ))}
     </div>
   );
+}
+
+// Helper function for feature bullet points
+function getFeaturePoints(title: string, language: string): string[] {
+  const points: Record<string, { bn: string[]; en: string[] }> = {
+    'সদস্য ব্যবস্থাপনা': {
+      bn: ['সদস্যের প্রোফাইল ও ছবি', 'NID ও ফোন নম্বর', 'স্ট্যাটাস ট্র্যাকিং'],
+      en: ['Member profiles with photos', 'NID & phone tracking', 'Status management'],
+    },
+    'Member Management': {
+      bn: ['সদস্যের প্রোফাইল ও ছবি', 'NID ও ফোন নম্বর', 'স্ট্যাটাস ট্র্যাকিং'],
+      en: ['Member profiles with photos', 'NID & phone tracking', 'Status management'],
+    },
+    'পেমেন্ট ট্র্যাকিং': {
+      bn: ['bKash, Nagad সাপোর্ট', 'অফলাইন পেমেন্ট রেকর্ড', 'অটো রিসিপ্ট জেনারেশন'],
+      en: ['bKash, Nagad support', 'Offline payment records', 'Auto receipt generation'],
+    },
+    'Payment Tracking': {
+      bn: ['bKash, Nagad সাপোর্ট', 'অফলাইন পেমেন্ট রেকর্ড', 'অটো রিসিপ্ট জেনারেশন'],
+      en: ['bKash, Nagad support', 'Offline payment records', 'Auto receipt generation'],
+    },
+    'রিপোর্ট': {
+      bn: ['মাসিক ও বার্ষিক রিপোর্ট', 'PDF/Excel এক্সপোর্ট', 'বকেয়া বিশ্লেষণ'],
+      en: ['Monthly & yearly reports', 'PDF/Excel export', 'Dues analysis'],
+    },
+    'Reports': {
+      bn: ['মাসিক ও বার্ষিক রিপোর্ট', 'PDF/Excel এক্সপোর্ট', 'বকেয়া বিশ্লেষণ'],
+      en: ['Monthly & yearly reports', 'PDF/Excel export', 'Dues analysis'],
+    },
+    'নোটিফিকেশন': {
+      bn: ['SMS রিমাইন্ডার', 'বকেয়া নোটিফিকেশন', 'অটো অ্যালার্ট'],
+      en: ['SMS reminders', 'Due notifications', 'Auto alerts'],
+    },
+    'Notifications': {
+      bn: ['SMS রিমাইন্ডার', 'বকেয়া নোটিফিকেশন', 'অটো অ্যালার্ট'],
+      en: ['SMS reminders', 'Due notifications', 'Auto alerts'],
+    },
+  };
+
+  return points[title]?.[language === 'bn' ? 'bn' : 'en'] || [];
 }
