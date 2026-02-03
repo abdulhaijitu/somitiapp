@@ -45,7 +45,10 @@ import {
   Mail,
   Phone,
   MessageSquare,
-  Send
+  Send,
+  Facebook,
+  Twitter,
+  Linkedin
 } from 'lucide-react';
 
 // Bottom nav items for landing page
@@ -1243,8 +1246,40 @@ export function LandingPage() {
           </div>
 
           {/* Copyright */}
-          <div className="flex flex-col items-center justify-between gap-4 pt-8 border-t border-border text-sm text-muted-foreground md:flex-row">
+          <div className="flex flex-col items-center justify-between gap-6 pt-8 border-t border-border text-sm text-muted-foreground md:flex-row">
             <p>© {new Date().getFullYear()} {defaultBrandConfig.appName}. All rights reserved.</p>
+            
+            {/* Social Media Icons */}
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://facebook.com/somitiapp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                aria-label="Facebook"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+              <a 
+                href="https://twitter.com/somitiapp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                aria-label="Twitter"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+              <a 
+                href="https://linkedin.com/company/somitiapp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-4 w-4" />
+              </a>
+            </div>
+
             <div className="flex gap-6">
               <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
               <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
