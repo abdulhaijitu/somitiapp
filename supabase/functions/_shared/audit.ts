@@ -12,6 +12,8 @@ export type AuditAction =
   | 'PAYMENT_COMPLETED'
   | 'PAYMENT_FAILED'
   | 'PAYMENT_VERIFIED'
+  | 'PAYMENT_APPROVED'
+  | 'PAYMENT_REJECTED'
   | 'WEBHOOK_RECEIVED'
   | 'MEMBER_CREATED'
   | 'MEMBER_UPDATED'
@@ -125,7 +127,7 @@ export async function logSecurityViolation(
 export async function logPaymentEvent(
   supabase: SupabaseClient,
   params: {
-    action: 'PAYMENT_INITIATED' | 'PAYMENT_COMPLETED' | 'PAYMENT_FAILED' | 'PAYMENT_VERIFIED' | 'WEBHOOK_RECEIVED';
+    action: 'PAYMENT_INITIATED' | 'PAYMENT_COMPLETED' | 'PAYMENT_FAILED' | 'PAYMENT_VERIFIED' | 'WEBHOOK_RECEIVED' | 'PAYMENT_APPROVED' | 'PAYMENT_REJECTED';
     payment_id: string;
     tenant_id: string;
     user_id?: string;

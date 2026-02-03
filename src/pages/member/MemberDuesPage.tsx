@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -11,12 +13,15 @@ import {
   Wallet,
   Info,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  CreditCard,
+  Loader2
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { format, parseISO, isPast, startOfMonth, addMonths } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
+import { useMemberPaymentRequest } from '@/hooks/useMemberPaymentRequest';
 
 interface DueWithContribution {
   id: string;
@@ -33,6 +38,9 @@ interface DueWithContribution {
 export function MemberDuesPage() {
   const { language } = useLanguage();
   const { tenant, userId } = useTenant();
+  const queryClient = useQueryClient();
+  const { requestPayment, isRequesting } = useMemberPaymentRequest();
+  const [requestingDueId, setRequestingDueId] = useState<string | null>(null);
 
   // Fetch member data
   const { data: memberData } = useQuery({
@@ -146,6 +154,23 @@ export function MemberDuesPage() {
           </Badge>
         );
     }
+  };
+
+  const handleRequestPayment = async (due: DueWithContribution) => {
+    const remaining = due.amount - due.paid_amount;
+    setRequestingDueId(due.id);
+    
+    const result = await requestPayment({
+      due_id: due.id,
+      amount: remaining
+    });
+    
+    if (result.success) {
+      // Refresh dues list
+      queryClient.invalidateQueries({ queryKey: ['member-dues-list'] });
+    }
+    
+    setRequestingDueId(null);
   };
 
   const hasNoDues = !duesData || duesData.dues.length === 0;
@@ -307,7 +332,7 @@ export function MemberDuesPage() {
                   return (
                     <div 
                       key={due.id}
-                      className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
+                      className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-colors gap-3 ${
                         isOverdue 
                           ? 'border-destructive/30 bg-destructive/5' 
                           : due.status === 'paid'
@@ -336,25 +361,44 @@ export function MemberDuesPage() {
                         )}
                       </div>
                       
-                      <div className="text-right shrink-0 ml-4">
-                        <p className={`font-semibold ${
-                          due.status === 'paid' 
-                            ? 'text-success' 
-                            : isOverdue 
-                              ? 'text-destructive' 
-                              : 'text-foreground'
-                        }`}>
-                          {formatCurrency(due.amount)}
-                        </p>
-                        {due.status === 'partial' && (
-                          <p className="text-xs text-warning">
-                            {language === 'bn' ? 'বাকি:' : 'Remaining:'} {formatCurrency(remaining)}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right shrink-0">
+                          <p className={`font-semibold ${
+                            due.status === 'paid' 
+                              ? 'text-success' 
+                              : isOverdue 
+                                ? 'text-destructive' 
+                                : 'text-foreground'
+                          }`}>
+                            {formatCurrency(due.amount)}
                           </p>
-                        )}
-                        {due.status === 'paid' && (
-                          <p className="text-xs text-success">
-                            {language === 'bn' ? 'সম্পূর্ণ পরিশোধিত' : 'Fully paid'}
-                          </p>
+                          {due.status === 'partial' && (
+                            <p className="text-xs text-warning">
+                              {language === 'bn' ? 'বাকি:' : 'Remaining:'} {formatCurrency(remaining)}
+                            </p>
+                          )}
+                          {due.status === 'paid' && (
+                            <p className="text-xs text-success">
+                              {language === 'bn' ? 'সম্পূর্ণ পরিশোধিত' : 'Fully paid'}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Pay Online Button */}
+                        {(due.status === 'unpaid' || due.status === 'partial') && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleRequestPayment(due)}
+                            disabled={isRequesting && requestingDueId === due.id}
+                            className="gap-2"
+                          >
+                            {isRequesting && requestingDueId === due.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CreditCard className="h-4 w-4" />
+                            )}
+                            {language === 'bn' ? 'অনলাইনে পরিশোধ' : 'Pay Online'}
+                          </Button>
                         )}
                       </div>
                     </div>

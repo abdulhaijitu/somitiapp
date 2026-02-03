@@ -19,7 +19,11 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  RotateCcw
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  Clock4,
+  Send
 } from 'lucide-react';
 import {
   Table,
@@ -52,6 +56,16 @@ import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { DateRangeFilter } from '@/components/common/DateRangeFilter';
 import { EmptyState } from '@/components/common/EmptyState';
 import { format, isAfter, startOfMonth, subMonths } from 'date-fns';
+import { useApprovePaymentRequest } from '@/hooks/useApprovePaymentRequest';
+import { Badge } from '@/components/ui/badge';
+
+interface PaymentMetadata {
+  member_requested?: boolean;
+  admin_approved?: boolean;
+  requested_at?: string;
+  member_name?: string;
+  due_month?: string;
+}
 
 interface Payment {
   id: string;
@@ -70,6 +84,8 @@ interface Payment {
   period_month: number | null;
   period_year: number | null;
   created_at: string;
+  payment_url: string | null;
+  metadata: PaymentMetadata | null;
   members: {
     id: string;
     name: string;
@@ -91,26 +107,29 @@ export function PaymentsPage() {
   const { tenant } = useTenant();
   const { toast } = useToast();
   const { createPayment, verifyPayment, redirectToPayment, isCreating, isVerifying } = useOnlinePayment();
+  const { approvePayment, rejectPayment, isApproving } = useApprovePaymentRequest();
   
   const [loading, setLoading] = useState(true);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'online' | 'offline'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'online' | 'offline' | 'pending_approval'>('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
   const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [approvingPaymentId, setApprovingPaymentId] = useState<string | null>(null);
   
   const [stats, setStats] = useState({
     thisMonth: 0,
     totalCollected: 0,
     outstanding: 0,
     pendingCount: 0,
-    overdueCount: 0
+    overdueCount: 0,
+    pendingApprovalCount: 0
   });
 
   useEffect(() => {
@@ -133,8 +152,9 @@ export function PaymentsPage() {
         return;
       }
 
-      setPayments(data || []);
-      calculateStats(data || []);
+      const paymentsData = (data || []) as unknown as Payment[];
+      setPayments(paymentsData);
+      calculateStats(paymentsData);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -157,6 +177,11 @@ export function PaymentsPage() {
       .reduce((sum, p) => sum + Number(p.amount), 0);
     
     const pendingPayments = paymentsData.filter(p => p.status === 'pending');
+    
+    // Count payments awaiting admin approval
+    const pendingApprovalPayments = paymentsData.filter(p => 
+      p.status === 'pending' && p.metadata?.member_requested && !p.metadata?.admin_approved
+    );
 
     const overduePayments = pendingPayments.filter(p => {
       if (p.period_month && p.period_year) {
@@ -171,8 +196,41 @@ export function PaymentsPage() {
       totalCollected: totalPaid,
       outstanding: pendingPayments.reduce((sum, p) => sum + Number(p.amount), 0),
       pendingCount: pendingPayments.length,
-      overdueCount: overduePayments.length
+      overdueCount: overduePayments.length,
+      pendingApprovalCount: pendingApprovalPayments.length
     });
+  };
+
+  // Helper to check if payment needs approval
+  const needsApproval = (payment: Payment) => {
+    return payment.status === 'pending' && 
+           payment.metadata?.member_requested && 
+           !payment.metadata?.admin_approved;
+  };
+
+  const handleApprovePayment = async (payment: Payment) => {
+    setApprovingPaymentId(payment.id);
+    const result = await approvePayment(payment.id);
+    
+    if (result.success) {
+      loadPayments();
+      if (result.payment_url) {
+        toast({
+          title: language === 'bn' ? 'পেমেন্ট লিংক তৈরি হয়েছে' : 'Payment Link Generated',
+          description: language === 'bn' 
+            ? 'সদস্যকে নোটিফিকেশন পাঠানো হয়েছে' 
+            : 'Member has been notified'
+        });
+      }
+    }
+    setApprovingPaymentId(null);
+  };
+
+  const handleRejectPayment = async (payment: Payment) => {
+    const success = await rejectPayment(payment.id);
+    if (success) {
+      loadPayments();
+    }
   };
 
   const loadMembers = async () => {
@@ -354,7 +412,9 @@ export function PaymentsPage() {
       result = result.filter(p => p.status === statusFilter);
     }
 
-    if (typeFilter !== 'all') {
+    if (typeFilter === 'pending_approval') {
+      result = result.filter(p => needsApproval(p));
+    } else if (typeFilter !== 'all') {
       result = result.filter(p => p.payment_type === typeFilter);
     }
 
@@ -515,16 +575,22 @@ export function PaymentsPage() {
             />
             
             <Select value={typeFilter} onValueChange={(v) => {
-              setTypeFilter(v as 'all' | 'online' | 'offline');
+              setTypeFilter(v as 'all' | 'online' | 'offline' | 'pending_approval');
               setCurrentPage(1);
             }}>
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Payment type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 <SelectItem value="online">Online only</SelectItem>
                 <SelectItem value="offline">Offline only</SelectItem>
+                <SelectItem value="pending_approval">
+                  <div className="flex items-center gap-2">
+                    <Clock4 className="h-4 w-4 text-warning" />
+                    Awaiting Approval {stats.pendingApprovalCount > 0 && `(${stats.pendingApprovalCount})`}
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -654,47 +720,95 @@ export function PaymentsPage() {
                               ৳ {Number(payment.amount).toLocaleString()}
                             </TableCell>
                             <TableCell>
-                              <PaymentStatusBadge status={payment.status} />
+                              <div className="flex items-center gap-2">
+                                <PaymentStatusBadge status={payment.status} />
+                                {needsApproval(payment) && (
+                                  <Badge variant="outline" className="text-warning border-warning/50 text-xs">
+                                    {language === 'bn' ? 'অনুমোদন প্রয়োজন' : 'Needs Approval'}
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
+                              {needsApproval(payment) ? (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    className="h-7 gap-1 px-2"
+                                    onClick={() => handleApprovePayment(payment)}
+                                    disabled={isApproving && approvingPaymentId === payment.id}
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    {language === 'bn' ? 'অনুমোদন' : 'Approve'}
                                   </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem className="gap-2">
-                                    <Eye className="h-4 w-4" />
-                                    View Details
-                                  </DropdownMenuItem>
-                                  {payment.payment_type === 'online' && payment.status === 'pending' && (
-                                    <DropdownMenuItem 
-                                      className="gap-2"
-                                      onClick={() => handleVerifyPayment(payment)}
-                                      disabled={isVerifying}
-                                    >
-                                      <RefreshCw className="h-4 w-4" />
-                                      Verify Payment
-                                    </DropdownMenuItem>
-                                  )}
-                                  {payment.status === 'failed' && (
-                                    <DropdownMenuItem 
-                                      className="gap-2"
-                                      onClick={() => handleRetryPayment(payment)}
-                                    >
-                                      <RotateCcw className="h-4 w-4" />
-                                      Retry Payment
-                                    </DropdownMenuItem>
-                                  )}
-                                  {payment.payment_type === 'online' && payment.invoice_id && payment.status === 'pending' && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 gap-1 px-2 text-destructive hover:text-destructive"
+                                    onClick={() => handleRejectPayment(payment)}
+                                  >
+                                    <XCircle className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
                                     <DropdownMenuItem className="gap-2">
-                                      <ExternalLink className="h-4 w-4" />
-                                      Copy Payment Link
+                                      <Eye className="h-4 w-4" />
+                                      View Details
                                     </DropdownMenuItem>
-                                  )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                                    {payment.payment_type === 'online' && payment.status === 'pending' && (
+                                      <DropdownMenuItem 
+                                        className="gap-2"
+                                        onClick={() => handleVerifyPayment(payment)}
+                                        disabled={isVerifying}
+                                      >
+                                        <RefreshCw className="h-4 w-4" />
+                                        Verify Payment
+                                      </DropdownMenuItem>
+                                    )}
+                                    {payment.status === 'failed' && (
+                                      <DropdownMenuItem 
+                                        className="gap-2"
+                                        onClick={() => handleRetryPayment(payment)}
+                                      >
+                                        <RotateCcw className="h-4 w-4" />
+                                        Retry Payment
+                                      </DropdownMenuItem>
+                                    )}
+                                    {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
+                                      <DropdownMenuItem 
+                                        className="gap-2"
+                                        onClick={() => {
+                                          navigator.clipboard.writeText(payment.payment_url!);
+                                          toast({
+                                            title: language === 'bn' ? 'কপি হয়েছে' : 'Copied',
+                                            description: language === 'bn' ? 'পেমেন্ট লিংক কপি করা হয়েছে' : 'Payment link copied to clipboard'
+                                          });
+                                        }}
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                        Copy Payment Link
+                                      </DropdownMenuItem>
+                                    )}
+                                    {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
+                                      <DropdownMenuItem 
+                                        className="gap-2"
+                                        onClick={() => window.open(payment.payment_url!, '_blank')}
+                                      >
+                                        <Send className="h-4 w-4" />
+                                        Open Payment Page
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </TableCell>
                           </TableRow>
                         );
