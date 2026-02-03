@@ -330,7 +330,7 @@ export function DuesPage() {
                   <Calendar className="h-4 w-4 mr-2" />
                   <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50">
                   {getYearOptions().map(year => (
                     <SelectItem key={year} value={year.toString()}>
                       {year}
@@ -343,7 +343,7 @@ export function DuesPage() {
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50">
                   {months.map(m => (
                     <SelectItem key={m.value} value={m.value.toString()}>
                       {language === 'bn' ? m.labelBn : m.label}
@@ -356,7 +356,7 @@ export function DuesPage() {
                 <SelectTrigger className="w-[150px]">
                   <SelectValue placeholder={language === 'bn' ? 'সব স্ট্যাটাস' : 'All Status'} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50">
                   <SelectItem value="all">{language === 'bn' ? 'সব' : 'All'}</SelectItem>
                   <SelectItem value="unpaid">{language === 'bn' ? 'বাকি' : 'Unpaid'}</SelectItem>
                   <SelectItem value="partial">{language === 'bn' ? 'আংশিক' : 'Partial'}</SelectItem>
