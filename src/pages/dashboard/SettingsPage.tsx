@@ -8,13 +8,15 @@ import { TenantBillingCard } from '@/components/billing/TenantBillingCard';
 import { AddOnPurchaseCard } from '@/components/billing/AddOnPurchaseCard';
 import { OrganizationInfoForm } from '@/components/settings/OrganizationInfoForm';
 import { ContributionTypesSettings } from '@/components/settings/ContributionTypesSettings';
+import { MonthlyDueSettings } from '@/components/settings/MonthlyDueSettings';
 import { 
   Settings, 
   Globe, 
   CreditCard, 
   Shield,
   MessageSquare,
-  Banknote
+  Banknote,
+  CalendarClock
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -48,22 +50,26 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-3xl grid-cols-5">
           <TabsTrigger value="general" className="gap-2">
             <Settings className="h-4 w-4" />
-            {language === 'bn' ? 'সাধারণ' : 'General'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'সাধারণ' : 'General'}</span>
           </TabsTrigger>
           <TabsTrigger value="contributions" className="gap-2">
             <Banknote className="h-4 w-4" />
-            {language === 'bn' ? 'চাঁদা' : 'Contributions'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'চাঁদা' : 'Contributions'}</span>
+          </TabsTrigger>
+          <TabsTrigger value="dues" className="gap-2">
+            <CalendarClock className="h-4 w-4" />
+            <span className="hidden sm:inline">{language === 'bn' ? 'বকেয়া' : 'Dues'}</span>
           </TabsTrigger>
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="h-4 w-4" />
-            {language === 'bn' ? 'বিলিং' : 'Billing'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'বিলিং' : 'Billing'}</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <MessageSquare className="h-4 w-4" />
-            {language === 'bn' ? 'নোটিফিকেশন' : 'Notifications'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'নোটিফিকেশন' : 'Notifications'}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -130,6 +136,10 @@ export function SettingsPage() {
 
         <TabsContent value="contributions" className="space-y-6">
           <ContributionTypesSettings />
+        </TabsContent>
+
+        <TabsContent value="dues" className="space-y-6">
+          <MonthlyDueSettings />
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">

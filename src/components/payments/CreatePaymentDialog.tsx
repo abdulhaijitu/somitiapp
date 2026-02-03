@@ -40,6 +40,15 @@ interface ContributionType {
   is_active: boolean;
 }
 
+interface Due {
+  id: string;
+  member_id: string;
+  amount: number;
+  paid_amount: number;
+  due_month: string;
+  status: 'unpaid' | 'partial' | 'paid';
+}
+
 interface CreatePaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,6 +60,7 @@ interface CreatePaymentDialogProps {
     period_year: number;
     notes?: string;
     contribution_type_id: string;
+    due_id?: string;
   }) => void;
   onCreateOnlinePayment: (data: {
     member_id: string;
@@ -60,6 +70,7 @@ interface CreatePaymentDialogProps {
     full_name: string;
     email?: string;
     contribution_type_id: string;
+    due_id?: string;
   }) => void;
   isSubmitting: boolean;
 }
@@ -104,6 +115,8 @@ export function CreatePaymentDialog({
   const [notes, setNotes] = useState<string>('');
   const [contributionTypes, setContributionTypes] = useState<ContributionType[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(false);
+  const [memberDues, setMemberDues] = useState<Due[]>([]);
+  const [selectedDueId, setSelectedDueId] = useState<string>('');
 
   const selectedMember = members.find(m => m.id === selectedMemberId);
   const selectedCategory = contributionTypes.find(c => c.id === selectedCategoryId);
@@ -114,6 +127,16 @@ export function CreatePaymentDialog({
       loadContributionTypes();
     }
   }, [open, tenant?.id]);
+
+  // Load member dues when member is selected and category is monthly
+  useEffect(() => {
+    if (selectedMemberId && selectedCategory?.category_type === 'monthly' && tenant?.id) {
+      loadMemberDues();
+    } else {
+      setMemberDues([]);
+      setSelectedDueId('');
+    }
+  }, [selectedMemberId, selectedCategoryId, tenant?.id]);
 
   const loadContributionTypes = async () => {
     if (!tenant?.id) return;
@@ -145,6 +168,26 @@ export function CreatePaymentDialog({
     }
   };
 
+  const loadMemberDues = async () => {
+    if (!tenant?.id || !selectedMemberId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('dues')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .eq('member_id', selectedMemberId)
+        .in('status', ['unpaid', 'partial'])
+        .order('due_month', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      setMemberDues((data || []) as unknown as Due[]);
+    } catch (error) {
+      console.error('Error loading member dues:', error);
+    }
+  };
+
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
     const category = contributionTypes.find(c => c.id === categoryId);
@@ -154,6 +197,18 @@ export function CreatePaymentDialog({
       } else if (category.default_amount) {
         setAmount(Number(category.default_amount));
       }
+    }
+  };
+
+  const handleDueSelect = (dueId: string) => {
+    setSelectedDueId(dueId);
+    const due = memberDues.find(d => d.id === dueId);
+    if (due) {
+      const remainingAmount = due.amount - due.paid_amount;
+      setAmount(remainingAmount);
+      const dueDate = new Date(due.due_month);
+      setPeriodMonth(dueDate.getMonth() + 1);
+      setPeriodYear(dueDate.getFullYear());
     }
   };
 
@@ -167,7 +222,8 @@ export function CreatePaymentDialog({
         period_month: periodMonth,
         period_year: periodYear,
         notes,
-        contribution_type_id: selectedCategoryId
+        contribution_type_id: selectedCategoryId,
+        due_id: selectedDueId || undefined
       });
     } else {
       onCreateOnlinePayment({
@@ -177,7 +233,8 @@ export function CreatePaymentDialog({
         period_year: periodYear,
         full_name: selectedMember?.name || '',
         email: selectedMember?.email || undefined,
-        contribution_type_id: selectedCategoryId
+        contribution_type_id: selectedCategoryId,
+        due_id: selectedDueId || undefined
       });
     }
   };
@@ -185,11 +242,13 @@ export function CreatePaymentDialog({
   const resetForm = () => {
     setSelectedMemberId('');
     setSelectedCategoryId('');
+    setSelectedDueId('');
     setAmount(0);
     setPeriodMonth(currentMonth);
     setPeriodYear(currentYear);
     setNotes('');
     setPaymentType('offline');
+    setMemberDues([]);
   };
 
   const getCategoryHint = () => {
@@ -333,8 +392,39 @@ export function CreatePaymentDialog({
               )}
             </div>
 
-            {/* Period - Only show for Monthly Contribution */}
-            {selectedCategory?.category_type === 'monthly' && (
+            {/* Outstanding Dues Selection - Show for monthly category */}
+            {selectedCategory?.category_type === 'monthly' && memberDues.length > 0 && (
+              <div className="space-y-2">
+                <Label>{language === 'bn' ? 'বকেয়া নির্বাচন (ঐচ্ছিক)' : 'Select Outstanding Due (Optional)'}</Label>
+                <Select value={selectedDueId} onValueChange={handleDueSelect}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={language === 'bn' ? 'বকেয়া বাছুন...' : 'Select due...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {memberDues.map((due) => {
+                      const dueDate = new Date(due.due_month);
+                      const monthName = months.find(m => m.value === dueDate.getMonth() + 1);
+                      const remaining = due.amount - due.paid_amount;
+                      return (
+                        <SelectItem key={due.id} value={due.id}>
+                          {language === 'bn' 
+                            ? `${monthName?.labelBn} ${dueDate.getFullYear()} - ৳${remaining} বাকি`
+                            : `${monthName?.label} ${dueDate.getFullYear()} - ৳${remaining} remaining`}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {language === 'bn' 
+                    ? 'একটি বকেয়া নির্বাচন করলে পেমেন্ট সেটির সাথে সংযুক্ত হবে'
+                    : 'Selecting a due will link this payment to it'}
+                </p>
+              </div>
+            )}
+
+            {/* Period - Show for Monthly Contribution when no due selected */}
+            {selectedCategory?.category_type === 'monthly' && !selectedDueId && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>{language === 'bn' ? 'মাস' : 'Month'} *</Label>

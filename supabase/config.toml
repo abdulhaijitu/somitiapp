@@ -1,5 +1,8 @@
 project_id = "qiejhdddxpwvgcywrdnx"
 
+[functions.generate-monthly-dues]
+verify_jwt = false
+
 [functions.update-tenant-settings]
 verify_jwt = false
 

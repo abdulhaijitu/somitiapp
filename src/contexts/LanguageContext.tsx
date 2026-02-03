@@ -15,6 +15,7 @@ const translations: Translations = {
   'nav.dashboard': { en: 'Dashboard', bn: 'ড্যাশবোর্ড' },
   'nav.members': { en: 'Members', bn: 'সদস্য' },
   'nav.payments': { en: 'Payments', bn: 'পেমেন্ট' },
+  'nav.dues': { en: 'Dues', bn: 'বকেয়া' },
   'nav.reports': { en: 'Reports', bn: 'রিপোর্ট' },
   'nav.notices': { en: 'Notice Board', bn: 'নোটিশ বোর্ড' },
   'nav.constitution': { en: 'Constitution', bn: 'সংবিধান' },

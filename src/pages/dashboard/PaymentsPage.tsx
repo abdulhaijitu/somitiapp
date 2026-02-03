@@ -201,6 +201,7 @@ export function PaymentsPage() {
     period_year: number;
     notes?: string;
     contribution_type_id: string;
+    due_id?: string;
   }) => {
     if (!tenant?.id) {
       toast({
@@ -228,7 +229,8 @@ export function PaymentsPage() {
           period_year: data.period_year,
           payment_date: new Date().toISOString(),
           notes: data.notes,
-          contribution_type_id: data.contribution_type_id
+          contribution_type_id: data.contribution_type_id,
+          due_id: data.due_id || null
         });
 
       if (error) {
@@ -266,6 +268,7 @@ export function PaymentsPage() {
     full_name: string;
     email?: string;
     contribution_type_id: string;
+    due_id?: string;
   }) => {
     const result = await createPayment({
       member_id: data.member_id,

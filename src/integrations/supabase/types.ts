@@ -154,6 +154,70 @@ export type Database = {
           },
         ]
       }
+      dues: {
+        Row: {
+          amount: number
+          contribution_type_id: string
+          created_at: string
+          due_month: string
+          generated_at: string
+          id: string
+          member_id: string
+          paid_amount: number
+          status: Database["public"]["Enums"]["due_status"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          contribution_type_id: string
+          created_at?: string
+          due_month: string
+          generated_at?: string
+          id?: string
+          member_id: string
+          paid_amount?: number
+          status?: Database["public"]["Enums"]["due_status"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          contribution_type_id?: string
+          created_at?: string
+          due_month?: string
+          generated_at?: string
+          id?: string
+          member_id?: string
+          paid_amount?: number
+          status?: Database["public"]["Enums"]["due_status"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dues_contribution_type_id_fkey"
+            columns: ["contribution_type_id"]
+            isOneToOne: false
+            referencedRelation: "contribution_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dues_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dues_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           address: string | null
@@ -211,6 +275,60 @@ export type Database = {
             foreignKeyName: "members_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monthly_due_settings: {
+        Row: {
+          contribution_type_id: string
+          created_at: string
+          fixed_amount: number
+          generation_day: number
+          id: string
+          include_members_joined_after_generation: boolean
+          is_enabled: boolean
+          start_month: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          contribution_type_id: string
+          created_at?: string
+          fixed_amount: number
+          generation_day?: number
+          id?: string
+          include_members_joined_after_generation?: boolean
+          is_enabled?: boolean
+          start_month?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          contribution_type_id?: string
+          created_at?: string
+          fixed_amount?: number
+          generation_day?: number
+          id?: string
+          include_members_joined_after_generation?: boolean
+          is_enabled?: boolean
+          start_month?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_due_settings_contribution_type_id_fkey"
+            columns: ["contribution_type_id"]
+            isOneToOne: false
+            referencedRelation: "contribution_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_due_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
@@ -392,6 +510,7 @@ export type Database = {
           charged_amount: number | null
           contribution_type_id: string | null
           created_at: string
+          due_id: string | null
           fee: number | null
           id: string
           invoice_id: string | null
@@ -417,6 +536,7 @@ export type Database = {
           charged_amount?: number | null
           contribution_type_id?: string | null
           created_at?: string
+          due_id?: string | null
           fee?: number | null
           id?: string
           invoice_id?: string | null
@@ -442,6 +562,7 @@ export type Database = {
           charged_amount?: number | null
           contribution_type_id?: string | null
           created_at?: string
+          due_id?: string | null
           fee?: number | null
           id?: string
           invoice_id?: string | null
@@ -468,6 +589,13 @@ export type Database = {
             columns: ["contribution_type_id"]
             isOneToOne: false
             referencedRelation: "contribution_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_due_id_fkey"
+            columns: ["due_id"]
+            isOneToOne: false
+            referencedRelation: "dues"
             referencedColumns: ["id"]
           },
           {
@@ -960,6 +1088,7 @@ export type Database = {
         | "custom_module"
       app_role: "super_admin" | "admin" | "manager" | "member"
       delivery_status: "pending" | "sent" | "delivered" | "failed" | "read"
+      due_status: "unpaid" | "partial" | "paid"
       notification_channel: "sms" | "in_app" | "email"
       notification_type:
         | "otp"
@@ -1115,6 +1244,7 @@ export const Constants = {
       ],
       app_role: ["super_admin", "admin", "manager", "member"],
       delivery_status: ["pending", "sent", "delivered", "failed", "read"],
+      due_status: ["unpaid", "partial", "paid"],
       notification_channel: ["sms", "in_app", "email"],
       notification_type: [
         "otp",
