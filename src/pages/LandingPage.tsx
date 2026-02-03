@@ -9,6 +9,7 @@ import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { FloatingActions } from '@/components/common/FloatingActions';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { MobileBottomNav, BottomNavItem } from '@/components/common/MobileBottomNav';
 import heroDashboard from '@/assets/hero-dashboard.png';
 import { 
   Users, 
@@ -21,8 +22,19 @@ import {
   ArrowRight,
   Smartphone,
   Menu,
-  X
+  Home,
+  LogIn,
+  Presentation,
+  Map
 } from 'lucide-react';
+
+// Bottom nav items for landing page
+const landingBottomNavItems: BottomNavItem[] = [
+  { key: 'home', label: 'Home', labelBn: 'হোম', icon: Home, href: '/', end: true },
+  { key: 'roadmap', label: 'Roadmap', labelBn: 'রোডম্যাপ', icon: Map, href: '/mobile-roadmap' },
+  { key: 'pitch', label: 'Investors', labelBn: 'বিনিয়োগ', icon: Presentation, href: '/pitch' },
+  { key: 'login', label: 'Login', labelBn: 'লগইন', icon: LogIn, href: '/dashboard' },
+];
 
 export function LandingPage() {
   const { t } = useLanguage();
@@ -389,8 +401,11 @@ export function LandingPage() {
         </div>
       </footer>
       
-      {/* Developer Credit */}
-      <DeveloperCredit />
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav items={landingBottomNavItems} />
+      
+      {/* Developer Credit - Hidden on mobile to avoid overlap */}
+      <DeveloperCredit className="hidden lg:block" />
       
       {/* Floating Actions */}
       <FloatingActions />
