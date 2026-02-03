@@ -706,7 +706,7 @@ export function PaymentsPage() {
             <Download className="h-4 w-4" />
             {t('common.export')}
           </Button>
-          <PermissionGate requiredRole="manager" showAccessDenied={false}>
+          <PermissionGate requiredRole="admin" showAccessDenied={false}>
             <Button 
               variant="outline"
               className="gap-2"
