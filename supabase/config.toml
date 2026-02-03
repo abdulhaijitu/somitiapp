@@ -56,3 +56,9 @@ verify_jwt = false
 
 [functions.add-tenant-admin]
 verify_jwt = false
+
+[functions.create-bulk-dues]
+verify_jwt = false
+
+[functions.waive-due]
+verify_jwt = false
