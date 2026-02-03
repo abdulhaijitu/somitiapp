@@ -40,6 +40,8 @@ import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
 import { RequireTenantAuth } from "@/components/tenant/RequireTenantAuth";
 import { RequireMemberAuth } from "@/components/member/RequireMemberAuth";
 import { TenantLoginPage } from "@/pages/tenant/TenantLoginPage";
+import { ForgotPasswordPage } from "@/pages/tenant/ForgotPasswordPage";
+import { ResetPasswordPage } from "@/pages/tenant/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +96,24 @@ const App = () => (
               </LanguageProvider>
             }
           />
+          <Route
+            path="/forgot-password"
+            element={
+              <LanguageProvider>
+                <ForgotPasswordPage />
+              </LanguageProvider>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <LanguageProvider>
+                <ResetPasswordPage />
+              </LanguageProvider>
+            }
+          />
+          
+          {/* Tenant Dashboard routes (protected) */}
           
           {/* Tenant Dashboard routes (protected) */}
           <Route
