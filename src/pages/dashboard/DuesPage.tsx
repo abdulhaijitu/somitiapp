@@ -108,17 +108,18 @@ export function DuesPage() {
     member_name: string;
     due_month: string;
   } | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
-  });
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Compute dueMonth from year and month
+  const dueMonth = format(new Date(selectedYear, selectedMonth - 1, 1), 'yyyy-MM-dd');
 
   useEffect(() => {
     if (tenant?.id) {
       loadDues();
     }
-  }, [tenant?.id, selectedMonth]);
+  }, [tenant?.id, selectedYear, selectedMonth]);
 
   const loadDues = async () => {
     if (!tenant?.id) return;
@@ -133,7 +134,7 @@ export function DuesPage() {
           contribution_types(name, name_bn)
         `)
         .eq('tenant_id', tenant.id)
-        .eq('due_month', selectedMonth)
+        .eq('due_month', dueMonth)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -186,19 +187,13 @@ export function DuesPage() {
     };
   }, [dues]);
 
-  const getMonthOptions = () => {
-    const options = [];
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = format(date, 'yyyy-MM-dd');
-      const month = months[date.getMonth()];
-      options.push({
-        value,
-        label: `${language === 'bn' ? month.labelBn : month.label} ${date.getFullYear()}`
-      });
+  const getYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+      years.push(y);
     }
-    return options.reverse();
+    return years;
   };
 
   if (loading) {
@@ -218,7 +213,7 @@ export function DuesPage() {
     );
   }
 
-  const selectedMonthDate = new Date(selectedMonth);
+  const selectedMonthDate = new Date(selectedYear, selectedMonth - 1, 1);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -330,15 +325,28 @@ export function DuesPage() {
                 />
               </div>
 
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-[200px]">
+              <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+                <SelectTrigger className="w-[120px]">
                   <Calendar className="h-4 w-4 mr-2" />
-                  <SelectValue />
+                  <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
                 </SelectTrigger>
                 <SelectContent>
-                  {getMonthOptions().map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                  {getYearOptions().map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map(m => (
+                    <SelectItem key={m.value} value={m.value.toString()}>
+                      {language === 'bn' ? m.labelBn : m.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
