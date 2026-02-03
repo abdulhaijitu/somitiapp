@@ -3,13 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreatePaymentParams {
-  tenant_id: string;
   member_id: string;
   amount: number;
   period_month: number;
   period_year: number;
   full_name: string;
   email?: string;
+  contribution_type_id?: string;
   metadata?: Record<string, unknown>;
 }
 
