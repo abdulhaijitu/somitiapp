@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { SEO, getOrganizationSchema } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { 
   Users, 
   CreditCard, 
@@ -250,6 +251,9 @@ export function LandingPage() {
           </div>
         </div>
       </footer>
+      
+      {/* Developer Credit */}
+      <DeveloperCredit />
     </div>
   );
 }

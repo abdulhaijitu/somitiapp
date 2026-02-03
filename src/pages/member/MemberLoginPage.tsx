@@ -12,6 +12,7 @@ import { Loader2, Phone, KeyRound, Users, ArrowLeft } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 
 type Step = 'phone' | 'otp';
 
@@ -332,6 +333,9 @@ export function MemberLoginPage() {
           © {new Date().getFullYear()} {defaultBrandConfig.appName}. {t('All rights reserved.', 'সমস্ত অধিকার সংরক্ষিত।')}
         </p>
       </footer>
+      
+      {/* Developer Credit */}
+      <DeveloperCredit />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { Building2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs } from '@/lib/seo';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 
 export function TenantLoginPage() {
   const navigate = useNavigate();
@@ -202,6 +203,9 @@ export function TenantLoginPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Developer Credit */}
+      <DeveloperCredit className="absolute bottom-0 left-0 right-0" />
     </div>
   );
 }
