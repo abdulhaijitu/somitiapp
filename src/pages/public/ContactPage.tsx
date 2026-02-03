@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { SEO } from '@/components/common/SEO';
+import { ScrollAnimation } from '@/components/common/ScrollAnimation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -145,17 +146,19 @@ export function ContactPage() {
       <section className="relative overflow-hidden py-16 md:py-24">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
         <div className="container relative mx-auto px-4 text-center">
-          <Badge variant="secondary" className="mb-4">
-            {language === 'bn' ? 'যোগাযোগ' : 'Get in Touch'}
-          </Badge>
-          <h1 className="text-4xl font-bold text-foreground md:text-5xl lg:text-6xl">
-            {language === 'bn' ? 'আমাদের সাথে যোগাযোগ করুন' : 'Contact Us'}
-          </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            {language === 'bn' 
-              ? 'ডেমো, সাপোর্ট, বা যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন। আমরা আপনার সমিতিকে সাহায্য করতে প্রস্তুত।'
-              : 'Reach out for demos, support, or any questions. We\'re here to help your somiti succeed.'}
-          </p>
+          <ScrollAnimation animation="fade-up">
+            <Badge variant="secondary" className="mb-4">
+              {language === 'bn' ? 'যোগাযোগ' : 'Get in Touch'}
+            </Badge>
+            <h1 className="text-4xl font-bold text-foreground md:text-5xl lg:text-6xl">
+              {language === 'bn' ? 'আমাদের সাথে যোগাযোগ করুন' : 'Contact Us'}
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              {language === 'bn' 
+                ? 'ডেমো, সাপোর্ট, বা যেকোনো প্রশ্নের জন্য আমাদের সাথে যোগাযোগ করুন। আমরা আপনার সমিতিকে সাহায্য করতে প্রস্তুত।'
+                : 'Reach out for demos, support, or any questions. We\'re here to help your somiti succeed.'}
+            </p>
+          </ScrollAnimation>
         </div>
       </section>
 
@@ -164,6 +167,7 @@ export function ContactPage() {
         <div className="container mx-auto px-4">
           <div className="grid gap-12 lg:grid-cols-2">
             {/* Contact Form */}
+            <ScrollAnimation animation="fade-right">
             <Card className="shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -301,71 +305,74 @@ export function ContactPage() {
                 )}
               </CardContent>
             </Card>
+            </ScrollAnimation>
 
             {/* Contact Information */}
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  {language === 'bn' ? 'যোগাযোগের তথ্য' : 'Contact Information'}
-                </h2>
-                <p className="text-muted-foreground">
-                  {language === 'bn' 
-                    ? 'সরাসরি যোগাযোগের জন্য নিচের তথ্য ব্যবহার করুন।'
-                    : 'Use the following information to reach us directly.'}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {contactInfo.map((item, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow duration-300">
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                        <item.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">{item.label}</p>
-                        {item.href ? (
-                          <a 
-                            href={item.href}
-                            className="font-medium text-foreground hover:text-primary transition-colors"
-                            target={item.href.startsWith('http') ? '_blank' : undefined}
-                            rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                          >
-                            {item.value}
-                          </a>
-                        ) : (
-                          <p className="font-medium text-foreground">{item.value}</p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Quick Contact via WhatsApp */}
-              <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {language === 'bn' ? 'দ্রুত সাহায্য প্রয়োজন?' : 'Need Quick Help?'}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
+            <ScrollAnimation animation="fade-left">
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground mb-4">
+                    {language === 'bn' ? 'যোগাযোগের তথ্য' : 'Contact Information'}
+                  </h2>
+                  <p className="text-muted-foreground">
                     {language === 'bn' 
-                      ? 'আমাদের সাথে WhatsApp-এ চ্যাট করুন এবং তাৎক্ষণিক সাহায্য পান।'
-                      : 'Chat with us on WhatsApp for instant support.'}
+                      ? 'সরাসরি যোগাযোগের জন্য নিচের তথ্য ব্যবহার করুন।'
+                      : 'Use the following information to reach us directly.'}
                   </p>
-                  <a
-                    href="https://wa.me/8801833876434?text=Hi,%20I'm%20interested%20in%20Somiti%20App"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button className="bg-success hover:bg-success/90 gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      {language === 'bn' ? 'WhatsApp-এ চ্যাট করুন' : 'Chat on WhatsApp'}
-                    </Button>
-                  </a>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+
+                <div className="space-y-4">
+                  {contactInfo.map((item, index) => (
+                    <Card key={index} className="hover:shadow-md transition-shadow duration-300">
+                      <CardContent className="flex items-center gap-4 p-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                          <item.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">{item.label}</p>
+                          {item.href ? (
+                            <a 
+                              href={item.href}
+                              className="font-medium text-foreground hover:text-primary transition-colors"
+                              target={item.href.startsWith('http') ? '_blank' : undefined}
+                              rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                            >
+                              {item.value}
+                            </a>
+                          ) : (
+                            <p className="font-medium text-foreground">{item.value}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Quick Contact via WhatsApp */}
+                <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      {language === 'bn' ? 'দ্রুত সাহায্য প্রয়োজন?' : 'Need Quick Help?'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {language === 'bn' 
+                        ? 'আমাদের সাথে WhatsApp-এ চ্যাট করুন এবং তাৎক্ষণিক সাহায্য পান।'
+                        : 'Chat with us on WhatsApp for instant support.'}
+                    </p>
+                    <a
+                      href="https://wa.me/8801833876434?text=Hi,%20I'm%20interested%20in%20Somiti%20App"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button className="bg-success hover:bg-success/90 gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        {language === 'bn' ? 'WhatsApp-এ চ্যাট করুন' : 'Chat on WhatsApp'}
+                      </Button>
+                    </a>
+                  </CardContent>
+                </Card>
+              </div>
+            </ScrollAnimation>
           </div>
         </div>
       </section>
