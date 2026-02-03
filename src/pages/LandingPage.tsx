@@ -21,6 +21,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import heroDashboard from '@/assets/hero-dashboard.png';
+import grameenLogo from '@/assets/partners/grameen-logo.png';
+import bracLogo from '@/assets/partners/brac-logo.png';
+import asaLogo from '@/assets/partners/asa-logo.png';
+import tmssLogo from '@/assets/partners/tmss-logo.png';
+import shaktiLogo from '@/assets/partners/shakti-logo.png';
+import pksfLogo from '@/assets/partners/pksf-logo.png';
 import { 
   Users, 
   CreditCard, 
@@ -501,25 +507,25 @@ export function LandingPage() {
           
           {/* Logo Grid */}
           <div className="mx-auto max-w-4xl">
-            <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-6 items-center justify-items-center">
-              {/* Partner logos - using placeholder text logos */}
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">গ্রামীণ</span>
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6 items-center justify-items-center">
+              {/* Partner logos */}
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={grameenLogo} alt="Grameen" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">BRAC</span>
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={bracLogo} alt="BRAC" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">ASA</span>
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={asaLogo} alt="ASA" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">TMSS</span>
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={tmssLogo} alt="TMSS" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">Shakti</span>
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={shaktiLogo} alt="Shakti Foundation" className="max-h-full max-w-full object-contain" />
               </div>
-              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
-                <span className="font-bold text-foreground text-sm">PKSF</span>
+              <div className="flex h-16 w-32 items-center justify-center rounded-lg p-2 grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <img src={pksfLogo} alt="PKSF" className="max-h-full max-w-full object-contain" />
               </div>
             </div>
             
