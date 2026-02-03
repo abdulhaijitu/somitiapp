@@ -1149,13 +1149,107 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8">
-        <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row">
-          <p>© {new Date().getFullYear()} {defaultBrandConfig.appName}. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
-            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
-            <a href="mailto:support@somitiapp.com" className="hover:text-foreground transition-colors">Support</a>
+      <footer className="border-t border-border bg-muted/30 pt-16 pb-8">
+        <div className="container mx-auto px-4">
+          {/* Newsletter Section */}
+          <div className="mx-auto max-w-xl text-center mb-12">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Stay Updated
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Get the latest updates, tips, and news about somiti management delivered to your inbox.
+            </p>
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const form = e.target as HTMLFormElement;
+                const formData = new FormData(form);
+                const email = formData.get('newsletter-email') as string;
+                
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!email?.trim() || !emailRegex.test(email)) {
+                  toast({
+                    title: "Invalid email",
+                    description: "Please enter a valid email address.",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                // Success - in production this would send to backend/email service
+                toast({
+                  title: "Subscribed! 🎉",
+                  description: "Thank you for subscribing to our newsletter.",
+                });
+                form.reset();
+              }}
+              className="flex flex-col sm:flex-row gap-3"
+            >
+              <Input 
+                name="newsletter-email"
+                type="email" 
+                placeholder="Enter your email address" 
+                maxLength={255}
+                required
+                className="flex-1"
+              />
+              <Button type="submit" className="bg-gradient-primary shadow-glow hover:opacity-90 whitespace-nowrap">
+                <Mail className="h-4 w-4 mr-2" />
+                Subscribe
+              </Button>
+            </form>
+            <p className="text-xs text-muted-foreground mt-3">
+              We respect your privacy. Unsubscribe at any time.
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border mb-8"></div>
+
+          {/* Footer Links */}
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 mb-8">
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Product</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">Features</a></li>
+                <li><a href="#pricing" className="text-muted-foreground hover:text-foreground transition-colors">Pricing</a></li>
+                <li><Link to="/mobile-roadmap" className="text-muted-foreground hover:text-foreground transition-colors">Roadmap</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Company</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#about" className="text-muted-foreground hover:text-foreground transition-colors">About Us</a></li>
+                <li><Link to="/pitch" className="text-muted-foreground hover:text-foreground transition-colors">Investors</Link></li>
+                <li><a href="#contact" className="text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm">
+                <li><Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-4">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">FAQ</a></li>
+                <li><a href="mailto:support@somitiapp.com" className="text-muted-foreground hover:text-foreground transition-colors">Email Support</a></li>
+                <li><a href="https://wa.me/8801700000000" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">WhatsApp</a></li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="flex flex-col items-center justify-between gap-4 pt-8 border-t border-border text-sm text-muted-foreground md:flex-row">
+            <p>© {new Date().getFullYear()} {defaultBrandConfig.appName}. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+              <a href="mailto:support@somitiapp.com" className="hover:text-foreground transition-colors">Support</a>
+            </div>
           </div>
         </div>
       </footer>
