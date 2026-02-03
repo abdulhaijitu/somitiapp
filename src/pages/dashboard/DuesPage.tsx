@@ -15,8 +15,20 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Plus,
+  MoreHorizontal,
+  Ban
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { BulkDuesWizard } from '@/components/dues/BulkDuesWizard';
+import { WaiveDueDialog } from '@/components/dues/WaiveDueDialog';
+import { PermissionGate } from '@/components/common/PermissionGate';
 import {
   Table,
   TableBody,
@@ -48,6 +60,7 @@ interface Due {
   status: 'unpaid' | 'partial' | 'paid';
   generated_at: string;
   created_at: string;
+  advance_from_balance?: number;
   members: {
     id: string;
     name: string;
@@ -79,13 +92,22 @@ const months = [
 
 export function DuesPage() {
   const { language } = useLanguage();
-  const { tenant } = useTenant();
+  const { tenant, checkPermission } = useTenant();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
   const [dues, setDues] = useState<Due[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [bulkWizardOpen, setBulkWizardOpen] = useState(false);
+  const [waiveDueOpen, setWaiveDueOpen] = useState(false);
+  const [selectedDueForWaiver, setSelectedDueForWaiver] = useState<{
+    id: string;
+    amount: number;
+    paid_amount: number;
+    member_name: string;
+    due_month: string;
+  } | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return format(new Date(now.getFullYear(), now.getMonth(), 1), 'yyyy-MM-dd');
@@ -221,6 +243,12 @@ export function DuesPage() {
             <Download className="h-4 w-4" />
             {language === 'bn' ? 'এক্সপোর্ট' : 'Export'}
           </Button>
+          <PermissionGate requiredRole="admin" showAccessDenied={false}>
+            <Button className="gap-2" onClick={() => setBulkWizardOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {language === 'bn' ? 'বাল্ক বকেয়া তৈরি' : 'Create Bulk Dues'}
+            </Button>
+          </PermissionGate>
         </div>
       </div>
 
@@ -359,6 +387,7 @@ export function DuesPage() {
                   <TableHead className="text-right">{language === 'bn' ? 'পরিশোধিত' : 'Paid'}</TableHead>
                   <TableHead className="text-right">{language === 'bn' ? 'বাকি' : 'Remaining'}</TableHead>
                   <TableHead>{language === 'bn' ? 'স্ট্যাটাস' : 'Status'}</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -398,6 +427,37 @@ export function DuesPage() {
                       <TableCell>
                         <DueStatusBadge status={due.status} />
                       </TableCell>
+                      <TableCell>
+                        {due.status !== 'paid' && checkPermission('admin') && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedDueForWaiver({
+                                    id: due.id,
+                                    amount: due.amount,
+                                    paid_amount: due.paid_amount,
+                                    member_name: language === 'bn' && due.members?.name_bn 
+                                      ? due.members.name_bn 
+                                      : due.members?.name || '',
+                                    due_month: due.due_month
+                                  });
+                                  setWaiveDueOpen(true);
+                                }}
+                                className="gap-2 text-warning"
+                              >
+                                <Ban className="h-4 w-4" />
+                                {language === 'bn' ? 'মওকুফ করুন' : 'Waive Due'}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -435,6 +495,21 @@ export function DuesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Bulk Dues Wizard */}
+      <BulkDuesWizard
+        open={bulkWizardOpen}
+        onOpenChange={setBulkWizardOpen}
+        onSuccess={loadDues}
+      />
+
+      {/* Waive Due Dialog */}
+      <WaiveDueDialog
+        open={waiveDueOpen}
+        onOpenChange={setWaiveDueOpen}
+        due={selectedDueForWaiver}
+        onSuccess={loadDues}
+      />
     </div>
   );
 }
