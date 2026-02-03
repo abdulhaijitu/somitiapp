@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,13 +72,11 @@ interface Member {
   dues?: number;
 }
 
-// Mock tenant_id for now
-const MOCK_TENANT_ID = '00000000-0000-0000-0000-000000000000';
-
 const PAGE_SIZE = 20;
 
 export function MembersPage() {
   const { t, language } = useLanguage();
+  const { tenant } = useTenant();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
@@ -163,10 +162,19 @@ export function MembersPage() {
   }) => {
     setIsSubmitting(true);
     try {
+      if (!tenant?.id) {
+        toast({
+          title: 'Error',
+          description: 'No active tenant found',
+          variant: 'destructive'
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('members')
         .insert({
-          tenant_id: MOCK_TENANT_ID,
+          tenant_id: tenant.id,
           name: data.name,
           name_bn: data.name_bn,
           phone: data.phone,
