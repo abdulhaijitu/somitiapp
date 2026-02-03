@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountUp } from '@/hooks/useCountUp';
+import { ScrollAnimation } from '@/components/common/ScrollAnimation';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { SEO, getOrganizationSchema } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
@@ -358,7 +359,7 @@ export function HomePage() {
       {/* Features Section */}
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <ScrollAnimation animation="fade-up" className="text-center mb-16">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'বৈশিষ্ট্যসমূহ' : 'Features'}
             </Badge>
@@ -370,46 +371,51 @@ export function HomePage() {
                 ? 'আপনার সমিতি পরিচালনার জন্য প্রয়োজনীয় সব ফিচার'
                 : 'All the features you need to manage your somiti efficiently'}
             </p>
-          </div>
+          </ScrollAnimation>
           
           {/* Feature Items with Screenshots */}
           <div className="space-y-20">
             {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className={`grid gap-8 lg:gap-12 items-center lg:grid-cols-2 ${
-                  index % 2 === 1 ? 'lg:grid-flow-dense' : ''
-                }`}
+              <ScrollAnimation 
+                key={index}
+                animation={index % 2 === 0 ? 'fade-right' : 'fade-left'}
+                delay={100}
               >
-                {/* Text Content */}
-                <div className={`space-y-4 ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
-                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                    <feature.icon className="h-7 w-7 text-primary" />
+                <div 
+                  className={`grid gap-8 lg:gap-12 items-center lg:grid-cols-2 ${
+                    index % 2 === 1 ? 'lg:grid-flow-dense' : ''
+                  }`}
+                >
+                  {/* Text Content */}
+                  <div className={`space-y-4 ${index % 2 === 1 ? 'lg:col-start-2' : ''}`}>
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                      <feature.icon className="h-7 w-7 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground md:text-3xl">{feature.title}</h3>
+                    <p className="text-lg text-muted-foreground">{feature.description}</p>
+                    <ul className="space-y-2 pt-2">
+                      {getFeaturePoints(feature.title, language).map((point, i) => (
+                        <li key={i} className="flex items-center gap-2 text-muted-foreground">
+                          <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <h3 className="text-2xl font-bold text-foreground md:text-3xl">{feature.title}</h3>
-                  <p className="text-lg text-muted-foreground">{feature.description}</p>
-                  <ul className="space-y-2 pt-2">
-                    {getFeaturePoints(feature.title, language).map((point, i) => (
-                      <li key={i} className="flex items-center gap-2 text-muted-foreground">
-                        <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
-                        <span>{point}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                
-                {/* Screenshot */}
-                <div className={`relative ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
-                  <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 opacity-50 blur-2xl" />
-                  <div className="relative rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
-                    <img 
-                      src={feature.image} 
-                      alt={feature.title} 
-                      className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                    />
+                  
+                  {/* Screenshot */}
+                  <div className={`relative ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                    <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 opacity-50 blur-2xl" />
+                    <div className="relative rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-xl overflow-hidden group hover:shadow-2xl transition-all duration-300">
+                      <img 
+                        src={feature.image} 
+                        alt={feature.title} 
+                        className="w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -418,30 +424,32 @@ export function HomePage() {
       {/* How It Works */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'কিভাবে কাজ করে' : 'How It Works'}
             </Badge>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'তিনটি সহজ ধাপ' : 'Three Simple Steps'}
             </h2>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
             {howItWorks.map((item, index) => (
-              <div key={index} className="text-center relative">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary text-2xl font-bold text-primary-foreground shadow-glow">
-                  {item.step}
-                </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
-                <p className="text-muted-foreground">{item.description}</p>
-                
-                {index < howItWorks.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%]">
-                    <ArrowRight className="h-6 w-6 text-muted-foreground/30" />
+              <ScrollAnimation key={index} animation="fade-up" delay={index * 150}>
+                <div className="text-center relative">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-primary text-2xl font-bold text-primary-foreground shadow-glow">
+                    {item.step}
                   </div>
-                )}
-              </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground">{item.description}</p>
+                  
+                  {index < howItWorks.length - 1 && (
+                    <div className="hidden md:block absolute top-8 left-[60%] w-[80%]">
+                      <ArrowRight className="h-6 w-6 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -450,26 +458,28 @@ export function HomePage() {
       {/* Who It's For */}
       <section className="py-16 md:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'কাদের জন্য' : 'Who It\'s For'}
             </Badge>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'সব ধরনের সংগঠনের জন্য' : 'For All Types of Organizations'}
             </h2>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid gap-6 md:grid-cols-3 max-w-4xl mx-auto">
             {targetAudience.map((item, index) => (
-              <Card key={index} className="text-center">
-                <CardContent className="p-6">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                    <item.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
-                </CardContent>
-              </Card>
+              <ScrollAnimation key={index} animation="zoom-in" delay={index * 100}>
+                <Card className="text-center h-full">
+                  <CardContent className="p-6">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                      <item.icon className="h-7 w-7 text-primary" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">{item.description}</p>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -478,7 +488,7 @@ export function HomePage() {
       {/* Testimonials */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <Badge variant="secondary" className="mb-4 gap-1">
               <Star className="h-3 w-3" />
               {language === 'bn' ? '১০০+ সমিতির বিশ্বাস' : 'Trusted by 100+ Somitis'}
@@ -486,20 +496,22 @@ export function HomePage() {
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'আমাদের ব্যবহারকারীরা কি বলেন' : 'What Our Users Say'}
             </h2>
-          </div>
+          </ScrollAnimation>
           
           <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((testimonial, index) => (
-              <Card key={index} className="relative">
-                <CardContent className="p-6">
-                  <Quote className="h-8 w-8 text-primary/20 mb-4" />
-                  <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
-                  <div>
-                    <p className="font-semibold text-foreground">{testimonial.author}</p>
-                    <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ScrollAnimation key={index} animation="fade-up" delay={index * 100}>
+                <Card className="relative h-full">
+                  <CardContent className="p-6">
+                    <Quote className="h-8 w-8 text-primary/20 mb-4" />
+                    <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
+                    <div>
+                      <p className="font-semibold text-foreground">{testimonial.author}</p>
+                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </ScrollAnimation>
             ))}
           </div>
         </div>
@@ -508,35 +520,37 @@ export function HomePage() {
       {/* Partner Logos */}
       <section className="py-12 border-y border-border bg-muted/20">
         <div className="container mx-auto px-4">
-          <p className="text-center text-sm text-muted-foreground mb-8">
-            {language === 'bn' ? 'বিশ্বস্ত সংগঠনগুলো' : 'Trusted by leading organizations'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            {partnerLogos.map((logo, index) => (
-              <img 
-                key={index}
-                src={logo.src} 
-                alt={logo.alt} 
-                className="h-10 w-auto object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-              />
-            ))}
-          </div>
+          <ScrollAnimation animation="fade">
+            <p className="text-center text-sm text-muted-foreground mb-8">
+              {language === 'bn' ? 'বিশ্বস্ত সংগঠনগুলো' : 'Trusted by leading organizations'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+              {partnerLogos.map((logo, index) => (
+                <img 
+                  key={index}
+                  src={logo.src} 
+                  alt={logo.alt} 
+                  className="h-10 w-auto object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                />
+              ))}
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
 
       {/* FAQs */}
       <section className="py-16 md:py-24">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
+          <ScrollAnimation animation="fade-up" className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
               {language === 'bn' ? 'সচরাচর প্রশ্ন' : 'FAQs'}
             </Badge>
             <h2 className="text-3xl font-bold text-foreground md:text-4xl">
               {language === 'bn' ? 'সাধারণ প্রশ্নসমূহ' : 'Frequently Asked Questions'}
             </h2>
-          </div>
+          </ScrollAnimation>
           
-          <div className="max-w-2xl mx-auto">
+          <ScrollAnimation animation="fade-up" delay={100} className="max-w-2xl mx-auto">
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`} className="border rounded-lg px-4">
@@ -549,34 +563,36 @@ export function HomePage() {
                 </AccordionItem>
               ))}
             </Accordion>
-          </div>
+          </ScrollAnimation>
         </div>
       </section>
 
       {/* Final CTA */}
       <section className="py-16 md:py-24 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-            {language === 'bn' ? 'আজই আপনার সমিতি ডিজিটাল করুন' : 'Digitize Your Somiti Today'}
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {language === 'bn' 
-              ? 'বিনামূল্যে শুরু করুন এবং দেখুন কিভাবে আমরা আপনার সমিতিকে আরও স্বচ্ছ ও দক্ষ করতে পারি।'
-              : 'Start for free and see how we can make your somiti more transparent and efficient.'}
-          </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link to="/contact">
-              <Button size="lg" className="bg-gradient-primary shadow-glow gap-2 px-8">
-                {language === 'bn' ? 'বিনামূল্যে শুরু করুন' : 'Get Started Free'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/about">
-              <Button size="lg" variant="outline" className="px-8">
-                {language === 'bn' ? 'আমাদের সম্পর্কে জানুন' : 'Learn About Us'}
-              </Button>
-            </Link>
-          </div>
+          <ScrollAnimation animation="zoom-in">
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              {language === 'bn' ? 'আজই আপনার সমিতি ডিজিটাল করুন' : 'Digitize Your Somiti Today'}
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              {language === 'bn' 
+                ? 'বিনামূল্যে শুরু করুন এবং দেখুন কিভাবে আমরা আপনার সমিতিকে আরও স্বচ্ছ ও দক্ষ করতে পারি।'
+                : 'Start for free and see how we can make your somiti more transparent and efficient.'}
+            </p>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Link to="/contact">
+                <Button size="lg" className="bg-gradient-primary shadow-glow gap-2 px-8">
+                  {language === 'bn' ? 'বিনামূল্যে শুরু করুন' : 'Get Started Free'}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/about">
+                <Button size="lg" variant="outline" className="px-8">
+                  {language === 'bn' ? 'আমাদের সম্পর্কে জানুন' : 'Learn About Us'}
+                </Button>
+              </Link>
+            </div>
+          </ScrollAnimation>
         </div>
       </section>
     </>
