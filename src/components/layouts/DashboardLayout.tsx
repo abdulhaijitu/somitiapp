@@ -15,6 +15,7 @@ import { usePWAInstall, usePWAPromptEligibility } from '@/hooks/usePWAInstall';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import logoIcon from '@/assets/logo-icon.png';
 import {
   LayoutDashboard,
   Users,
@@ -192,16 +193,12 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
           <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
             {!collapsed && (
               <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-                  <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
-                </div>
+                <img src={logoIcon} alt="Somiti" className="h-8 w-8 rounded-lg object-contain" />
                 <span className="text-lg font-bold text-sidebar-foreground">Somiti</span>
               </div>
             )}
             {collapsed && (
-              <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary">
-                <Shield className="h-4 w-4 text-sidebar-primary-foreground" />
-              </div>
+              <img src={logoIcon} alt="Somiti" className="mx-auto h-8 w-8 rounded-lg object-contain" />
             )}
             <Button
               variant="ghost"

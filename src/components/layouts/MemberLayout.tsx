@@ -14,6 +14,7 @@ import { usePWAInstall, usePWAPromptEligibility } from '@/hooks/usePWAInstall';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import logoIcon from '@/assets/logo-icon.png';
 import {
   Home,
   CreditCard,
@@ -159,9 +160,7 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
       {/* Mobile Header - Simplified for bottom nav */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card/95 backdrop-blur-lg px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <User className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img src={logoIcon} alt="Somiti" className="h-8 w-8 rounded-lg object-contain" />
           <span className="font-semibold text-foreground font-bengali truncate max-w-[150px]">{tenantName}</span>
         </div>
         <div className="flex items-center gap-1">
