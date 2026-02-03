@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders, errorResponse, successResponse } from "../_shared/security.ts";
 import { logPaymentEvent } from "../_shared/audit.ts";
+import { sendNotification, getNotificationSettings, messageTemplates } from "../_shared/notifications.ts";
 
 // Map UddoktaPay payment methods to our enum
 const PAYMENT_METHOD_MAP: Record<string, string> = {
@@ -150,6 +151,48 @@ Deno.serve(async (req: Request) => {
         fee
       }
     });
+
+    // Send notification to member
+    try {
+      // Get member phone
+      const { data: member } = await supabase
+        .from('members')
+        .select('phone, name, name_bn')
+        .eq('id', payment.member_id)
+        .single();
+
+      // Get tenant info
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('name, name_bn')
+        .eq('id', payment.tenant_id)
+        .single();
+
+      if (member?.phone && tenant) {
+        const somitiName = tenant.name_bn || tenant.name;
+        const notificationType = newStatus === 'paid' ? 'payment_success' : 'payment_failed';
+        const templates = newStatus === 'paid' 
+          ? messageTemplates.paymentSuccess(Number(payment.amount), somitiName, new Date().toLocaleDateString('bn-BD'))
+          : messageTemplates.paymentFailed(Number(payment.amount), somitiName);
+
+        await sendNotification(supabase, {
+          tenantId: payment.tenant_id,
+          memberId: payment.member_id,
+          type: notificationType,
+          title: newStatus === 'paid' ? 'Payment Successful' : 'Payment Failed',
+          titleBn: newStatus === 'paid' ? 'পেমেন্ট সফল' : 'পেমেন্ট ব্যর্থ',
+          message: templates.en,
+          messageBn: templates.bn,
+          data: { paymentId: payment.id, amount: payment.amount, transactionId: transaction_id },
+          sendSms: true,
+          phoneNumber: member.phone,
+          idempotencyKey: `webhook-${payment.id}-${newStatus}`
+        });
+      }
+    } catch (notifError) {
+      console.error('Failed to send notification:', notifError);
+      // Don't fail the webhook for notification errors
+    }
 
     console.log('Webhook processed successfully:', {
       payment_id: payment.id,

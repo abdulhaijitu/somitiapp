@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant, TenantProvider } from '@/contexts/TenantContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import {
   Home,
   CreditCard,
@@ -85,6 +86,7 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
           <span className="font-semibold text-foreground font-bengali">{tenantName}</span>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationCenter />
           <LanguageToggle />
           <Button
             variant="ghost"

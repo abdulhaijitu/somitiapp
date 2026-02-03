@@ -103,6 +103,125 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          admin_alert_on_failed_payment: boolean | null
+          admin_alert_on_high_overdue: boolean | null
+          created_at: string
+          dues_reminder_day: number | null
+          dues_reminder_enabled: boolean | null
+          high_overdue_threshold: number | null
+          id: string
+          overdue_reminder_enabled: boolean | null
+          overdue_reminder_frequency_days: number | null
+          payment_failed_sms: boolean | null
+          payment_success_sms: boolean | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_alert_on_failed_payment?: boolean | null
+          admin_alert_on_high_overdue?: boolean | null
+          created_at?: string
+          dues_reminder_day?: number | null
+          dues_reminder_enabled?: boolean | null
+          high_overdue_threshold?: number | null
+          id?: string
+          overdue_reminder_enabled?: boolean | null
+          overdue_reminder_frequency_days?: number | null
+          payment_failed_sms?: boolean | null
+          payment_success_sms?: boolean | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_alert_on_failed_payment?: boolean | null
+          admin_alert_on_high_overdue?: boolean | null
+          created_at?: string
+          dues_reminder_day?: number | null
+          dues_reminder_enabled?: boolean | null
+          high_overdue_threshold?: number | null
+          id?: string
+          overdue_reminder_enabled?: boolean | null
+          overdue_reminder_frequency_days?: number | null
+          payment_failed_sms?: boolean | null
+          payment_success_sms?: boolean | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          member_id: string | null
+          message: string
+          message_bn: string | null
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          read_at: string | null
+          tenant_id: string
+          title: string
+          title_bn: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          member_id?: string | null
+          message: string
+          message_bn?: string | null
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          read_at?: string | null
+          tenant_id: string
+          title: string
+          title_bn?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          member_id?: string | null
+          message?: string
+          message_bn?: string | null
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          read_at?: string | null
+          tenant_id?: string
+          title?: string
+          title_bn?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_logs: {
         Row: {
           action: string
@@ -243,6 +362,102 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sms_logs: {
+        Row: {
+          cost: number | null
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          idempotency_key: string | null
+          member_id: string | null
+          message: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          phone_number: string
+          provider: string | null
+          provider_message_id: string | null
+          sent_at: string | null
+          status: Database["public"]["Enums"]["delivery_status"]
+          tenant_id: string
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          member_id?: string | null
+          message: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          phone_number: string
+          provider?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          tenant_id: string
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          member_id?: string | null
+          message?: string
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          phone_number?: string
+          provider?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["delivery_status"]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sms_logs_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sms_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sms_rate_limits: {
+        Row: {
+          created_at: string
+          id: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          phone_number: string
+          request_count: number | null
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          phone_number: string
+          request_count?: number | null
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          phone_number?: string
+          request_count?: number | null
+          window_start?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -402,6 +617,16 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "manager" | "member"
+      delivery_status: "pending" | "sent" | "delivered" | "failed" | "read"
+      notification_channel: "sms" | "in_app" | "email"
+      notification_type:
+        | "otp"
+        | "payment_success"
+        | "payment_failed"
+        | "payment_reminder"
+        | "dues_reminder"
+        | "system_alert"
+        | "admin_alert"
       payment_method:
         | "offline"
         | "bkash"
@@ -540,6 +765,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "manager", "member"],
+      delivery_status: ["pending", "sent", "delivered", "failed", "read"],
+      notification_channel: ["sms", "in_app", "email"],
+      notification_type: [
+        "otp",
+        "payment_success",
+        "payment_failed",
+        "payment_reminder",
+        "dues_reminder",
+        "system_alert",
+        "admin_alert",
+      ],
       payment_method: ["offline", "bkash", "nagad", "rocket", "card", "other"],
       payment_status: ["pending", "paid", "failed", "cancelled", "refunded"],
       subscription_status: ["active", "expired", "cancelled"],
