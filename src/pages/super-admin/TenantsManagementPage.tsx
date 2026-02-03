@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,13 +49,15 @@ import {
   RefreshCw,
   Filter,
   Globe,
-  UserPlus
+  UserPlus,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { CreateTenantWithAdminDialog } from '@/components/super-admin/CreateTenantWithAdminDialog';
 import { AddTenantAdminDialog } from '@/components/super-admin/AddTenantAdminDialog';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 
 interface Tenant {
   id: string;
@@ -75,6 +78,8 @@ interface Tenant {
 }
 
 export function TenantsManagementPage() {
+  const navigate = useNavigate();
+  const { startImpersonation } = useImpersonation();
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,6 +93,15 @@ export function TenantsManagementPage() {
   const [adminTenant, setAdminTenant] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
+
+  const handleEnterAsTenantAdmin = (tenant: Tenant) => {
+    startImpersonation({
+      type: 'tenant_admin',
+      tenantId: tenant.id,
+      tenantName: tenant.name
+    });
+    navigate('/dashboard');
+  };
 
   useEffect(() => {
     loadTenants();
@@ -379,6 +393,14 @@ export function TenantsManagementPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => handleEnterAsTenantAdmin(tenant)}
+                              className="text-primary"
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Enter as Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onClick={() => {
                                 setAdminTenant({ id: tenant.id, name: tenant.name });

@@ -1,9 +1,11 @@
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant, TenantProvider } from '@/contexts/TenantContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { SubscriptionBanner } from '@/components/common/SubscriptionBanner';
+import { ImpersonationBanner } from '@/components/common/ImpersonationBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -46,11 +48,17 @@ interface DashboardLayoutProps {
 function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const { t } = useLanguage();
   const { tenant, isLoading, isSubscriptionValid, checkPermission, error, isSuperAdmin } = useTenant();
+  const { isImpersonating, target: impersonationTarget } = useImpersonation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Use impersonation tenant info when active
+  const displayTenantName = isImpersonating && impersonationTarget?.type === 'tenant_admin' 
+    ? impersonationTarget.tenantName 
+    : tenant?.name || 'Your Organization';
 
   const handleLogout = async () => {
     try {
@@ -106,11 +114,13 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
     return isSuperAdmin || checkPermission(item.requiredRole);
   });
 
-  const tenantName = tenant?.name || 'Your Organization';
   const subscriptionStatus = isSubscriptionValid ? 'Active' : 'Expired';
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
+      {/* Impersonation Banner */}
+      <ImpersonationBanner />
+      
       {/* Subscription Banner */}
       <SubscriptionBanner />
 
@@ -213,7 +223,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                   {t('dashboard.welcome')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {tenantName} • {subscriptionStatus}
+                  {displayTenantName} • {subscriptionStatus}
                 </p>
               </div>
             </div>
@@ -221,7 +231,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
               <NotificationCenter />
               <LanguageToggle />
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
-                {tenantName.substring(0, 2).toUpperCase()}
+                {displayTenantName.substring(0, 2).toUpperCase()}
               </div>
             </div>
           </header>

@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +22,8 @@ import {
   UserX,
   UserCheck,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogIn
 } from 'lucide-react';
 import {
   Table,
@@ -75,8 +78,10 @@ interface Member {
 const PAGE_SIZE = 20;
 
 export function MembersPage() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { tenant } = useTenant();
+  const { startImpersonation } = useImpersonation();
   const { toast } = useToast();
   
   const [loading, setLoading] = useState(true);
@@ -325,6 +330,18 @@ const handleCreateMember = async (data: {
     setSelectedMember(member);
     setIsProfileOpen(false);
     setIsEditOpen(true);
+  };
+
+  const handleViewAsMember = (member: Member) => {
+    if (!tenant) return;
+    startImpersonation({
+      type: 'member',
+      tenantId: tenant.id,
+      tenantName: tenant.name,
+      memberId: member.id,
+      memberName: member.name
+    });
+    navigate('/member');
   };
 
   // Filtering and sorting
@@ -586,6 +603,11 @@ const handleCreateMember = async (data: {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewAsMember(member)} className="gap-2 text-primary">
+                                  <LogIn className="h-4 w-4" />
+                                  View as Member
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => openProfile(member)} className="gap-2">
                                   <Eye className="h-4 w-4" />
                                   View Profile

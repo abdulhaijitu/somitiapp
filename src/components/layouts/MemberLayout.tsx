@@ -1,8 +1,10 @@
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant, TenantProvider } from '@/contexts/TenantContext';
+import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { ImpersonationBanner } from '@/components/common/ImpersonationBanner';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -39,10 +41,14 @@ interface MemberLayoutProps {
 function MemberLayoutContent({ children }: MemberLayoutProps) {
   const { language } = useLanguage();
   const { tenant, isLoading, error, isMember } = useTenant();
+  const { isImpersonating, target: impersonationTarget } = useImpersonation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // When impersonating as member, skip auth checks and show member portal
+  const isViewingAsMember = isImpersonating && impersonationTarget?.type === 'member';
 
   const handleLogout = async () => {
     try {
@@ -79,8 +85,8 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
     );
   }
 
-  // Error/access denied state
-  if (error || !isMember) {
+  // Error/access denied state (skip if impersonating)
+  if ((error || !isMember) && !isViewingAsMember) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
         <div className="text-center max-w-md">
@@ -100,10 +106,15 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
     );
   }
 
-  const tenantName = language === 'bn' && tenant?.name_bn ? tenant.name_bn : tenant?.name || 'Somiti';
+  const tenantName = isViewingAsMember && impersonationTarget?.tenantName 
+    ? impersonationTarget.tenantName 
+    : (language === 'bn' && tenant?.name_bn ? tenant.name_bn : tenant?.name || 'Somiti');
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
+      {/* Impersonation Banner */}
+      <ImpersonationBanner />
+      
       {/* Mobile Header */}
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
         <div className="flex items-center gap-2">
