@@ -1,4 +1,6 @@
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountUp } from '@/hooks/useCountUp';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { SEO, getOrganizationSchema } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
@@ -271,19 +273,8 @@ export function HomePage() {
                 ))}
               </div>
 
-              {/* Stats */}
-              <div className="mt-10 grid grid-cols-3 gap-4">
-                {[
-                  { value: '100+', label: language === 'bn' ? 'সমিতি' : 'Somitis' },
-                  { value: '5,000+', label: language === 'bn' ? 'সদস্য' : 'Members' },
-                  { value: '৳50L+', label: language === 'bn' ? 'প্রসেসড' : 'Processed' },
-                ].map((stat, index) => (
-                  <div key={index} className="text-center lg:text-left">
-                    <div className="text-2xl font-bold text-foreground sm:text-3xl">{stat.value}</div>
-                    <div className="text-xs text-muted-foreground sm:text-sm">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
+              {/* Stats with Animated Counters */}
+              <StatsSection language={language} />
             </div>
             
             {/* Right - Dashboard Preview */}
@@ -547,5 +538,47 @@ export function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+// Animated Stats Section Component
+function StatsSection({ language }: { language: string }) {
+  const stat1 = useCountUp({ end: 100, duration: 2000 });
+  const stat2 = useCountUp({ end: 5000, duration: 2500 });
+  const stat3 = useCountUp({ end: 50, duration: 2000 });
+
+  const stats = [
+    { 
+      ref: stat1.ref, 
+      value: stat1.isVisible ? Math.round(stat1.count) : 0,
+      suffix: '+',
+      label: language === 'bn' ? 'সমিতি' : 'Somitis' 
+    },
+    { 
+      ref: stat2.ref, 
+      value: stat2.isVisible ? Math.round(stat2.count).toLocaleString() : '0',
+      suffix: '+',
+      label: language === 'bn' ? 'সদস্য' : 'Members' 
+    },
+    { 
+      ref: stat3.ref, 
+      value: stat3.isVisible ? Math.round(stat3.count) : 0,
+      prefix: '৳',
+      suffix: 'L+',
+      label: language === 'bn' ? 'প্রসেসড' : 'Processed' 
+    },
+  ];
+
+  return (
+    <div className="mt-10 grid grid-cols-3 gap-4">
+      {stats.map((stat, index) => (
+        <div key={index} ref={stat.ref} className="text-center lg:text-left">
+          <div className="text-2xl font-bold text-foreground sm:text-3xl tabular-nums">
+            {stat.prefix || ''}{stat.value}{stat.suffix || ''}
+          </div>
+          <div className="text-xs text-muted-foreground sm:text-sm">{stat.label}</div>
+        </div>
+      ))}
+    </div>
   );
 }
