@@ -24,6 +24,7 @@ import { SubscriptionsManagementPage } from "@/pages/super-admin/SubscriptionsMa
 import { AuditLogsPage } from "@/pages/super-admin/AuditLogsPage";
 import { SuperAdminSettingsPage } from "@/pages/super-admin/SuperAdminSettingsPage";
 import { SystemMonitoringPage } from "@/pages/super-admin/SystemMonitoringPage";
+import { RevenueDashboardPage } from "@/pages/super-admin/RevenueDashboardPage";
 import { MemberDashboard } from "@/pages/member/MemberDashboard";
 import { MemberPaymentsPage } from "@/pages/member/MemberPaymentsPage";
 import { MemberDuesPage } from "@/pages/member/MemberDuesPage";
@@ -232,6 +233,14 @@ const App = () => (
             element={
               <SuperAdminWrapper>
                 <SystemMonitoringPage />
+              </SuperAdminWrapper>
+            }
+          />
+          <Route
+            path="/super-admin/revenue"
+            element={
+              <SuperAdminWrapper>
+                <RevenueDashboardPage />
               </SuperAdminWrapper>
             }
           />
