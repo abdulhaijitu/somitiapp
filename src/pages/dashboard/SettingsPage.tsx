@@ -1,16 +1,14 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NotificationSettings } from '@/components/notifications/NotificationSettings';
 import { TenantBillingCard } from '@/components/billing/TenantBillingCard';
 import { AddOnPurchaseCard } from '@/components/billing/AddOnPurchaseCard';
+import { OrganizationInfoForm } from '@/components/settings/OrganizationInfoForm';
 import { 
   Settings, 
-  Building2, 
   Globe, 
   CreditCard, 
   Shield,
@@ -67,39 +65,8 @@ export function SettingsPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Main settings */}
             <div className="space-y-6 lg:col-span-2">
-              {/* Organization Info */}
-              <Card className="border-border">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                      <Building2 className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle>{language === 'bn' ? 'প্রতিষ্ঠানের তথ্য' : 'Organization Information'}</CardTitle>
-                      <CardDescription>{language === 'bn' ? 'আপনার সমিতির মৌলিক তথ্য' : 'Basic details about your somiti'}</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">{language === 'bn' ? 'সমিতির নাম' : 'Somiti Name'}</Label>
-                      <Input id="name" defaultValue="ABC Somiti" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="nameBn">{language === 'bn' ? 'নাম (বাংলা)' : 'Name (Bangla)'}</Label>
-                      <Input id="nameBn" defaultValue="এবিসি সমিতি" className="font-bengali" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">{language === 'bn' ? 'ঠিকানা' : 'Address'}</Label>
-                    <Input id="address" defaultValue="Dhaka, Bangladesh" />
-                  </div>
-                  <Button className="bg-gradient-primary hover:opacity-90">
-                    {language === 'bn' ? 'পরিবর্তন সংরক্ষণ করুন' : 'Save Changes'}
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Organization Info - Now using dedicated component */}
+              <OrganizationInfoForm />
 
               {/* Language Settings */}
               <Card className="border-border">

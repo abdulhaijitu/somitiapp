@@ -761,6 +761,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          address: string | null
           created_at: string
           default_language: string
           deleted_at: string | null
@@ -772,6 +773,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
           default_language?: string
           deleted_at?: string | null
@@ -783,6 +785,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
           default_language?: string
           deleted_at?: string | null
@@ -839,6 +842,7 @@ export type Database = {
       get_tenant_by_subdomain: {
         Args: { _subdomain: string }
         Returns: {
+          address: string | null
           created_at: string
           default_language: string
           deleted_at: string | null
