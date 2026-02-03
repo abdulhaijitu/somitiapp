@@ -1,9 +1,11 @@
 /**
  * Google Analytics (GA4) Integration
  * Privacy-safe, environment-aware, white-label analytics
+ * GDPR-compliant with cookie consent integration
  */
 
 import { config } from './config';
+import { isAnalyticsAllowed } from './cookie-consent';
 
 // GA4 Measurement ID from environment
 const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
@@ -25,6 +27,11 @@ export function shouldEnableAnalytics(): boolean {
   
   // Respect Do Not Track preference
   if (typeof navigator !== 'undefined' && navigator.doNotTrack === '1') {
+    return false;
+  }
+  
+  // GDPR: Check cookie consent
+  if (!isAnalyticsAllowed()) {
     return false;
   }
   

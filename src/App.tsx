@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics";
+import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
@@ -360,6 +361,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <CookieConsentBanner />
           </AnalyticsProvider>
         </BrowserRouter>
       </TooltipProvider>
