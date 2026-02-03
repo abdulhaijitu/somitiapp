@@ -30,6 +30,12 @@ import asaLogo from '@/assets/partners/asa-logo.png';
 import tmssLogo from '@/assets/partners/tmss-logo.png';
 import shaktiLogo from '@/assets/partners/shakti-logo.png';
 import pksfLogo from '@/assets/partners/pksf-logo.png';
+import person1 from '@/assets/testimonials/person-1.jpg';
+import person2 from '@/assets/testimonials/person-2.jpg';
+import person3 from '@/assets/testimonials/person-3.jpg';
+import person4 from '@/assets/testimonials/person-4.jpg';
+import person5 from '@/assets/testimonials/person-5.jpg';
+import person6 from '@/assets/testimonials/person-6.jpg';
 import { 
   Users, 
   CreditCard, 
@@ -143,6 +149,9 @@ export function HomePage() {
         : 'This platform has completely transformed our somiti\'s accounting. Now all members can see their payments from their mobile.',
       author: language === 'bn' ? 'মোঃ রফিকুল ইসলাম' : 'Md. Rafiqul Islam',
       role: language === 'bn' ? 'সভাপতি, গ্রামীণ সঞ্চয় সমিতি' : 'President, Grameen Savings Somiti',
+      photo: person1,
+      orgLogo: grameenLogo,
+      orgName: 'Grameen',
     },
     {
       quote: language === 'bn'
@@ -150,6 +159,9 @@ export function HomePage() {
         : 'We used to make many mistakes with paper accounting. Now that everything is digital, there are no discrepancies.',
       author: language === 'bn' ? 'ফাতেমা খাতুন' : 'Fatema Khatun',
       role: language === 'bn' ? 'ম্যানেজার, মহিলা উন্নয়ন সমিতি' : 'Manager, Women Development Somiti',
+      photo: person2,
+      orgLogo: bracLogo,
+      orgName: 'BRAC',
     },
     {
       quote: language === 'bn'
@@ -157,6 +169,39 @@ export function HomePage() {
         : 'The SMS reminder feature is amazing. Members now make payments on time.',
       author: language === 'bn' ? 'আব্দুল করিম' : 'Abdul Karim',
       role: language === 'bn' ? 'সেক্রেটারি, কৃষক সমবায় সমিতি' : 'Secretary, Farmers Cooperative',
+      photo: person3,
+      orgLogo: asaLogo,
+      orgName: 'ASA',
+    },
+    {
+      quote: language === 'bn'
+        ? 'রিপোর্ট জেনারেশন ফিচারটি আমাদের অনেক সময় বাঁচায়। এক ক্লিকে সব রিপোর্ট তৈরি হয়ে যায়।'
+        : 'The report generation feature saves us a lot of time. All reports are created with just one click.',
+      author: language === 'bn' ? 'নাসরিন আক্তার' : 'Nasrin Akter',
+      role: language === 'bn' ? 'ট্রেজারার, শক্তি মহিলা সমিতি' : 'Treasurer, Shakti Women Somiti',
+      photo: person4,
+      orgLogo: shaktiLogo,
+      orgName: 'Shakti',
+    },
+    {
+      quote: language === 'bn'
+        ? 'সদস্যদের মোবাইল পোর্টাল থাকায় তারা নিজেই সব তথ্য দেখতে পারে। আমাদের কাজ অনেক কমে গেছে।'
+        : 'With the member mobile portal, they can see all information themselves. Our workload has reduced significantly.',
+      author: language === 'bn' ? 'মোঃ হাসান আলী' : 'Md. Hasan Ali',
+      role: language === 'bn' ? 'পরিচালক, TMSS সঞ্চয় গ্রুপ' : 'Director, TMSS Savings Group',
+      photo: person5,
+      orgLogo: tmssLogo,
+      orgName: 'TMSS',
+    },
+    {
+      quote: language === 'bn'
+        ? 'অনলাইন পেমেন্ট সিস্টেম চালু করার পর সংগ্রহ অনেক সহজ হয়ে গেছে। bKash, Nagad সব কাজ করে।'
+        : 'After enabling online payments, collection has become much easier. bKash, Nagad all work seamlessly.',
+      author: language === 'bn' ? 'রাকিব হাসান' : 'Rakib Hasan',
+      role: language === 'bn' ? 'কো-অর্ডিনেটর, PKSF পার্টনার' : 'Coordinator, PKSF Partner',
+      photo: person6,
+      orgLogo: pksfLogo,
+      orgName: 'PKSF',
     },
   ];
 

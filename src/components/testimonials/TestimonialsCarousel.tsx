@@ -14,10 +14,13 @@ import Autoplay from 'embla-carousel-autoplay';
 import { Star, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface Testimonial {
+export interface Testimonial {
   quote: string;
   author: string;
   role: string;
+  photo?: string;
+  orgLogo?: string;
+  orgName?: string;
 }
 
 interface TestimonialsCarouselProps {
@@ -63,7 +66,7 @@ export function TestimonialsCarousel({ testimonials, language }: TestimonialsCar
         </ScrollAnimation>
         
         <ScrollAnimation animation="fade-up" delay={100}>
-          <div className="relative max-w-5xl mx-auto">
+          <div className="relative max-w-6xl mx-auto">
             <Carousel
               setApi={setApi}
               opts={{
@@ -76,26 +79,57 @@ export function TestimonialsCarousel({ testimonials, language }: TestimonialsCar
               <CarouselContent className="-ml-2 md:-ml-4">
                 {testimonials.map((testimonial, index) => (
                   <CarouselItem key={index} className="pl-2 md:pl-4 md:basis-1/2 lg:basis-1/3">
-                    <Card className="relative h-full border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
-                      <CardContent className="p-6">
+                    <Card className="relative h-full border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all duration-300 group">
+                      <CardContent className="p-6 flex flex-col h-full">
+                        {/* Stars */}
                         <div className="flex items-center gap-1 mb-4">
                           {[...Array(5)].map((_, i) => (
                             <Star key={i} className="h-4 w-4 fill-warning text-warning" />
                           ))}
                         </div>
-                        <Quote className="h-8 w-8 text-primary/20 mb-3" />
-                        <p className="text-muted-foreground mb-6 italic leading-relaxed">
+                        
+                        {/* Quote icon */}
+                        <Quote className="h-8 w-8 text-primary/20 mb-3 group-hover:text-primary/30 transition-colors" />
+                        
+                        {/* Quote text */}
+                        <p className="text-muted-foreground mb-6 italic leading-relaxed flex-1">
                           "{testimonial.quote}"
                         </p>
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold">
-                            {testimonial.author.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="font-semibold text-foreground">{testimonial.author}</p>
-                            <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                        
+                        {/* Author info */}
+                        <div className="flex items-center gap-3 mt-auto">
+                          {testimonial.photo ? (
+                            <img 
+                              src={testimonial.photo} 
+                              alt={testimonial.author}
+                              className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/20"
+                            />
+                          ) : (
+                            <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground font-semibold text-lg">
+                              {testimonial.author.charAt(0)}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-foreground truncate">{testimonial.author}</p>
+                            <p className="text-sm text-muted-foreground truncate">{testimonial.role}</p>
                           </div>
                         </div>
+                        
+                        {/* Organization logo */}
+                        {testimonial.orgLogo && (
+                          <div className="mt-4 pt-4 border-t border-border/50">
+                            <div className="flex items-center gap-2">
+                              <img 
+                                src={testimonial.orgLogo} 
+                                alt={testimonial.orgName || 'Organization'} 
+                                className="h-6 w-auto object-contain opacity-70 group-hover:opacity-100 transition-opacity"
+                              />
+                              {testimonial.orgName && (
+                                <span className="text-xs text-muted-foreground">{testimonial.orgName}</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </CarouselItem>
