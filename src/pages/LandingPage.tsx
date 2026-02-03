@@ -490,6 +490,62 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Trusted Partners Section */}
+      <section className="py-16 md:py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-10">
+            <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+              Trusted by leading organizations
+            </p>
+          </div>
+          
+          {/* Logo Grid */}
+          <div className="mx-auto max-w-4xl">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-6 items-center justify-items-center">
+              {/* Partner logos - using placeholder text logos */}
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">গ্রামীণ</span>
+              </div>
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">BRAC</span>
+              </div>
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">ASA</span>
+              </div>
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">TMSS</span>
+              </div>
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">Shakti</span>
+              </div>
+              <div className="flex h-12 items-center justify-center rounded-lg bg-muted/50 px-6 py-3 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300">
+                <span className="font-bold text-foreground text-sm">PKSF</span>
+              </div>
+            </div>
+            
+            {/* Stats */}
+            <div className="mt-12 grid grid-cols-2 gap-8 md:grid-cols-4 text-center">
+              <div>
+                <p className="text-3xl font-bold text-primary">100+</p>
+                <p className="text-sm text-muted-foreground mt-1">Active Somitis</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-primary">5,000+</p>
+                <p className="text-sm text-muted-foreground mt-1">Members Managed</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-primary">৳10M+</p>
+                <p className="text-sm text-muted-foreground mt-1">Payments Processed</p>
+              </div>
+              <div>
+                <p className="text-3xl font-bold text-primary">99.9%</p>
+                <p className="text-sm text-muted-foreground mt-1">Uptime</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
