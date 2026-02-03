@@ -161,74 +161,36 @@ export function TenantsManagementPage() {
     try {
       setIsSubmitting(true);
 
-      // Create tenant
-      const { data: tenant, error: tenantError } = await supabase
-        .from('tenants')
-        .insert({
+      // Use Edge Function to create tenant (bypasses RLS with service role)
+      const { data, error } = await supabase.functions.invoke('create-tenant', {
+        body: {
           name: formData.name,
           name_bn: formData.name_bn || null,
           subdomain: formData.subdomain.toLowerCase(),
           default_language: formData.default_language,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (tenantError) {
-        if (tenantError.code === '23505') {
-          toast({
-            title: 'Error',
-            description: 'This subdomain is already taken',
-            variant: 'destructive'
-          });
-        } else {
-          console.error('Error creating tenant:', tenantError);
-          toast({
-            title: 'Error',
-            description: 'Failed to create tenant',
-            variant: 'destructive'
-          });
+          subscription_months: formData.subscription_months,
+          plan: 'standard'
         }
-        return;
-      }
+      });
 
-      // Create subscription
-      const startDate = new Date();
-      const endDate = addMonths(startDate, formData.subscription_months);
-
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .insert({
-          tenant_id: tenant.id,
-          plan: 'standard',
-          status: 'active',
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString()
-        });
-
-      if (subscriptionError) {
-        console.error('Error creating subscription:', subscriptionError);
-        // Delete the tenant if subscription creation fails
-        await supabase.from('tenants').delete().eq('id', tenant.id);
+      if (error) {
+        console.error('Error creating tenant:', error);
         toast({
           title: 'Error',
-          description: 'Failed to create subscription',
+          description: 'Failed to create tenant',
           variant: 'destructive'
         });
         return;
       }
 
-      // Log the action
-      await supabase.from('audit_logs').insert({
-        action: 'CREATE_TENANT',
-        entity_type: 'tenant',
-        entity_id: tenant.id,
-        details: { 
-          name: formData.name, 
-          subdomain: formData.subdomain,
-          subscription_months: formData.subscription_months
-        }
-      });
+      if (data?.error) {
+        toast({
+          title: 'Error',
+          description: data.error,
+          variant: 'destructive'
+        });
+        return;
+      }
 
       toast({
         title: 'Success',

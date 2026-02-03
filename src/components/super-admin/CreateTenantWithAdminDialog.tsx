@@ -29,7 +29,6 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { addMonths } from 'date-fns';
 
 interface CreateTenantWithAdminDialogProps {
   open: boolean;
@@ -113,71 +112,33 @@ export function CreateTenantWithAdminDialog({
     try {
       setIsSubmitting(true);
 
-      // 1. Create tenant
-      const { data: tenant, error: tenantError } = await supabase
-        .from('tenants')
-        .insert({
+      // Use Edge Function to create tenant (bypasses RLS with service role)
+      const { data, error: fnError } = await supabase.functions.invoke('create-tenant', {
+        body: {
           name: formData.name,
           name_bn: formData.name_bn || null,
           subdomain: formData.subdomain.toLowerCase(),
           default_language: formData.default_language,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (tenantError) {
-        if (tenantError.code === '23505') {
-          throw new Error('This subdomain is already taken');
+          subscription_months: formData.subscription_months,
+          plan: 'standard'
         }
-        throw tenantError;
+      });
+
+      if (fnError) {
+        throw fnError;
       }
 
-      // 2. Create subscription
-      const startDate = new Date();
-      const endDate = addMonths(startDate, formData.subscription_months);
-
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .insert({
-          tenant_id: tenant.id,
-          plan: 'standard',
-          status: 'active',
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString()
-        });
-
-      if (subscriptionError) {
-        // Rollback tenant
-        await supabase.from('tenants').delete().eq('id', tenant.id);
-        throw subscriptionError;
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
-      // 3. Create admin user via Supabase Auth
-      // Note: In production, this would be done via an Edge Function with service role
-      // For now, we'll store the credentials to be shared manually
-      
-      // Create user role entry (user will be created when they sign up)
-      // We'll create a placeholder that will be linked when user registers
-      
+      const tenant = data?.tenant;
+
       // Store credentials for display
       setCredentials({
         email: formData.admin_email,
         password: formData.admin_password,
         subdomain: formData.subdomain
-      });
-
-      // Log the action
-      await supabase.from('audit_logs').insert({
-        action: 'CREATE_TENANT_WITH_ADMIN',
-        entity_type: 'tenant',
-        entity_id: tenant.id,
-        details: { 
-          name: formData.name, 
-          subdomain: formData.subdomain,
-          admin_email: formData.admin_email,
-          subscription_months: formData.subscription_months
-        }
       });
 
       setStep('success');
