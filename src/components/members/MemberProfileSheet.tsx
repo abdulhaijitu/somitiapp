@@ -92,15 +92,30 @@ export function MemberProfileSheet({
     if (!tenantId) return;
 
     try {
-      const { data, error } = await supabase
+      // First try to get from monthly_due_settings
+      const { data: dueSetting, error: dueError } = await supabase
         .from('monthly_due_settings')
         .select('fixed_amount')
         .eq('tenant_id', tenantId)
         .eq('is_enabled', true)
         .maybeSingle();
 
-      if (!error && data) {
-        setMonthlyDueAmount(Number(data.fixed_amount));
+      if (!dueError && dueSetting) {
+        setMonthlyDueAmount(Number(dueSetting.fixed_amount));
+        return;
+      }
+
+      // Fallback: get from contribution_types (monthly category)
+      const { data: contributionType, error: ctError } = await supabase
+        .from('contribution_types')
+        .select('default_amount')
+        .eq('tenant_id', tenantId)
+        .eq('category_type', 'monthly')
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!ctError && contributionType && contributionType.default_amount) {
+        setMonthlyDueAmount(Number(contributionType.default_amount));
       }
     } catch (error) {
       console.error('Error loading monthly due setting:', error);
