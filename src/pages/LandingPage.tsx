@@ -665,6 +665,230 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="border-y border-border bg-muted/30 py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+              <span>💎</span>
+              <span>Simple Pricing</span>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              Choose Your Plan
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+              Start free and scale as your organization grows. No hidden fees.
+            </p>
+          </div>
+          
+          {/* Pricing Cards */}
+          <div className="mx-auto max-w-5xl grid gap-6 md:grid-cols-3">
+            {/* Starter Plan */}
+            <div className="relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-foreground">Starter</h3>
+                <p className="text-sm text-muted-foreground mt-1">Perfect for small somitis</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-foreground">৳0</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Up to 25 members</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Basic member management</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Offline payment tracking</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>3 months report history</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="h-4 w-4 flex items-center justify-center flex-shrink-0">—</span>
+                  <span>SMS notifications</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="h-4 w-4 flex items-center justify-center flex-shrink-0">—</span>
+                  <span>Online payments</span>
+                </li>
+              </ul>
+              <Button variant="outline" className="w-full">
+                Get Started Free
+              </Button>
+            </div>
+
+            {/* Standard Plan - Popular */}
+            <div className="relative rounded-2xl border-2 border-primary bg-card p-6 transition-all duration-300 hover:shadow-xl shadow-lg">
+              {/* Popular Badge */}
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="rounded-full bg-primary px-4 py-1 text-xs font-semibold text-primary-foreground shadow-glow">
+                  Most Popular
+                </span>
+              </div>
+              <div className="mb-6 mt-2">
+                <h3 className="text-lg font-semibold text-foreground">Standard</h3>
+                <p className="text-sm text-muted-foreground mt-1">For growing organizations</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-foreground">৳499</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Up to 100 members</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Advanced member management</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Offline payment tracking</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>12 months report history</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>50 SMS/month included</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span className="h-4 w-4 flex items-center justify-center flex-shrink-0">—</span>
+                  <span>Online payments</span>
+                </li>
+              </ul>
+              <Button className="w-full bg-gradient-primary shadow-glow hover:opacity-90">
+                Start 14-Day Trial
+              </Button>
+            </div>
+
+            {/* Premium Plan */}
+            <div className="relative rounded-2xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-foreground">Premium</h3>
+                <p className="text-sm text-muted-foreground mt-1">For large organizations</p>
+              </div>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-foreground">৳999</span>
+                <span className="text-muted-foreground">/month</span>
+              </div>
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span className="font-medium">Unlimited members</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Advanced member management</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span className="font-medium">bKash/Nagad payments</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Unlimited report history</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>200 SMS/month included</span>
+                </li>
+                <li className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                  <span>Priority support</span>
+                </li>
+              </ul>
+              <Button variant="outline" className="w-full border-primary text-primary hover:bg-primary/5">
+                Start 14-Day Trial
+              </Button>
+            </div>
+          </div>
+
+          {/* Feature Comparison Table */}
+          <div className="mt-16 mx-auto max-w-4xl">
+            <h3 className="text-xl font-semibold text-foreground text-center mb-8">
+              Compare All Features
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-4 px-4 font-medium text-muted-foreground">Feature</th>
+                    <th className="text-center py-4 px-4 font-semibold text-foreground">Starter</th>
+                    <th className="text-center py-4 px-4 font-semibold text-primary">Standard</th>
+                    <th className="text-center py-4 px-4 font-semibold text-foreground">Premium</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Maximum Members</td>
+                    <td className="py-4 px-4 text-center">25</td>
+                    <td className="py-4 px-4 text-center font-medium text-primary">100</td>
+                    <td className="py-4 px-4 text-center font-medium">Unlimited</td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Member Portal Access</td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Dues Management</td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Report History</td>
+                    <td className="py-4 px-4 text-center">3 months</td>
+                    <td className="py-4 px-4 text-center font-medium text-primary">12 months</td>
+                    <td className="py-4 px-4 text-center font-medium">Unlimited</td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">SMS Notifications</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center font-medium text-primary">50/month</td>
+                    <td className="py-4 px-4 text-center font-medium">200/month</td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Online Payments (bKash/Nagad)</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Advanced Reports</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                  </tr>
+                  <tr className="hover:bg-muted/50 transition-colors">
+                    <td className="py-4 px-4 text-foreground">Priority Support</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center text-muted-foreground">—</td>
+                    <td className="py-4 px-4 text-center"><CheckCircle2 className="h-4 w-4 text-success mx-auto" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Add-ons note */}
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              Need more SMS or members? Purchase add-on bundles anytime from your dashboard.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 md:py-28">
         <div className="container mx-auto px-4">
