@@ -16,6 +16,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/hooks/use-toast';
 import heroDashboard from '@/assets/hero-dashboard.png';
 import { 
   Users, 
@@ -31,7 +35,11 @@ import {
   Home,
   LogIn,
   Presentation,
-  Map
+  Map,
+  Mail,
+  Phone,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 // Bottom nav items for landing page
@@ -885,6 +893,175 @@ export function LandingPage() {
             <p className="text-center text-sm text-muted-foreground mt-6">
               Need more SMS or members? Purchase add-on bundles anytime from your dashboard.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+              <span>📞</span>
+              <span>Get In Touch</span>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              Contact Us
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+              Have questions? We're here to help. Reach out through any of these channels.
+            </p>
+          </div>
+
+          <div className="mx-auto max-w-5xl grid gap-8 md:grid-cols-2">
+            {/* Contact Info Cards */}
+            <div className="space-y-6">
+              {/* Email Card */}
+              <div className="rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:border-primary/30">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Mail className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Email Support</h3>
+                    <p className="text-sm text-muted-foreground mt-1 mb-3">
+                      Get a response within 24 hours
+                    </p>
+                    <a 
+                      href="mailto:support@somitiapp.com" 
+                      className="text-primary hover:underline font-medium"
+                    >
+                      support@somitiapp.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone Card */}
+              <div className="rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:border-primary/30">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10 text-success">
+                    <Phone className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Phone Support</h3>
+                    <p className="text-sm text-muted-foreground mt-1 mb-3">
+                      Available Sat-Thu, 10AM-6PM
+                    </p>
+                    <a 
+                      href="tel:+8801700000000" 
+                      className="text-foreground hover:text-primary font-medium"
+                    >
+                      +880 1700-000000
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* WhatsApp Card */}
+              <div className="rounded-xl border border-border bg-card p-6 transition-all duration-300 hover:shadow-lg hover:border-primary/30">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#25D366]/10 text-[#25D366]">
+                    <MessageSquare className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">WhatsApp</h3>
+                    <p className="text-sm text-muted-foreground mt-1 mb-3">
+                      Quick responses for urgent queries
+                    </p>
+                    <a 
+                      href="https://wa.me/8801700000000" 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:text-primary font-medium"
+                    >
+                      Chat on WhatsApp
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <div className="rounded-xl border border-border bg-card p-6 md:p-8">
+              <h3 className="font-semibold text-foreground text-lg mb-6">Send us a message</h3>
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const formData = new FormData(form);
+                  const name = formData.get('name') as string;
+                  const email = formData.get('email') as string;
+                  const message = formData.get('message') as string;
+                  
+                  // Basic validation
+                  if (!name?.trim() || !email?.trim() || !message?.trim()) {
+                    toast({
+                      title: "Missing fields",
+                      description: "Please fill in all fields.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  // Email validation
+                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                  if (!emailRegex.test(email)) {
+                    toast({
+                      title: "Invalid email",
+                      description: "Please enter a valid email address.",
+                      variant: "destructive"
+                    });
+                    return;
+                  }
+                  
+                  // Success - in production this would send to backend
+                  toast({
+                    title: "Message sent!",
+                    description: "We'll get back to you within 24 hours.",
+                  });
+                  form.reset();
+                }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="contact-name">Your Name</Label>
+                  <Input 
+                    id="contact-name" 
+                    name="name"
+                    placeholder="Enter your name" 
+                    maxLength={100}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-email">Email Address</Label>
+                  <Input 
+                    id="contact-email" 
+                    name="email"
+                    type="email" 
+                    placeholder="you@example.com" 
+                    maxLength={255}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contact-message">Message</Label>
+                  <Textarea 
+                    id="contact-message" 
+                    name="message"
+                    placeholder="How can we help you?" 
+                    rows={4}
+                    maxLength={1000}
+                    required
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-gradient-primary shadow-glow hover:opacity-90">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </section>
