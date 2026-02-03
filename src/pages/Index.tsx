@@ -1,10 +1,13 @@
 import { LanguageProvider } from '@/contexts/LanguageContext';
-import { LandingPage } from '@/pages/LandingPage';
+import { PublicLayout } from '@/components/layouts/PublicLayout';
+import { HomePage } from '@/pages/public/HomePage';
 
 const Index = () => {
   return (
     <LanguageProvider>
-      <LandingPage />
+      <PublicLayout>
+        <HomePage />
+      </PublicLayout>
     </LanguageProvider>
   );
 };
