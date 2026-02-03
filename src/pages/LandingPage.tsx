@@ -21,6 +21,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import heroDashboard from '@/assets/hero-dashboard.png';
+import appLogo from '@/assets/logo.png';
+import logoIcon from '@/assets/logo-icon.png';
 import grameenLogo from '@/assets/partners/grameen-logo.png';
 import bracLogo from '@/assets/partners/brac-logo.png';
 import asaLogo from '@/assets/partners/asa-logo.png';
@@ -116,16 +118,13 @@ export function LandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-              <Shield className="h-5 w-5 text-primary-foreground" />
-              <div className="absolute -inset-0.5 rounded-xl bg-gradient-primary opacity-30 blur-sm" />
-            </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight text-foreground">Somiti</span>
-              <span className="ml-1 text-xs font-medium text-primary">App</span>
-            </div>
-          </div>
+          <Link to="/" className="flex items-center gap-3">
+            <img 
+              src={appLogo} 
+              alt="Somiti App Logo" 
+              className="h-10 w-auto object-contain"
+            />
+          </Link>
           
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-6 md:flex">
@@ -167,12 +166,11 @@ export function LandingPage() {
                 <div className="flex flex-col h-full">
                   {/* Mobile Menu Header */}
                   <div className="flex items-center justify-between border-b border-border p-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
-                        <Shield className="h-4 w-4 text-primary-foreground" />
-                      </div>
-                      <span className="font-bold text-foreground">Somiti</span>
-                    </div>
+                    <img 
+                      src={appLogo} 
+                      alt="Somiti App Logo" 
+                      className="h-8 w-auto object-contain"
+                    />
                   </div>
                   
                   {/* Mobile Navigation Links */}

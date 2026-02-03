@@ -4,6 +4,7 @@ import { NavLink } from '@/components/NavLink';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { NoIndexSEO } from '@/components/common/SEO';
 import { supabase } from '@/integrations/supabase/client';
+import logoIcon from '@/assets/logo-icon.png';
 import {
   LayoutDashboard,
   Building2,
@@ -79,9 +80,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-destructive">
-                <Shield className="h-4 w-4 text-destructive-foreground" />
-              </div>
+              <img src={logoIcon} alt="Somiti" className="h-8 w-8 rounded-lg object-contain" />
               <div>
                 <span className="text-lg font-bold text-sidebar-foreground">Super Admin</span>
                 <p className="text-xs text-sidebar-foreground/60">System Management</p>
@@ -89,9 +88,7 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
             </div>
           )}
           {collapsed && (
-            <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-destructive">
-              <Shield className="h-4 w-4 text-destructive-foreground" />
-            </div>
+            <img src={logoIcon} alt="Somiti" className="mx-auto h-8 w-8 rounded-lg object-contain" />
           )}
           <Button
             variant="ghost"
