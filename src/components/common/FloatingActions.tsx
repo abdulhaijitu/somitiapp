@@ -55,15 +55,19 @@ export function FloatingActions() {
         <ArrowUp className="h-5 w-5" />
       </Button>
 
-      {/* WhatsApp Button */}
-      <Button
-        onClick={openWhatsApp}
-        size="icon"
-        className="h-12 w-12 rounded-full shadow-lg bg-[#25D366] hover:bg-[#20BD5A] text-white"
-        aria-label="Contact on WhatsApp"
-      >
-        <WhatsAppIcon className="h-6 w-6" />
-      </Button>
+      {/* WhatsApp Button with Pulse Animation */}
+      <div className="relative">
+        {/* Pulse ring */}
+        <span className="absolute inset-0 animate-ping rounded-full bg-[#25D366] opacity-30" />
+        <Button
+          onClick={openWhatsApp}
+          size="icon"
+          className="relative h-12 w-12 rounded-full shadow-lg bg-[#25D366] hover:bg-[#20BD5A] text-white hover:scale-110 transition-transform"
+          aria-label="Contact on WhatsApp"
+        >
+          <WhatsAppIcon className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 }
