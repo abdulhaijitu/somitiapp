@@ -59,7 +59,7 @@ import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { BulkPaymentWizard } from '@/components/payments/BulkPaymentWizard';
 import { PermissionGate } from '@/components/common/PermissionGate';
-import { DateRangeFilter } from '@/components/common/DateRangeFilter';
+
 import { EmptyState } from '@/components/common/EmptyState';
 import { format, isAfter, startOfMonth, subMonths } from 'date-fns';
 import { useApprovePaymentRequest } from '@/hooks/useApprovePaymentRequest';
@@ -124,8 +124,8 @@ export function PaymentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'online' | 'offline' | 'pending_approval'>('all');
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
-  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
@@ -564,6 +564,31 @@ export function PaymentsPage() {
     return isAfter(lastMonth, new Date(payment.created_at));
   };
 
+  // Month options for filter
+  const months = [
+    { value: 1, label: 'January', labelBn: 'জানুয়ারি' },
+    { value: 2, label: 'February', labelBn: 'ফেব্রুয়ারি' },
+    { value: 3, label: 'March', labelBn: 'মার্চ' },
+    { value: 4, label: 'April', labelBn: 'এপ্রিল' },
+    { value: 5, label: 'May', labelBn: 'মে' },
+    { value: 6, label: 'June', labelBn: 'জুন' },
+    { value: 7, label: 'July', labelBn: 'জুলাই' },
+    { value: 8, label: 'August', labelBn: 'আগস্ট' },
+    { value: 9, label: 'September', labelBn: 'সেপ্টেম্বর' },
+    { value: 10, label: 'October', labelBn: 'অক্টোবর' },
+    { value: 11, label: 'November', labelBn: 'নভেম্বর' },
+    { value: 12, label: 'December', labelBn: 'ডিসেম্বর' },
+  ];
+
+  const getYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+      years.push(y);
+    }
+    return years;
+  };
+
   const filteredAndSortedPayments = useMemo(() => {
     let result = [...payments];
 
@@ -577,16 +602,25 @@ export function PaymentsPage() {
       result = result.filter(p => p.payment_type === typeFilter);
     }
 
-    if (dateFrom) {
+    // Filter by selected year
+    if (selectedYear !== null) {
       result = result.filter(p => {
+        if (p.period_year) {
+          return p.period_year === selectedYear;
+        }
         const date = new Date(p.payment_date || p.created_at);
-        return date >= dateFrom;
+        return date.getFullYear() === selectedYear;
       });
     }
-    if (dateTo) {
+
+    // Filter by selected month
+    if (selectedMonth !== null) {
       result = result.filter(p => {
+        if (p.period_month) {
+          return p.period_month === selectedMonth;
+        }
         const date = new Date(p.payment_date || p.created_at);
-        return date <= dateTo;
+        return date.getMonth() + 1 === selectedMonth;
       });
     }
 
@@ -614,7 +648,7 @@ export function PaymentsPage() {
     });
 
     return result;
-  }, [payments, statusFilter, typeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder]);
+  }, [payments, statusFilter, typeFilter, selectedYear, selectedMonth, searchQuery, sortBy, sortOrder]);
 
   const totalPages = Math.ceil(filteredAndSortedPayments.length / PAGE_SIZE);
   const paginatedPayments = filteredAndSortedPayments.slice(
@@ -631,9 +665,9 @@ export function PaymentsPage() {
     }
   };
 
-  const handleDateRangeChange = (from: Date | undefined, to: Date | undefined) => {
-    setDateFrom(from);
-    setDateTo(to);
+  const clearFilters = () => {
+    setSelectedYear(null);
+    setSelectedMonth(null);
     setCurrentPage(1);
   };
 
@@ -737,11 +771,40 @@ export function PaymentsPage() {
       <Card className="border-border">
         <CardContent className="py-4">
           <div className="flex flex-wrap gap-4 items-center">
-            <DateRangeFilter
-              from={dateFrom}
-              to={dateTo}
-              onRangeChange={handleDateRangeChange}
-            />
+            <Select value={selectedYear?.toString() || 'all'} onValueChange={(v) => {
+              setSelectedYear(v === 'all' ? null : parseInt(v));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[120px]">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'bn' ? 'সব বছর' : 'All Years'}</SelectItem>
+                {getYearOptions().map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedMonth?.toString() || 'all'} onValueChange={(v) => {
+              setSelectedMonth(v === 'all' ? null : parseInt(v));
+              setCurrentPage(1);
+            }}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{language === 'bn' ? 'সব মাস' : 'All Months'}</SelectItem>
+                {months.map(m => (
+                  <SelectItem key={m.value} value={m.value.toString()}>
+                    {language === 'bn' ? m.labelBn : m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             <Select value={typeFilter} onValueChange={(v) => {
               setTypeFilter(v as 'all' | 'online' | 'offline' | 'pending_approval');
@@ -803,9 +866,9 @@ export function PaymentsPage() {
               <EmptyState
                 icon={<CreditCard className="h-8 w-8" />}
                 title="No payments found"
-                description={searchQuery || dateFrom || dateTo ? "Try adjusting your filters" : "Start by recording your first payment"}
-                actionLabel={!searchQuery && !dateFrom && !dateTo ? "Add Payment" : undefined}
-                onAction={!searchQuery && !dateFrom && !dateTo ? () => setIsCreateOpen(true) : undefined}
+                description={searchQuery || selectedYear || selectedMonth ? "Try adjusting your filters" : "Start by recording your first payment"}
+                actionLabel={!searchQuery && !selectedYear && !selectedMonth ? "Add Payment" : undefined}
+                onAction={!searchQuery && !selectedYear && !selectedMonth ? () => setIsCreateOpen(true) : undefined}
               />
             ) : (
               <>
