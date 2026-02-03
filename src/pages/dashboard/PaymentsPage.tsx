@@ -779,7 +779,7 @@ export function PaymentsPage() {
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50">
                 <SelectItem value="all">{language === 'bn' ? 'সব বছর' : 'All Years'}</SelectItem>
                 {getYearOptions().map(year => (
                   <SelectItem key={year} value={year.toString()}>
@@ -796,7 +796,7 @@ export function PaymentsPage() {
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50">
                 <SelectItem value="all">{language === 'bn' ? 'সব মাস' : 'All Months'}</SelectItem>
                 {months.map(m => (
                   <SelectItem key={m.value} value={m.value.toString()}>
@@ -813,7 +813,7 @@ export function PaymentsPage() {
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Payment type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50">
                 <SelectItem value="all">All types</SelectItem>
                 <SelectItem value="online">Online only</SelectItem>
                 <SelectItem value="offline">Offline only</SelectItem>
