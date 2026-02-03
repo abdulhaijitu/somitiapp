@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { TestimonialsCarousel } from '@/components/testimonials/TestimonialsCarousel';
 import {
   Accordion,
   AccordionContent,
@@ -486,36 +487,7 @@ export function HomePage() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-24">
-        <div className="container mx-auto px-4">
-          <ScrollAnimation animation="fade-up" className="text-center mb-12">
-            <Badge variant="secondary" className="mb-4 gap-1">
-              <Star className="h-3 w-3" />
-              {language === 'bn' ? '১০০+ সমিতির বিশ্বাস' : 'Trusted by 100+ Somitis'}
-            </Badge>
-            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
-              {language === 'bn' ? 'আমাদের ব্যবহারকারীরা কি বলেন' : 'What Our Users Say'}
-            </h2>
-          </ScrollAnimation>
-          
-          <div className="grid gap-6 md:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <ScrollAnimation key={index} animation="fade-up" delay={index * 100}>
-                <Card className="relative h-full">
-                  <CardContent className="p-6">
-                    <Quote className="h-8 w-8 text-primary/20 mb-4" />
-                    <p className="text-muted-foreground mb-6 italic">"{testimonial.quote}"</p>
-                    <div>
-                      <p className="font-semibold text-foreground">{testimonial.author}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </ScrollAnimation>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TestimonialsCarousel testimonials={testimonials} language={language} />
 
       {/* Partner Logos */}
       <section className="py-12 border-y border-border bg-muted/20">
