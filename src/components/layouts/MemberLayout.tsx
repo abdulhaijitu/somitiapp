@@ -4,6 +4,9 @@ import { useTenant, TenantProvider } from '@/contexts/TenantContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import {
   Home,
   CreditCard,
@@ -37,6 +40,30 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
   const { language } = useLanguage();
   const { tenant, isLoading, error, isMember } = useTenant();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await supabase.auth.signOut();
+      toast({
+        title: language === 'bn' ? 'লগআউট সফল' : 'Logged out',
+        description: language === 'bn' ? 'আপনি সফলভাবে লগআউট করেছেন' : 'You have been successfully logged out',
+      });
+      navigate('/member/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to logout. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   // Loading state
   if (isLoading) {
@@ -121,10 +148,16 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
                 </NavLink>
               ))}
               <button
-                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
               >
-                <LogOut className="h-5 w-5" />
-                <span>{language === 'bn' ? 'লগআউট' : 'Logout'}</span>
+                {isLoggingOut ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <LogOut className="h-5 w-5" />
+                )}
+                <span>{isLoggingOut ? (language === 'bn' ? 'লগআউট হচ্ছে...' : 'Logging out...') : (language === 'bn' ? 'লগআউট' : 'Logout')}</span>
               </button>
             </div>
           </nav>
@@ -172,10 +205,16 @@ function MemberLayoutContent({ children }: MemberLayoutProps) {
               <LanguageToggle />
             </div>
             <button
-              className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-foreground/70 transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
             >
-              <LogOut className="h-5 w-5" />
-              <span>{language === 'bn' ? 'লগআউট' : 'Logout'}</span>
+              {isLoggingOut ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <LogOut className="h-5 w-5" />
+              )}
+              <span>{isLoggingOut ? (language === 'bn' ? 'লগআউট হচ্ছে...' : 'Logging out...') : (language === 'bn' ? 'লগআউট' : 'Logout')}</span>
             </button>
           </div>
         </aside>

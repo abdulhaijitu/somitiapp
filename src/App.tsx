@@ -31,12 +31,14 @@ import { MemberPaymentsPage } from "@/pages/member/MemberPaymentsPage";
 import { MemberDuesPage } from "@/pages/member/MemberDuesPage";
 import { MemberNoticesPage } from "@/pages/member/MemberNoticesPage";
 import { MemberConstitutionPage } from "@/pages/member/MemberConstitutionPage";
+import { MemberLoginPage } from "@/pages/member/MemberLoginPage";
 import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { PitchDeckPage } from "@/pages/PitchDeckPage";
 import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
 import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
 import { RequireTenantAuth } from "@/components/tenant/RequireTenantAuth";
+import { RequireMemberAuth } from "@/components/member/RequireMemberAuth";
 import { TenantLoginPage } from "@/pages/tenant/TenantLoginPage";
 
 const queryClient = new QueryClient();
@@ -63,11 +65,13 @@ function SuperAdminWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Member Portal wrapper component
+// Member Portal wrapper component (with auth protection)
 function MemberWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
-      <MemberLayout>{children}</MemberLayout>
+      <RequireMemberAuth>
+        <MemberLayout>{children}</MemberLayout>
+      </RequireMemberAuth>
     </LanguageProvider>
   );
 }
@@ -165,7 +169,17 @@ const App = () => (
             }
           />
           
-          {/* Member Portal routes */}
+          {/* Member Login (public) */}
+          <Route
+            path="/member/login"
+            element={
+              <LanguageProvider>
+                <MemberLoginPage />
+              </LanguageProvider>
+            }
+          />
+          
+          {/* Member Portal routes (protected) */}
           <Route
             path="/member"
             element={
