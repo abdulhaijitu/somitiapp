@@ -98,6 +98,62 @@ export type Database = {
         }
         Relationships: []
       }
+      contribution_types: {
+        Row: {
+          category_type: string
+          created_at: string
+          default_amount: number | null
+          description: string | null
+          description_bn: string | null
+          id: string
+          is_active: boolean
+          is_fixed_amount: boolean
+          name: string
+          name_bn: string | null
+          sort_order: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_type?: string
+          created_at?: string
+          default_amount?: number | null
+          description?: string | null
+          description_bn?: string | null
+          id?: string
+          is_active?: boolean
+          is_fixed_amount?: boolean
+          name: string
+          name_bn?: string | null
+          sort_order?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_type?: string
+          created_at?: string
+          default_amount?: number | null
+          description?: string | null
+          description_bn?: string | null
+          id?: string
+          is_active?: boolean
+          is_fixed_amount?: boolean
+          name?: string
+          name_bn?: string | null
+          sort_order?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           address: string | null
@@ -110,6 +166,7 @@ export type Database = {
           name: string
           name_bn: string | null
           phone: string | null
+          photo_url: string | null
           status: string
           tenant_id: string
           updated_at: string
@@ -126,6 +183,7 @@ export type Database = {
           name: string
           name_bn?: string | null
           phone?: string | null
+          photo_url?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
@@ -142,6 +200,7 @@ export type Database = {
           name?: string
           name_bn?: string | null
           phone?: string | null
+          photo_url?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
@@ -331,6 +390,7 @@ export type Database = {
         Row: {
           amount: number
           charged_amount: number | null
+          contribution_type_id: string | null
           created_at: string
           fee: number | null
           id: string
@@ -355,6 +415,7 @@ export type Database = {
         Insert: {
           amount: number
           charged_amount?: number | null
+          contribution_type_id?: string | null
           created_at?: string
           fee?: number | null
           id?: string
@@ -379,6 +440,7 @@ export type Database = {
         Update: {
           amount?: number
           charged_amount?: number | null
+          contribution_type_id?: string | null
           created_at?: string
           fee?: number | null
           id?: string
@@ -401,6 +463,13 @@ export type Database = {
           verified_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_contribution_type_id_fkey"
+            columns: ["contribution_type_id"]
+            isOneToOne: false
+            referencedRelation: "contribution_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_member_id_fkey"
             columns: ["member_id"]

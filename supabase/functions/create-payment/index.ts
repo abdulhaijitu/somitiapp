@@ -17,6 +17,7 @@ interface PaymentRequest {
   period_year: number;
   full_name: string;
   email?: string;
+  contribution_type_id?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -78,10 +79,28 @@ Deno.serve(async (req: Request) => {
     // Parse request body
     // IMPORTANT: tenant_id is NOT accepted from client - it's resolved server-side
     const body: PaymentRequest = await req.json();
-    const { member_id, amount, period_month, period_year, full_name, email, metadata } = body;
+    const { member_id, amount, period_month, period_year, full_name, email, contribution_type_id, metadata } = body;
 
     if (!member_id || !amount) {
       return errorResponse('member_id and amount are required', 400);
+    }
+
+    // Validate contribution_type_id if provided
+    if (contribution_type_id) {
+      const { data: contribType, error: contribError } = await supabase!
+        .from('contribution_types')
+        .select('id, is_active')
+        .eq('id', contribution_type_id)
+        .eq('tenant_id', tenantId)
+        .single();
+
+      if (contribError || !contribType) {
+        return errorResponse('Invalid contribution type', 400);
+      }
+
+      if (!contribType.is_active) {
+        return errorResponse('This contribution type is inactive', 400);
+      }
     }
 
     // Verify member belongs to tenant (using server-resolved tenant_id)
@@ -123,6 +142,7 @@ Deno.serve(async (req: Request) => {
         reference,
         period_month,
         period_year,
+        contribution_type_id: contribution_type_id || null,
         metadata: {
           ...metadata,
           initiated_by: userId,

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,14 +82,13 @@ interface Member {
   name: string;
   name_bn: string | null;
   email: string | null;
-  monthly_amount: number | null;
 }
 
-const MOCK_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 const PAGE_SIZE = 20;
 
 export function PaymentsPage() {
   const { t, language } = useLanguage();
+  const { tenant } = useTenant();
   const { toast } = useToast();
   const { createPayment, verifyPayment, redirectToPayment, isCreating, isVerifying } = useOnlinePayment();
   
@@ -179,7 +179,7 @@ export function PaymentsPage() {
     try {
       const { data, error } = await supabase
         .from('members')
-        .select('id, name, name_bn, email, monthly_amount')
+        .select('id, name, name_bn, email')
         .eq('status', 'active')
         .order('name');
 
@@ -200,14 +200,24 @@ export function PaymentsPage() {
     period_month: number;
     period_year: number;
     notes?: string;
+    contribution_type_id: string;
   }) => {
+    if (!tenant?.id) {
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' ? 'টেন্যান্ট পাওয়া যায়নি' : 'No active tenant found',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       const reference = `OFF-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       
       const { error } = await supabase
         .from('payments')
         .insert({
-          tenant_id: MOCK_TENANT_ID,
+          tenant_id: tenant.id,
           member_id: data.member_id,
           amount: data.amount,
           payment_type: 'offline',
@@ -217,21 +227,22 @@ export function PaymentsPage() {
           period_month: data.period_month,
           period_year: data.period_year,
           payment_date: new Date().toISOString(),
-          notes: data.notes
+          notes: data.notes,
+          contribution_type_id: data.contribution_type_id
         });
 
       if (error) {
         toast({
-          title: 'Error',
-          description: 'Failed to record payment',
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' ? 'পেমেন্ট রেকর্ড করতে সমস্যা হয়েছে' : 'Failed to record payment',
           variant: 'destructive'
         });
         return;
       }
 
       toast({
-        title: 'Success',
-        description: 'Offline payment recorded successfully'
+        title: language === 'bn' ? 'সফল' : 'Success',
+        description: language === 'bn' ? 'অফলাইন পেমেন্ট সফলভাবে রেকর্ড হয়েছে' : 'Offline payment recorded successfully'
       });
 
       setIsCreateOpen(false);
@@ -240,8 +251,8 @@ export function PaymentsPage() {
     } catch (error) {
       console.error('Error:', error);
       toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' ? 'একটি অপ্রত্যাশিত ত্রুটি হয়েছে' : 'An unexpected error occurred',
         variant: 'destructive'
       });
     }
@@ -254,15 +265,16 @@ export function PaymentsPage() {
     period_year: number;
     full_name: string;
     email?: string;
+    contribution_type_id: string;
   }) => {
     const result = await createPayment({
-      tenant_id: MOCK_TENANT_ID,
       member_id: data.member_id,
       amount: data.amount,
       period_month: data.period_month,
       period_year: data.period_year,
       full_name: data.full_name,
-      email: data.email
+      email: data.email,
+      contribution_type_id: data.contribution_type_id
     });
 
     if (result.success && result.payment_url) {
@@ -309,7 +321,6 @@ export function PaymentsPage() {
     }
 
     const result = await createPayment({
-      tenant_id: payment.tenant_id,
       member_id: payment.member_id,
       amount: Number(payment.amount),
       period_month: payment.period_month || new Date().getMonth() + 1,

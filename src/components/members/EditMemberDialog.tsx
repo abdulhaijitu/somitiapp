@@ -27,7 +27,7 @@ interface Member {
   phone?: string | null;
   email?: string | null;
   address?: string | null;
-  monthly_amount?: number | null;
+  member_number?: string | null;
   status: string;
 }
 
@@ -41,10 +41,11 @@ interface EditMemberDialogProps {
     phone?: string;
     email?: string;
     address?: string;
-    monthly_amount: number;
+    member_number?: string;
     status: string;
   }) => void;
   isSubmitting: boolean;
+  existingMemberNumbers?: string[];
 }
 
 export function EditMemberDialog({
@@ -52,16 +53,18 @@ export function EditMemberDialog({
   onOpenChange,
   member,
   onSubmit,
-  isSubmitting
+  isSubmitting,
+  existingMemberNumbers = []
 }: EditMemberDialogProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [name, setName] = useState('');
   const [nameBn, setNameBn] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [monthlyAmount, setMonthlyAmount] = useState(1000);
+  const [memberNumber, setMemberNumber] = useState('');
   const [status, setStatus] = useState('active');
+  const [memberNumberError, setMemberNumberError] = useState<string | null>(null);
 
   useEffect(() => {
     if (member) {
@@ -70,13 +73,34 @@ export function EditMemberDialog({
       setPhone(member.phone || '');
       setEmail(member.email || '');
       setAddress(member.address || '');
-      setMonthlyAmount(member.monthly_amount || 1000);
+      setMemberNumber(member.member_number || '');
       setStatus(member.status || 'active');
+      setMemberNumberError(null);
     }
   }, [member]);
 
+  const validateMemberNumber = (value: string) => {
+    if (value && value.trim() !== member?.member_number) {
+      const otherNumbers = existingMemberNumbers.filter(n => n !== member?.member_number);
+      if (otherNumbers.includes(value.trim())) {
+        setMemberNumberError(language === 'bn' 
+          ? 'এই সদস্য নম্বর ইতিমধ্যে ব্যবহৃত হয়েছে' 
+          : 'This member number is already in use');
+        return false;
+      }
+    }
+    setMemberNumberError(null);
+    return true;
+  };
+
+  const handleMemberNumberChange = (value: string) => {
+    setMemberNumber(value);
+    validateMemberNumber(value);
+  };
+
   const handleSubmit = () => {
     if (!member || !name.trim()) return;
+    if (memberNumber && !validateMemberNumber(memberNumber)) return;
     
     onSubmit(member.id, {
       name: name.trim(),
@@ -84,29 +108,46 @@ export function EditMemberDialog({
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
       address: address.trim() || undefined,
-      monthly_amount: monthlyAmount,
+      member_number: memberNumber.trim() || undefined,
       status
     });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Member</DialogTitle>
+          <DialogTitle>
+            {language === 'bn' ? 'সদস্য সম্পাদনা' : 'Edit Member'}
+          </DialogTitle>
           <DialogDescription>
-            Update member information
+            {language === 'bn' ? 'সদস্যের তথ্য আপডেট করুন' : 'Update member information'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Member Number */}
+          <div className="space-y-2">
+            <Label>{language === 'bn' ? 'সদস্য নম্বর' : 'Member Number'}</Label>
+            <Input
+              value={memberNumber}
+              onChange={(e) => handleMemberNumberChange(e.target.value)}
+              placeholder={language === 'bn' ? 'যেমন: M001' : 'e.g., M001'}
+              className={memberNumberError ? 'border-destructive' : ''}
+            />
+            {memberNumberError && (
+              <p className="text-xs text-destructive">{memberNumberError}</p>
+            )}
+          </div>
+
+          {/* Names */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Name (English) *</Label>
+              <Label>{language === 'bn' ? 'নাম (ইংরেজি) *' : 'Name (English) *'}</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Member name"
+                placeholder={language === 'bn' ? 'সদস্যের নাম' : 'Member name'}
               />
             </div>
             <div className="space-y-2">
@@ -120,9 +161,10 @@ export function EditMemberDialog({
             </div>
           </div>
 
+          {/* Contact */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Phone</Label>
+              <Label>{language === 'bn' ? 'ফোন' : 'Phone'}</Label>
               <Input
                 type="tel"
                 value={phone}
@@ -131,7 +173,7 @@ export function EditMemberDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{language === 'bn' ? 'ইমেইল' : 'Email'}</Label>
               <Input
                 type="email"
                 value={email}
@@ -141,42 +183,44 @@ export function EditMemberDialog({
             </div>
           </div>
 
+          {/* Address */}
           <div className="space-y-2">
-            <Label>Address</Label>
+            <Label>{language === 'bn' ? 'ঠিকানা' : 'Address'}</Label>
             <Input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Full address"
+              placeholder={language === 'bn' ? 'সম্পূর্ণ ঠিকানা' : 'Full address'}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Monthly Amount *</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">৳</span>
-                <Input
-                  type="number"
-                  value={monthlyAmount}
-                  onChange={(e) => setMonthlyAmount(Number(e.target.value))}
-                  className="pl-8"
-                  min={0}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Status */}
+          <div className="space-y-2">
+            <Label>{language === 'bn' ? 'স্ট্যাটাস' : 'Status'}</Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">
+                  {language === 'bn' ? 'সক্রিয়' : 'Active'}
+                </SelectItem>
+                <SelectItem value="inactive">
+                  {language === 'bn' ? 'নিষ্ক্রিয়' : 'Inactive'}
+                </SelectItem>
+                <SelectItem value="suspended">
+                  {language === 'bn' ? 'স্থগিত' : 'Suspended'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Info about monthly contribution */}
+          <div className="rounded-lg border border-muted bg-muted/30 p-3">
+            <p className="text-xs text-muted-foreground">
+              {language === 'bn' 
+                ? 'মাসিক চাঁদা সমিতির সেটিংস দ্বারা নির্ধারিত এবং পেমেন্টের সময় প্রযোজ্য হবে।'
+                : 'Monthly contribution is defined by the somiti and applied during payment.'}
+            </p>
           </div>
         </div>
 
@@ -186,7 +230,7 @@ export function EditMemberDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!name.trim() || isSubmitting}
+            disabled={!name.trim() || !!memberNumberError || isSubmitting}
             className="bg-gradient-primary hover:opacity-90 gap-2"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}

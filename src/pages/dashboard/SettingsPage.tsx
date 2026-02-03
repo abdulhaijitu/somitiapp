@@ -7,12 +7,14 @@ import { NotificationSettings } from '@/components/notifications/NotificationSet
 import { TenantBillingCard } from '@/components/billing/TenantBillingCard';
 import { AddOnPurchaseCard } from '@/components/billing/AddOnPurchaseCard';
 import { OrganizationInfoForm } from '@/components/settings/OrganizationInfoForm';
+import { ContributionTypesSettings } from '@/components/settings/ContributionTypesSettings';
 import { 
   Settings, 
   Globe, 
   CreditCard, 
   Shield,
-  MessageSquare
+  MessageSquare,
+  Banknote
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -46,10 +48,14 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="general" className="gap-2">
             <Settings className="h-4 w-4" />
             {language === 'bn' ? 'সাধারণ' : 'General'}
+          </TabsTrigger>
+          <TabsTrigger value="contributions" className="gap-2">
+            <Banknote className="h-4 w-4" />
+            {language === 'bn' ? 'চাঁদা' : 'Contributions'}
           </TabsTrigger>
           <TabsTrigger value="billing" className="gap-2">
             <CreditCard className="h-4 w-4" />
@@ -120,6 +126,10 @@ export function SettingsPage() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="contributions" className="space-y-6">
+          <ContributionTypesSettings />
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-6">

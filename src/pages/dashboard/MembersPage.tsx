@@ -152,13 +152,14 @@ export function MembersPage() {
     }
   };
 
-  const handleCreateMember = async (data: {
+const handleCreateMember = async (data: {
     name: string;
     name_bn?: string;
     phone?: string;
     email?: string;
     address?: string;
-    monthly_amount: number;
+    member_number?: string;
+    photo_url?: string;
   }) => {
     setIsSubmitting(true);
     try {
@@ -180,7 +181,7 @@ export function MembersPage() {
           phone: data.phone,
           email: data.email,
           address: data.address,
-          monthly_amount: data.monthly_amount,
+          member_number: data.member_number,
           status: 'active'
         });
 
@@ -218,7 +219,7 @@ export function MembersPage() {
     phone?: string;
     email?: string;
     address?: string;
-    monthly_amount: number;
+    member_number?: string;
     status: string;
   }) => {
     setIsSubmitting(true);
@@ -231,7 +232,7 @@ export function MembersPage() {
           phone: data.phone,
           email: data.email,
           address: data.address,
-          monthly_amount: data.monthly_amount,
+          member_number: data.member_number,
           status: data.status
         })
         .eq('id', id);
@@ -670,6 +671,7 @@ export function MembersPage() {
         onOpenChange={setIsCreateOpen}
         onSubmit={handleCreateMember}
         isSubmitting={isSubmitting}
+        existingMemberNumbers={members.map(m => m.member_number).filter(Boolean) as string[]}
       />
 
       <EditMemberDialog
@@ -678,6 +680,7 @@ export function MembersPage() {
         member={selectedMember}
         onSubmit={handleEditMember}
         isSubmitting={isSubmitting}
+        existingMemberNumbers={members.map(m => m.member_number).filter(Boolean) as string[]}
       />
 
       <MemberProfileSheet

@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTenant } from '@/contexts/TenantContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -19,14 +21,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, Wallet, Loader2 } from 'lucide-react';
+import { CreditCard, Wallet, Loader2, AlertCircle } from 'lucide-react';
 
 interface Member {
   id: string;
   name: string;
   name_bn?: string | null;
   email?: string | null;
-  monthly_amount?: number | null;
+}
+
+interface ContributionType {
+  id: string;
+  name: string;
+  name_bn: string | null;
+  category_type: string;
+  is_fixed_amount: boolean;
+  default_amount: number;
+  is_active: boolean;
 }
 
 interface CreatePaymentDialogProps {
@@ -39,6 +50,7 @@ interface CreatePaymentDialogProps {
     period_month: number;
     period_year: number;
     notes?: string;
+    contribution_type_id: string;
   }) => void;
   onCreateOnlinePayment: (data: {
     member_id: string;
@@ -47,6 +59,7 @@ interface CreatePaymentDialogProps {
     period_year: number;
     full_name: string;
     email?: string;
+    contribution_type_id: string;
   }) => void;
   isSubmitting: boolean;
 }
@@ -80,25 +93,72 @@ export function CreatePaymentDialog({
   isSubmitting
 }: CreatePaymentDialogProps) {
   const { t, language } = useLanguage();
+  const { tenant } = useTenant();
+  
   const [paymentType, setPaymentType] = useState<'offline' | 'online'>('offline');
   const [selectedMemberId, setSelectedMemberId] = useState<string>('');
-  const [amount, setAmount] = useState<number>(1000);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [amount, setAmount] = useState<number>(0);
   const [periodMonth, setPeriodMonth] = useState<number>(currentMonth);
   const [periodYear, setPeriodYear] = useState<number>(currentYear);
   const [notes, setNotes] = useState<string>('');
+  const [contributionTypes, setContributionTypes] = useState<ContributionType[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
 
   const selectedMember = members.find(m => m.id === selectedMemberId);
+  const selectedCategory = contributionTypes.find(c => c.id === selectedCategoryId);
 
-  const handleMemberChange = (memberId: string) => {
-    setSelectedMemberId(memberId);
-    const member = members.find(m => m.id === memberId);
-    if (member?.monthly_amount) {
-      setAmount(Number(member.monthly_amount));
+  // Load contribution types when dialog opens
+  useEffect(() => {
+    if (open && tenant?.id) {
+      loadContributionTypes();
+    }
+  }, [open, tenant?.id]);
+
+  const loadContributionTypes = async () => {
+    if (!tenant?.id) return;
+    
+    setLoadingTypes(true);
+    try {
+      const { data, error } = await supabase
+        .from('contribution_types')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .eq('is_active', true)
+        .order('sort_order');
+
+      if (error) throw error;
+      
+      // Type assertion for the data since types haven't been regenerated yet
+      setContributionTypes((data || []) as unknown as ContributionType[]);
+      
+      // Auto-select monthly contribution if available
+      const monthlyType = (data || []).find((t: any) => t.category_type === 'monthly');
+      if (monthlyType) {
+        setSelectedCategoryId(monthlyType.id);
+        setAmount(Number(monthlyType.default_amount) || 0);
+      }
+    } catch (error) {
+      console.error('Error loading contribution types:', error);
+    } finally {
+      setLoadingTypes(false);
+    }
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategoryId(categoryId);
+    const category = contributionTypes.find(c => c.id === categoryId);
+    if (category) {
+      if (category.is_fixed_amount) {
+        setAmount(Number(category.default_amount) || 0);
+      } else if (category.default_amount) {
+        setAmount(Number(category.default_amount));
+      }
     }
   };
 
   const handleSubmit = () => {
-    if (!selectedMemberId || !amount) return;
+    if (!selectedMemberId || !amount || !selectedCategoryId) return;
 
     if (paymentType === 'offline') {
       onCreateOfflinePayment({
@@ -106,7 +166,8 @@ export function CreatePaymentDialog({
         amount,
         period_month: periodMonth,
         period_year: periodYear,
-        notes
+        notes,
+        contribution_type_id: selectedCategoryId
       });
     } else {
       onCreateOnlinePayment({
@@ -115,18 +176,41 @@ export function CreatePaymentDialog({
         period_month: periodMonth,
         period_year: periodYear,
         full_name: selectedMember?.name || '',
-        email: selectedMember?.email || undefined
+        email: selectedMember?.email || undefined,
+        contribution_type_id: selectedCategoryId
       });
     }
   };
 
   const resetForm = () => {
     setSelectedMemberId('');
-    setAmount(1000);
+    setSelectedCategoryId('');
+    setAmount(0);
     setPeriodMonth(currentMonth);
     setPeriodYear(currentYear);
     setNotes('');
     setPaymentType('offline');
+  };
+
+  const getCategoryHint = () => {
+    if (!selectedCategory) return null;
+    
+    switch (selectedCategory.category_type) {
+      case 'monthly':
+        return language === 'bn' 
+          ? 'নিয়মিত মাসিক চাঁদা' 
+          : 'Regular monthly contribution';
+      case 'fund_raise':
+        return language === 'bn'
+          ? 'বিশেষ তহবিল সংগ্রহ বা অনুদান'
+          : 'Special fund collection or donation';
+      case 'other':
+        return language === 'bn'
+          ? 'অন্যান্য ধরনের পেমেন্ট'
+          : 'Other types of payment';
+      default:
+        return null;
+    }
   };
 
   return (
@@ -134,11 +218,13 @@ export function CreatePaymentDialog({
       onOpenChange(isOpen);
       if (!isOpen) resetForm();
     }}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('payments.addPayment')}</DialogTitle>
           <DialogDescription>
-            Record a new payment for a member
+            {language === 'bn' 
+              ? 'সদস্যের জন্য নতুন পেমেন্ট রেকর্ড করুন'
+              : 'Record a new payment for a member'}
           </DialogDescription>
         </DialogHeader>
 
@@ -155,12 +241,62 @@ export function CreatePaymentDialog({
           </TabsList>
 
           <div className="space-y-4 py-4">
+            {/* Payment Category - REQUIRED */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                {language === 'bn' ? 'পেমেন্ট ক্যাটাগরি' : 'Payment Category'} *
+                <span className="text-destructive">*</span>
+              </Label>
+              {loadingTypes ? (
+                <div className="flex items-center gap-2 h-10 px-3 border rounded-md">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">
+                    {language === 'bn' ? 'লোড হচ্ছে...' : 'Loading...'}
+                  </span>
+                </div>
+              ) : contributionTypes.length === 0 ? (
+                <div className="flex items-center gap-2 p-3 border border-warning/30 bg-warning/5 rounded-md">
+                  <AlertCircle className="h-4 w-4 text-warning" />
+                  <span className="text-sm text-warning">
+                    {language === 'bn' 
+                      ? 'কোনো পেমেন্ট ক্যাটাগরি কনফিগার করা হয়নি। সেটিংসে যান।'
+                      : 'No payment categories configured. Go to Settings.'}
+                  </span>
+                </div>
+              ) : (
+                <Select value={selectedCategoryId} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className={!selectedCategoryId ? 'border-destructive/50' : ''}>
+                    <SelectValue placeholder={language === 'bn' ? 'ক্যাটাগরি নির্বাচন করুন...' : 'Select category...'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contributionTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        <span className={language === 'bn' && type.name_bn ? 'font-bengali' : ''}>
+                          {language === 'bn' && type.name_bn ? type.name_bn : type.name}
+                        </span>
+                        {type.is_fixed_amount && (
+                          <span className="text-muted-foreground ml-2">
+                            (৳{type.default_amount})
+                          </span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {selectedCategory && (
+                <p className="text-xs text-muted-foreground">
+                  {getCategoryHint()}
+                </p>
+              )}
+            </div>
+
             {/* Member Selection */}
             <div className="space-y-2">
-              <Label>Select Member *</Label>
-              <Select value={selectedMemberId} onValueChange={handleMemberChange}>
+              <Label>{language === 'bn' ? 'সদস্য নির্বাচন করুন' : 'Select Member'} *</Label>
+              <Select value={selectedMemberId} onValueChange={setSelectedMemberId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a member..." />
+                  <SelectValue placeholder={language === 'bn' ? 'সদস্য বাছুন...' : 'Choose a member...'} />
                 </SelectTrigger>
                 <SelectContent>
                   {members.map((member) => (
@@ -185,65 +321,79 @@ export function CreatePaymentDialog({
                   onChange={(e) => setAmount(Number(e.target.value))}
                   className="pl-8"
                   min={0}
+                  disabled={selectedCategory?.is_fixed_amount}
                 />
               </div>
+              {selectedCategory?.is_fixed_amount && (
+                <p className="text-xs text-muted-foreground">
+                  {language === 'bn' 
+                    ? 'এই ক্যাটাগরির জন্য পরিমাণ নির্ধারিত'
+                    : 'Amount is fixed for this category'}
+                </p>
+              )}
             </div>
 
-            {/* Period */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Month *</Label>
-                <Select value={periodMonth.toString()} onValueChange={(v) => setPeriodMonth(Number(v))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map((month) => (
-                      <SelectItem key={month.value} value={month.value.toString()}>
-                        {language === 'bn' ? month.labelBn : month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Period - Only show for Monthly Contribution */}
+            {selectedCategory?.category_type === 'monthly' && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{language === 'bn' ? 'মাস' : 'Month'} *</Label>
+                  <Select value={periodMonth.toString()} onValueChange={(v) => setPeriodMonth(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {months.map((month) => (
+                        <SelectItem key={month.value} value={month.value.toString()}>
+                          {language === 'bn' ? month.labelBn : month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>{language === 'bn' ? 'বছর' : 'Year'} *</Label>
+                  <Select value={periodYear.toString()} onValueChange={(v) => setPeriodYear(Number(v))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Year *</Label>
-                <Select value={periodYear.toString()} onValueChange={(v) => setPeriodYear(Number(v))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            )}
 
             <TabsContent value="offline" className="mt-0 space-y-4">
               <div className="space-y-2">
-                <Label>Notes (Optional)</Label>
+                <Label>{language === 'bn' ? 'নোট (ঐচ্ছিক)' : 'Notes (Optional)'}</Label>
                 <Input
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Payment notes..."
+                  placeholder={language === 'bn' ? 'পেমেন্ট নোট...' : 'Payment notes...'}
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Record a cash or offline payment received from the member.
+                {language === 'bn'
+                  ? 'সদস্যের কাছ থেকে প্রাপ্ত নগদ বা অফলাইন পেমেন্ট রেকর্ড করুন।'
+                  : 'Record a cash or offline payment received from the member.'}
               </p>
             </TabsContent>
 
             <TabsContent value="online" className="mt-0 space-y-2">
               <div className="rounded-lg border border-info/30 bg-info/5 p-3">
                 <p className="text-sm text-info">
-                  <strong>Online Payment via UddoktaPay</strong>
+                  <strong>{language === 'bn' ? 'UddoktaPay দিয়ে অনলাইন পেমেন্ট' : 'Online Payment via UddoktaPay'}</strong>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  The member will be redirected to a secure payment page where they can pay using bKash, Nagad, Rocket, or Card.
+                  {language === 'bn'
+                    ? 'সদস্য একটি নিরাপদ পেমেন্ট পেজে রিডাইরেক্ট হবে যেখানে বিকাশ, নগদ, রকেট বা কার্ডে পেমেন্ট করতে পারবে।'
+                    : 'The member will be redirected to a secure payment page where they can pay using bKash, Nagad, Rocket, or Card.'}
                 </p>
               </div>
             </TabsContent>
@@ -252,17 +402,17 @@ export function CreatePaymentDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!selectedMemberId || !amount || isSubmitting}
+            disabled={!selectedMemberId || !amount || !selectedCategoryId || isSubmitting}
             className="bg-gradient-primary hover:opacity-90 gap-2"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {paymentType === 'offline' 
-              ? 'Record Payment' 
-              : 'Create Payment Link'}
+              ? (language === 'bn' ? 'পেমেন্ট রেকর্ড করুন' : 'Record Payment')
+              : (language === 'bn' ? 'পেমেন্ট লিংক তৈরি করুন' : 'Create Payment Link')}
           </Button>
         </DialogFooter>
       </DialogContent>
