@@ -5,6 +5,8 @@ import { ArrowLeft, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs } from '@/lib/seo';
+import { DeveloperCredit } from '@/components/common/DeveloperCredit';
+import { LegalFooterLinks } from '@/components/common/LegalFooterLinks';
 
 export function TermsOfServicePage() {
   const { language } = useLanguage();
@@ -188,6 +190,14 @@ export function TermsOfServicePage() {
           </CardContent>
         </Card>
       </main>
+      
+      {/* Legal Footer Links */}
+      <div className="container mx-auto px-4 py-4">
+        <LegalFooterLinks />
+      </div>
+      
+      {/* Developer Credit */}
+      <DeveloperCredit />
     </div>
   );
 }
