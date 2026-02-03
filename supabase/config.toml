@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.check-plan-limit]
 verify_jwt = false
+
+[functions.member-otp]
+verify_jwt = false
+
+[functions.member-session]
+verify_jwt = false
