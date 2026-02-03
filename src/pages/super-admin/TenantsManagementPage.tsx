@@ -47,12 +47,14 @@ import {
   Trash2,
   RefreshCw,
   Filter,
-  Globe
+  Globe,
+  UserPlus
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import { CreateTenantWithAdminDialog } from '@/components/super-admin/CreateTenantWithAdminDialog';
+import { AddTenantAdminDialog } from '@/components/super-admin/AddTenantAdminDialog';
 
 interface Tenant {
   id: string;
@@ -82,6 +84,8 @@ export function TenantsManagementPage() {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [confirmAction, setConfirmAction] = useState<'suspend' | 'activate' | 'delete' | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddAdminOpen, setIsAddAdminOpen] = useState(false);
+  const [adminTenant, setAdminTenant] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
@@ -375,6 +379,16 @@ export function TenantsManagementPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setAdminTenant({ id: tenant.id, name: tenant.name });
+                                setIsAddAdminOpen(true);
+                              }}
+                            >
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              Add Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             {tenant.status === 'active' ? (
                               <DropdownMenuItem 
                                 onClick={() => openConfirmDialog(tenant, 'suspend')}
@@ -416,6 +430,14 @@ export function TenantsManagementPage() {
       <CreateTenantWithAdminDialog
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
+        onSuccess={loadTenants}
+      />
+
+      {/* Add Admin to Tenant Dialog */}
+      <AddTenantAdminDialog
+        open={isAddAdminOpen}
+        onOpenChange={setIsAddAdminOpen}
+        tenant={adminTenant}
         onSuccess={loadTenants}
       />
 
