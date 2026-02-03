@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { SkeletonLoader } from '@/components/ui/skeleton-loader';
 import {
@@ -14,14 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,8 +50,9 @@ import {
   Globe
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, addMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
+import { CreateTenantWithAdminDialog } from '@/components/super-admin/CreateTenantWithAdminDialog';
 
 interface Tenant {
   id: string;
@@ -89,13 +81,6 @@ export function TenantsManagementPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [confirmAction, setConfirmAction] = useState<'suspend' | 'activate' | 'delete' | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    name_bn: '',
-    subdomain: '',
-    default_language: 'en',
-    subscription_months: 1
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
@@ -137,87 +122,7 @@ export function TenantsManagementPage() {
     }
   };
 
-  const handleCreateTenant = async () => {
-    if (!formData.name || !formData.subdomain) {
-      toast({
-        title: 'Validation Error',
-        description: 'Name and subdomain are required',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    // Validate subdomain format
-    const subdomainRegex = /^[a-z0-9-]+$/;
-    if (!subdomainRegex.test(formData.subdomain)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Subdomain must contain only lowercase letters, numbers, and hyphens',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      // Use Edge Function to create tenant (bypasses RLS with service role)
-      const { data, error } = await supabase.functions.invoke('create-tenant', {
-        body: {
-          name: formData.name,
-          name_bn: formData.name_bn || null,
-          subdomain: formData.subdomain.toLowerCase(),
-          default_language: formData.default_language,
-          subscription_months: formData.subscription_months,
-          plan: 'standard'
-        }
-      });
-
-      if (error) {
-        console.error('Error creating tenant:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to create tenant',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      if (data?.error) {
-        toast({
-          title: 'Error',
-          description: data.error,
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Tenant created successfully'
-      });
-
-      setIsCreateOpen(false);
-      setFormData({
-        name: '',
-        name_bn: '',
-        subdomain: '',
-        default_language: 'en',
-        subscription_months: 1
-      });
-      loadTenants();
-
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Removed inline handleCreateTenant - now using CreateTenantWithAdminDialog
 
   const handleStatusChange = async () => {
     if (!selectedTenant || !confirmAction) return;
@@ -507,104 +412,12 @@ export function TenantsManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Create Tenant Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Create New Tenant</DialogTitle>
-            <DialogDescription>
-              Set up a new somiti organization with subscription
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name">Organization Name *</Label>
-                <Input
-                  id="name"
-                  placeholder="ABC Somiti"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name_bn">Name (Bangla)</Label>
-                <Input
-                  id="name_bn"
-                  placeholder="এবিসি সমিতি"
-                  className="font-bengali"
-                  value={formData.name_bn}
-                  onChange={(e) => setFormData({ ...formData, name_bn: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subdomain">Subdomain *</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="subdomain"
-                  placeholder="abc-somiti"
-                  value={formData.subdomain}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')
-                  })}
-                />
-                <span className="text-sm text-muted-foreground whitespace-nowrap">.somiti.app</span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Only lowercase letters, numbers, and hyphens allowed
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Default Language</Label>
-                <Select 
-                  value={formData.default_language}
-                  onValueChange={(value) => setFormData({ ...formData, default_language: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="bn">বাংলা (Bangla)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Initial Subscription</Label>
-                <Select 
-                  value={formData.subscription_months.toString()}
-                  onValueChange={(value) => setFormData({ ...formData, subscription_months: parseInt(value) })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1 Month</SelectItem>
-                    <SelectItem value="3">3 Months</SelectItem>
-                    <SelectItem value="6">6 Months</SelectItem>
-                    <SelectItem value="12">12 Months</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateTenant}
-              disabled={isSubmitting}
-              className="bg-gradient-primary hover:opacity-90"
-            >
-              {isSubmitting ? 'Creating...' : 'Create Tenant'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Create Tenant with Admin Dialog */}
+      <CreateTenantWithAdminDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onSuccess={loadTenants}
+      />
 
       {/* Confirm Action Dialog */}
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
