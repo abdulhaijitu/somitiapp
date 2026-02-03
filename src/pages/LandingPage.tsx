@@ -10,6 +10,12 @@ import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { FloatingActions } from '@/components/common/FloatingActions';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileBottomNav, BottomNavItem } from '@/components/common/MobileBottomNav';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import heroDashboard from '@/assets/hero-dashboard.png';
 import { 
   Users, 
@@ -555,6 +561,106 @@ export function LandingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 md:py-28">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm font-medium text-primary">
+              <span>❓</span>
+              <span>Got Questions?</span>
+            </div>
+            <h2 className="text-3xl font-bold text-foreground md:text-4xl">
+              Frequently Asked Questions
+            </h2>
+            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+              Everything you need to know about Somiti App. Can't find the answer? Contact our support team.
+            </p>
+          </div>
+          
+          <div className="mx-auto max-w-3xl">
+            <Accordion type="single" collapsible className="w-full space-y-4">
+              {/* Getting Started */}
+              <AccordionItem value="item-1" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  How do I get started with Somiti App?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  Getting started is easy! Simply sign up for a free account, create your somiti organization, and start adding members. 
+                  Our onboarding wizard will guide you through setting up monthly dues, contribution types, and other settings. 
+                  You can be up and running in less than 10 minutes.
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Pricing */}
+              <AccordionItem value="item-2" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  What are the pricing plans available?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  We offer flexible pricing plans to suit organizations of all sizes:
+                  <ul className="mt-3 space-y-2 list-disc list-inside">
+                    <li><strong>Starter (Free):</strong> Up to 25 members, basic features</li>
+                    <li><strong>Standard:</strong> Up to 100 members, SMS notifications, reports</li>
+                    <li><strong>Premium:</strong> Unlimited members, online payments, advanced analytics</li>
+                  </ul>
+                  All paid plans come with a 14-day free trial. No credit card required to start.
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Member Portal */}
+              <AccordionItem value="item-3" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  Can members access their own portal?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  Yes! Each member gets access to their personal portal where they can view their payment history, 
+                  check outstanding dues, see notices, and even make online payments (on supported plans). 
+                  Members log in using OTP verification via their registered phone number - no password needed!
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Online Payments */}
+              <AccordionItem value="item-4" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  Do you support bKash/Nagad payments?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  Absolutely! We support all major mobile payment methods in Bangladesh including bKash, Nagad, and Rocket. 
+                  Members can pay their dues directly from their phones, and payments are automatically reconciled with their accounts. 
+                  This feature is available on our Premium plan.
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Data Security */}
+              <AccordionItem value="item-5" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  Is my organization's data secure?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  Security is our top priority. We use enterprise-grade encryption for all data, 
+                  and each organization's data is completely isolated from others. 
+                  We're hosted on secure cloud infrastructure with regular backups and 99.9% uptime guarantee. 
+                  Your financial data is protected with bank-level security standards.
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Bangla Support */}
+              <AccordionItem value="item-6" className="rounded-xl border border-border bg-card px-6 data-[state=open]:shadow-md transition-shadow">
+                <AccordionTrigger className="text-left font-semibold hover:no-underline py-5">
+                  বাংলা ভাষায় কি সাপোর্ট আছে?
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-5">
+                  হ্যাঁ! Somiti App সম্পূর্ণ বাংলা ভাষায় ব্যবহার করা যায়। 
+                  আপনি এক ক্লিকে ইংরেজি থেকে বাংলায় সুইচ করতে পারবেন। 
+                  সদস্যদের নাম, ঠিকানা এবং সকল তথ্য বাংলায় সংরক্ষণ করা যায়। 
+                  SMS নোটিফিকেশনও বাংলায় পাঠানো সম্ভব।
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
         </div>
       </section>
