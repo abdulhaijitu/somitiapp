@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
@@ -113,11 +113,15 @@ export function CreateMemberDialog({
     setMemberNumberError(null);
   };
 
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetForm();
+    }
+  }, [open]);
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen);
-      if (!isOpen) resetForm();
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('members.addMember')}</DialogTitle>
