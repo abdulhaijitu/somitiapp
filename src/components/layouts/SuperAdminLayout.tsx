@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, href: '/super-admin' },
   { label: 'Tenants', icon: Building2, href: '/super-admin/tenants' },
   { label: 'Subscriptions', icon: CreditCard, href: '/super-admin/subscriptions' },
+  { label: 'Monitoring', icon: Shield, href: '/super-admin/monitoring' },
   { label: 'Audit Logs', icon: FileText, href: '/super-admin/audit-logs' },
   { label: 'Settings', icon: Settings, href: '/super-admin/settings' },
 ];
