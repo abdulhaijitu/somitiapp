@@ -89,6 +89,8 @@ interface Payment {
   created_at: string;
   payment_url: string | null;
   metadata: PaymentMetadata | null;
+  due_id: string | null;
+  notes?: string | null;
   members: {
     id: string;
     name: string;
@@ -285,6 +287,11 @@ export function PaymentsPage() {
         return;
       }
 
+      // Update linked due status if payment has a due_id
+      if (editingPayment?.due_id) {
+        await recalculateDueStatus(editingPayment.due_id);
+      }
+
       toast({
         title: language === 'bn' ? 'সফল' : 'Success',
         description: language === 'bn' ? 'পেমেন্ট সফলভাবে আপডেট হয়েছে' : 'Payment updated successfully'
@@ -302,6 +309,67 @@ export function PaymentsPage() {
       });
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // Recalculate due status based on all linked payments
+  const recalculateDueStatus = async (dueId: string) => {
+    try {
+      // Get the due record
+      const { data: due, error: dueError } = await supabase
+        .from('dues')
+        .select('id, amount')
+        .eq('id', dueId)
+        .single();
+
+      if (dueError || !due) {
+        console.error('Error fetching due:', dueError);
+        return;
+      }
+
+      // Get all paid payments linked to this due
+      const { data: linkedPayments, error: paymentsError } = await supabase
+        .from('payments')
+        .select('amount, status')
+        .eq('due_id', dueId)
+        .eq('status', 'paid');
+
+      if (paymentsError) {
+        console.error('Error fetching linked payments:', paymentsError);
+        return;
+      }
+
+      // Calculate total paid amount
+      const totalPaid = (linkedPayments || []).reduce(
+        (sum, p) => sum + Number(p.amount), 
+        0
+      );
+
+      // Determine new due status
+      let newStatus: 'unpaid' | 'partial' | 'paid';
+      if (totalPaid >= Number(due.amount)) {
+        newStatus = 'paid';
+      } else if (totalPaid > 0) {
+        newStatus = 'partial';
+      } else {
+        newStatus = 'unpaid';
+      }
+
+      // Update the due record
+      const { error: updateError } = await supabase
+        .from('dues')
+        .update({
+          paid_amount: totalPaid,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', dueId);
+
+      if (updateError) {
+        console.error('Error updating due status:', updateError);
+      }
+    } catch (error) {
+      console.error('Error recalculating due status:', error);
     }
   };
 
