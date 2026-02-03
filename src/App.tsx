@@ -44,6 +44,7 @@ import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
 import { PricingPage } from "@/pages/public/PricingPage";
 import { AboutPage } from "@/pages/public/AboutPage";
 import { ContactPage } from "@/pages/public/ContactPage";
+import { InstallAppPage } from "@/pages/public/InstallAppPage";
 import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
 import { RequireTenantAuth } from "@/components/tenant/RequireTenantAuth";
 import { RequireMemberAuth } from "@/components/member/RequireMemberAuth";
@@ -126,6 +127,16 @@ const App = () => (
                   <LanguageProvider>
                     <PublicLayout>
                       <ContactPage />
+                    </PublicLayout>
+                  </LanguageProvider>
+                }
+              />
+              <Route
+                path="/install"
+                element={
+                  <LanguageProvider>
+                    <PublicLayout>
+                      <InstallAppPage />
                     </PublicLayout>
                   </LanguageProvider>
                 }
