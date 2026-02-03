@@ -19,6 +19,7 @@ import { NoticesPage } from "@/pages/dashboard/NoticesPage";
 import { ConstitutionPage } from "@/pages/dashboard/ConstitutionPage";
 import { SettingsPage } from "@/pages/dashboard/SettingsPage";
 import { SuperAdminDashboard } from "@/pages/super-admin/SuperAdminDashboard";
+import { SuperAdminLoginPage } from "@/pages/super-admin/SuperAdminLoginPage";
 import { TenantsManagementPage } from "@/pages/super-admin/TenantsManagementPage";
 import { SubscriptionsManagementPage } from "@/pages/super-admin/SubscriptionsManagementPage";
 import { AuditLogsPage } from "@/pages/super-admin/AuditLogsPage";
@@ -34,6 +35,7 @@ import { TermsOfServicePage } from "@/pages/legal/TermsOfServicePage";
 import { PrivacyPolicyPage } from "@/pages/legal/PrivacyPolicyPage";
 import { PitchDeckPage } from "@/pages/PitchDeckPage";
 import { MobileRoadmapPage } from "@/pages/MobileRoadmapPage";
+import { RequireSuperAdmin } from "@/components/super-admin/RequireSuperAdmin";
 
 const queryClient = new QueryClient();
 
@@ -46,11 +48,13 @@ function DashboardWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Super Admin wrapper component
+// Super Admin wrapper component (with auth protection)
 function SuperAdminWrapper({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
-      <SuperAdminLayout>{children}</SuperAdminLayout>
+      <RequireSuperAdmin>
+        <SuperAdminLayout>{children}</SuperAdminLayout>
+      </RequireSuperAdmin>
     </LanguageProvider>
   );
 }
@@ -189,7 +193,17 @@ const App = () => (
             }
           />
           
-          {/* Super Admin routes */}
+          {/* Super Admin Login (public) */}
+          <Route
+            path="/super-admin/login"
+            element={
+              <LanguageProvider>
+                <SuperAdminLoginPage />
+              </LanguageProvider>
+            }
+          />
+          
+          {/* Super Admin routes (protected) */}
           <Route
             path="/super-admin"
             element={
