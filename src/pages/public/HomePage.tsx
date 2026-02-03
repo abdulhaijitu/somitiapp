@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { TestimonialsCarousel } from '@/components/testimonials/TestimonialsCarousel';
 import { MobileAppSection } from '@/components/home/MobileAppSection';
+import { VideoDemoSection } from '@/components/home/VideoDemoSection';
 import {
   Accordion,
   AccordionContent,
@@ -534,6 +535,9 @@ export function HomePage() {
 
       {/* Mobile App Section */}
       <MobileAppSection />
+
+      {/* Video Demo Section */}
+      <VideoDemoSection />
 
       {/* Testimonials */}
       <TestimonialsCarousel testimonials={testimonials} language={language} />
