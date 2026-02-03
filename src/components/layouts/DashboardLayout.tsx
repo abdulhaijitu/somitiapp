@@ -4,6 +4,7 @@ import { useTenant, TenantProvider } from '@/contexts/TenantContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { SubscriptionBanner } from '@/components/common/SubscriptionBanner';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import {
   LayoutDashboard,
   Users,
@@ -182,6 +183,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <NotificationCenter />
               <LanguageToggle />
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary">
                 {tenantName.substring(0, 2).toUpperCase()}
