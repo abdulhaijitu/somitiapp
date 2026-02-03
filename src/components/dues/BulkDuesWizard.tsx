@@ -38,7 +38,7 @@ import {
   ClipboardList
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, startOfMonth, subMonths, addMonths } from 'date-fns';
+import { format, startOfMonth } from 'date-fns';
 
 interface BulkDuesWizardProps {
   open: boolean;
@@ -95,9 +95,13 @@ export function BulkDuesWizard({ open, onOpenChange, onSuccess }: BulkDuesWizard
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
   // Step 3: Period & Amount
-  const [dueMonth, setDueMonth] = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1); // 1-12
   const [amount, setAmount] = useState<number>(0);
   const [notes, setNotes] = useState('');
+
+  // Compute dueMonth from year and month
+  const dueMonth = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
 
   // Step 4: Confirmation
   const [confirmed, setConfirmed] = useState(false);
@@ -180,17 +184,31 @@ export function BulkDuesWizard({ open, onOpenChange, onSuccess }: BulkDuesWizard
 
   const totalDueAmount = targetMemberCount * amount;
 
-  const getMonthOptions = () => {
-    const options = [];
-    const now = new Date();
-    // 12 months back and 3 months forward
-    for (let i = 12; i >= -3; i--) {
-      const date = i >= 0 ? subMonths(now, i) : addMonths(now, Math.abs(i));
-      const value = format(startOfMonth(date), 'yyyy-MM-dd');
-      const label = format(date, 'MMMM yyyy');
-      options.push({ value, label });
+  const getYearOptions = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    // 5 years back and 1 year forward
+    for (let y = currentYear - 5; y <= currentYear + 1; y++) {
+      years.push(y);
     }
-    return options;
+    return years;
+  };
+
+  const getMonthOptions = () => {
+    return [
+      { value: 1, label: language === 'bn' ? 'জানুয়ারি' : 'January' },
+      { value: 2, label: language === 'bn' ? 'ফেব্রুয়ারি' : 'February' },
+      { value: 3, label: language === 'bn' ? 'মার্চ' : 'March' },
+      { value: 4, label: language === 'bn' ? 'এপ্রিল' : 'April' },
+      { value: 5, label: language === 'bn' ? 'মে' : 'May' },
+      { value: 6, label: language === 'bn' ? 'জুন' : 'June' },
+      { value: 7, label: language === 'bn' ? 'জুলাই' : 'July' },
+      { value: 8, label: language === 'bn' ? 'আগস্ট' : 'August' },
+      { value: 9, label: language === 'bn' ? 'সেপ্টেম্বর' : 'September' },
+      { value: 10, label: language === 'bn' ? 'অক্টোবর' : 'October' },
+      { value: 11, label: language === 'bn' ? 'নভেম্বর' : 'November' },
+      { value: 12, label: language === 'bn' ? 'ডিসেম্বর' : 'December' },
+    ];
   };
 
   const isBackdated = new Date(dueMonth) < startOfMonth(new Date());
@@ -505,20 +523,50 @@ export function BulkDuesWizard({ open, onOpenChange, onSuccess }: BulkDuesWizard
           {currentStep === 3 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label>{language === 'bn' ? 'বকেয়া মাস' : 'Due Month'}</Label>
-                <Select value={dueMonth} onValueChange={setDueMonth}>
-                  <SelectTrigger>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {getMonthOptions().map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>{language === 'bn' ? 'বকেয়া মাস' : 'Due Period'}</Label>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground mb-1">
+                      {language === 'bn' ? 'বছর' : 'Year'}
+                    </Label>
+                    <Select 
+                      value={selectedYear.toString()} 
+                      onValueChange={(v) => setSelectedYear(parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getYearOptions().map(year => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground mb-1">
+                      {language === 'bn' ? 'মাস' : 'Month'}
+                    </Label>
+                    <Select 
+                      value={selectedMonth.toString()} 
+                      onValueChange={(v) => setSelectedMonth(parseInt(v))}
+                    >
+                      <SelectTrigger>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getMonthOptions().map(opt => (
+                          <SelectItem key={opt.value} value={opt.value.toString()}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 {isBackdated && (
                   <Alert variant="default" className="border-warning/50 bg-warning/10">
                     <AlertTriangle className="h-4 w-4 text-warning" />
