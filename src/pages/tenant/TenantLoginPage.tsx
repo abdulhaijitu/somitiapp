@@ -11,6 +11,7 @@ import { SEO } from '@/components/common/SEO';
 import { pageConfigs } from '@/lib/seo';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
+import { LegalFooterLinks } from '@/components/common/LegalFooterLinks';
 
 export function TenantLoginPage() {
   const navigate = useNavigate();
@@ -203,6 +204,11 @@ export function TenantLoginPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Legal Links */}
+      <div className="absolute bottom-16 left-0 right-0">
+        <LegalFooterLinks />
+      </div>
       
       {/* Developer Credit */}
       <DeveloperCredit className="absolute bottom-0 left-0 right-0" />

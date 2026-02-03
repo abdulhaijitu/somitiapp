@@ -13,6 +13,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { SEO } from '@/components/common/SEO';
 import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
+import { LegalFooterLinks } from '@/components/common/LegalFooterLinks';
 
 type Step = 'phone' | 'otp';
 
@@ -328,7 +329,8 @@ export function MemberLoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground space-y-2">
+        <LegalFooterLinks />
         <p className="font-bengali">
           © {new Date().getFullYear()} {defaultBrandConfig.appName}. {t('All rights reserved.', 'সমস্ত অধিকার সংরক্ষিত।')}
         </p>
