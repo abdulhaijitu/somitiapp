@@ -7,6 +7,7 @@ import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { FloatingActions } from '@/components/common/FloatingActions';
+import heroDashboard from '@/assets/hero-dashboard.png';
 import { 
   Users, 
   CreditCard, 
@@ -190,60 +191,17 @@ export function LandingPage() {
             </div>
           </div>
           
-          {/* Hero Visual - Dashboard Preview */}
+          {/* Hero Visual - AI Generated Dashboard Image */}
           <div className="relative mx-auto mt-16 max-w-5xl animate-slide-up" style={{ animationDelay: '400ms' }}>
-            <div className="absolute -inset-4 rounded-2xl bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 opacity-50 blur-2xl" />
-            <div className="glass-card relative overflow-hidden rounded-2xl border-2 border-border/50 p-1 shadow-2xl">
-              <div className="rounded-xl bg-card">
-                {/* Mock Browser Chrome */}
-                <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-4 py-3">
-                  <div className="flex gap-1.5">
-                    <div className="h-3 w-3 rounded-full bg-destructive/60" />
-                    <div className="h-3 w-3 rounded-full bg-warning/60" />
-                    <div className="h-3 w-3 rounded-full bg-success/60" />
-                  </div>
-                  <div className="mx-auto flex h-7 w-64 items-center justify-center rounded-md bg-background text-xs text-muted-foreground">
-                    app.somiti.com
-                  </div>
-                </div>
-                
-                {/* Dashboard Preview Content */}
-                <div className="grid gap-4 p-6 md:grid-cols-3">
-                  {/* Stat Cards */}
-                  <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <div className="mb-2 text-xs font-medium text-muted-foreground">Total Members</div>
-                    <div className="flex items-end justify-between">
-                      <span className="text-2xl font-bold text-foreground">2,847</span>
-                      <span className="text-xs font-medium text-success">+12%</span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <div className="mb-2 text-xs font-medium text-muted-foreground">This Month</div>
-                    <div className="flex items-end justify-between">
-                      <span className="text-2xl font-bold text-primary">৳1.2M</span>
-                      <span className="text-xs font-medium text-success">+8%</span>
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-border bg-muted/20 p-4">
-                    <div className="mb-2 text-xs font-medium text-muted-foreground">Dues Collected</div>
-                    <div className="flex items-end justify-between">
-                      <span className="text-2xl font-bold text-success">94%</span>
-                      <span className="text-xs font-medium text-success">+3%</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Chart Placeholder */}
-                <div className="mx-6 mb-6 flex h-32 items-end justify-between gap-2 rounded-xl border border-border bg-muted/10 p-4">
-                  {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((height, i) => (
-                    <div 
-                      key={i} 
-                      className="w-full rounded-t bg-gradient-to-t from-primary/40 to-primary transition-all hover:from-primary/60 hover:to-primary"
-                      style={{ height: `${height}%` }}
-                    />
-                  ))}
-                </div>
-              </div>
+            <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 opacity-60 blur-3xl" />
+            <div className="relative overflow-hidden rounded-2xl shadow-2xl">
+              <img 
+                src={heroDashboard} 
+                alt="Somiti Dashboard - Modern financial management interface" 
+                className="w-full object-cover transition-transform duration-700 hover:scale-[1.02]"
+              />
+              {/* Overlay gradient for text readability if needed */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent opacity-0" />
             </div>
           </div>
         </div>
