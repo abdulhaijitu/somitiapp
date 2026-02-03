@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { useAnalytics, useScrollTracking } from '@/hooks/useAnalytics';
 import { DeveloperCredit } from '@/components/common/DeveloperCredit';
 import { FloatingActions } from '@/components/common/FloatingActions';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import heroDashboard from '@/assets/hero-dashboard.png';
 import { 
   Users, 
@@ -17,15 +19,24 @@ import {
   BarChart3,
   CheckCircle2,
   ArrowRight,
-  Smartphone
+  Smartphone,
+  Menu,
+  X
 } from 'lucide-react';
 
 export function LandingPage() {
   const { t } = useLanguage();
   const { trackCTA } = useAnalytics();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Track scroll depth on landing page
   useScrollTracking();
+
+  const navLinks = [
+    { label: 'Investors', href: '/pitch' },
+    { label: 'Roadmap', href: '/mobile-roadmap' },
+    { label: 'Admin', href: '/super-admin' },
+  ];
 
   const features = [
     {
@@ -69,6 +80,7 @@ export function LandingPage() {
       {/* Enhanced Header with Glassmorphism */}
       <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
               <Shield className="h-5 w-5 text-primary-foreground" />
@@ -82,18 +94,19 @@ export function LandingPage() {
           
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-6 md:flex">
-            <Link to="/pitch" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Investors
-            </Link>
-            <Link to="/mobile-roadmap" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Roadmap
-            </Link>
-            <Link to="/super-admin" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              Admin
-            </Link>
+            {navLinks.map((link) => (
+              <Link 
+                key={link.href}
+                to={link.href} 
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop CTA Buttons */}
+          <div className="hidden items-center gap-3 md:flex">
             <LanguageToggle />
             <Link to="/dashboard">
               <Button variant="ghost" size="sm" className="font-medium">
@@ -103,6 +116,60 @@ export function LandingPage() {
             <Button size="sm" className="bg-gradient-primary font-medium shadow-glow hover:opacity-90">
               {t('auth.signup')}
             </Button>
+          </div>
+
+          {/* Mobile Menu */}
+          <div className="flex items-center gap-2 md:hidden">
+            <LanguageToggle />
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] p-0">
+                <div className="flex flex-col h-full">
+                  {/* Mobile Menu Header */}
+                  <div className="flex items-center justify-between border-b border-border p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary">
+                        <Shield className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                      <span className="font-bold text-foreground">Somiti</span>
+                    </div>
+                  </div>
+                  
+                  {/* Mobile Navigation Links */}
+                  <nav className="flex-1 p-4">
+                    <div className="space-y-1">
+                      {navLinks.map((link) => (
+                        <Link
+                          key={link.href}
+                          to={link.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center rounded-lg px-3 py-3 text-base font-medium text-foreground transition-colors hover:bg-muted"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </nav>
+                  
+                  {/* Mobile Menu Footer */}
+                  <div className="border-t border-border p-4 space-y-3">
+                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                      <Button variant="outline" className="w-full font-medium">
+                        {t('auth.login')}
+                      </Button>
+                    </Link>
+                    <Button className="w-full bg-gradient-primary font-medium shadow-glow hover:opacity-90">
+                      {t('auth.signup')}
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
