@@ -91,6 +91,7 @@ interface Payment {
   metadata: PaymentMetadata | null;
   due_id: string | null;
   notes?: string | null;
+  advance_applied?: number | null;
   members: {
     id: string;
     name: string;
@@ -413,7 +414,7 @@ export function PaymentsPage() {
     try {
       const reference = `OFF-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       
-      const { error } = await supabase
+      const { data: paymentData, error } = await supabase
         .from('payments')
         .insert({
           tenant_id: tenant.id,
@@ -429,7 +430,9 @@ export function PaymentsPage() {
           notes: data.notes,
           contribution_type_id: data.contribution_type_id,
           due_id: data.due_id || null
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) {
         toast({
@@ -438,6 +441,18 @@ export function PaymentsPage() {
           variant: 'destructive'
         });
         return;
+      }
+
+      // Call reconcile-payment edge function to handle advance balance
+      if (paymentData?.id) {
+        try {
+          await supabase.functions.invoke('reconcile-payment', {
+            body: { payment_id: paymentData.id }
+          });
+        } catch (reconcileError) {
+          console.error('Reconciliation error:', reconcileError);
+          // Don't fail the payment, just log the error
+        }
       }
 
       toast({
