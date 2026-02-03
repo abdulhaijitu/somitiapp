@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import {
   Dialog,
   DialogContent,
@@ -30,16 +33,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Alert,
+  AlertDescription,
+} from "@/components/ui/alert";
 import { 
   Plus, 
   Edit, 
-  Trash2, 
   Loader2,
   Banknote,
   HandCoins,
-  MoreHorizontal
+  Info,
+  AlertTriangle,
+  Lock
 } from 'lucide-react';
 
 interface ContributionType {
@@ -53,6 +65,7 @@ interface ContributionType {
   is_fixed_amount: boolean;
   default_amount: number;
   sort_order: number;
+  payment_count?: number;
 }
 
 export function ContributionTypesSettings() {
@@ -65,6 +78,14 @@ export function ContributionTypesSettings() {
   const [types, setTypes] = useState<ContributionType[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingType, setEditingType] = useState<ContributionType | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    type: ContributionType | null;
+    action: 'disable' | 'enable';
+  }>({ open: false, type: null, action: 'disable' });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -88,21 +109,32 @@ export function ContributionTypesSettings() {
 
     setLoading(true);
     try {
+      // Load contribution types with payment counts
       const { data, error } = await supabase
         .from('contribution_types')
-        .select('*')
+        .select(`
+          *,
+          payments:payments(count)
+        `)
         .eq('tenant_id', tenant.id)
         .order('sort_order');
 
       if (error) throw error;
-      setTypes((data || []) as unknown as ContributionType[]);
+      
+      // Transform data to include payment count
+      const typesWithCounts = (data || []).map((type: any) => ({
+        ...type,
+        payment_count: type.payments?.[0]?.count || 0
+      }));
+      
+      setTypes(typesWithCounts as ContributionType[]);
     } catch (error) {
       console.error('Error loading contribution types:', error);
       toast({
         title: language === 'bn' ? 'ত্রুটি' : 'Error',
         description: language === 'bn' 
-          ? 'চাঁদার ধরন লোড করতে সমস্যা হয়েছে' 
-          : 'Failed to load contribution types',
+          ? 'পেমেন্ট ক্যাটাগরি লোড করতে সমস্যা হয়েছে' 
+          : 'Failed to load payment categories',
         variant: 'destructive'
       });
     } finally {
@@ -110,7 +142,31 @@ export function ContributionTypesSettings() {
     }
   };
 
+  const validateName = (name: string): boolean => {
+    if (!name.trim()) {
+      setNameError(language === 'bn' ? 'নাম আবশ্যক' : 'Name is required');
+      return false;
+    }
+    
+    // Check for duplicate names (excluding current editing type)
+    const duplicate = types.find(t => 
+      t.name.toLowerCase() === name.trim().toLowerCase() && 
+      t.id !== editingType?.id
+    );
+    
+    if (duplicate) {
+      setNameError(language === 'bn' 
+        ? 'এই নামে আরেকটি ক্যাটাগরি আছে' 
+        : 'A category with this name already exists');
+      return false;
+    }
+    
+    setNameError(null);
+    return true;
+  };
+
   const handleOpenDialog = (type?: ContributionType) => {
+    setNameError(null);
     if (type) {
       setEditingType(type);
       setFormData({
@@ -138,7 +194,22 @@ export function ContributionTypesSettings() {
   };
 
   const handleSave = async () => {
-    if (!tenant?.id || !formData.name.trim()) return;
+    if (!tenant?.id) return;
+    
+    // Validate name
+    if (!validateName(formData.name)) return;
+    
+    // Validate fixed amount
+    if (formData.is_fixed_amount && formData.default_amount <= 0) {
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' 
+          ? 'নির্ধারিত পরিমাণ শূন্যের বেশি হতে হবে' 
+          : 'Fixed amount must be greater than zero',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -161,7 +232,7 @@ export function ContributionTypesSettings() {
         
         toast({
           title: language === 'bn' ? 'সফল' : 'Success',
-          description: language === 'bn' ? 'চাঁদার ধরন আপডেট হয়েছে' : 'Contribution type updated',
+          description: language === 'bn' ? 'পেমেন্ট ক্যাটাগরি আপডেট হয়েছে' : 'Payment category updated',
         });
       } else {
         // Create
@@ -183,7 +254,7 @@ export function ContributionTypesSettings() {
         
         toast({
           title: language === 'bn' ? 'সফল' : 'Success',
-          description: language === 'bn' ? 'নতুন চাঁদার ধরন যোগ হয়েছে' : 'Contribution type created',
+          description: language === 'bn' ? 'নতুন পেমেন্ট ক্যাটাগরি যোগ হয়েছে' : 'Payment category created',
         });
       }
 
@@ -195,11 +266,21 @@ export function ContributionTypesSettings() {
         title: language === 'bn' ? 'ত্রুটি' : 'Error',
         description: language === 'bn' 
           ? 'সংরক্ষণ করতে সমস্যা হয়েছে' 
-          : 'Failed to save contribution type',
+          : 'Failed to save payment category',
         variant: 'destructive'
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleToggleActiveRequest = (type: ContributionType) => {
+    // If disabling, show confirmation
+    if (type.is_active) {
+      setConfirmDialog({ open: true, type, action: 'disable' });
+    } else {
+      // Enabling doesn't need confirmation
+      handleToggleActive(type);
     }
   };
 
@@ -212,6 +293,13 @@ export function ContributionTypesSettings() {
 
       if (error) throw error;
       
+      toast({
+        title: language === 'bn' ? 'সফল' : 'Success',
+        description: type.is_active 
+          ? (language === 'bn' ? 'ক্যাটাগরি নিষ্ক্রিয় করা হয়েছে' : 'Category disabled')
+          : (language === 'bn' ? 'ক্যাটাগরি সক্রিয় করা হয়েছে' : 'Category enabled'),
+      });
+      
       loadContributionTypes();
     } catch (error) {
       console.error('Error toggling status:', error);
@@ -223,6 +311,7 @@ export function ContributionTypesSettings() {
         variant: 'destructive'
       });
     }
+    setConfirmDialog({ open: false, type: null, action: 'disable' });
   };
 
   const getCategoryLabel = (type: string) => {
@@ -245,6 +334,11 @@ export function ContributionTypesSettings() {
       default:
         return 'outline';
     }
+  };
+
+  const isDefaultCategory = (type: ContributionType) => {
+    return type.category_type === 'monthly' || 
+           (type.sort_order <= 3 && ['monthly', 'fund_raise', 'other'].includes(type.category_type));
   };
 
   if (loading) {
@@ -271,12 +365,12 @@ export function ContributionTypesSettings() {
               </div>
               <div>
                 <CardTitle>
-                  {language === 'bn' ? 'চাঁদার ধরন' : 'Contribution Types'}
+                  {language === 'bn' ? 'পেমেন্ট ক্যাটাগরি' : 'Payment Categories'}
                 </CardTitle>
                 <CardDescription>
                   {language === 'bn' 
-                    ? 'পেমেন্ট ক্যাটাগরি কনফিগার করুন'
-                    : 'Configure payment categories for your somiti'}
+                    ? 'সদস্যদের কাছ থেকে টাকা সংগ্রহের সময় এই ক্যাটাগরিগুলো ব্যবহৃত হয়'
+                    : 'These categories are used when collecting money from members'}
                 </CardDescription>
               </div>
             </div>
@@ -286,77 +380,134 @@ export function ContributionTypesSettings() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Helper Info */}
+          <Alert className="border-info/30 bg-info/5">
+            <Info className="h-4 w-4 text-info" />
+            <AlertDescription className="text-sm text-muted-foreground">
+              {language === 'bn' 
+                ? 'পেমেন্ট ক্যাটাগরি পেমেন্ট ফর্ম এবং রিপোর্টে ব্যবহৃত হয়। নির্ধারিত পরিমাণের ক্যাটাগরিতে সদস্য সেই নির্দিষ্ট পরিমাণ দেবে, নমনীয় ক্যাটাগরিতে যেকোনো পরিমাণ দেওয়া যায়।'
+                : 'Payment categories are used in payment forms and reports. Fixed amount categories require members to pay the specified amount, while flexible categories allow any amount.'}
+            </AlertDescription>
+          </Alert>
+
           {types.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <HandCoins className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>{language === 'bn' ? 'কোনো চাঁদার ধরন নেই' : 'No contribution types defined'}</p>
+              <p>{language === 'bn' ? 'কোনো পেমেন্ট ক্যাটাগরি নেই' : 'No payment categories defined'}</p>
               <Button variant="outline" className="mt-4 gap-2" onClick={() => handleOpenDialog()}>
                 <Plus className="h-4 w-4" />
-                {language === 'bn' ? 'প্রথম টাইপ যোগ করুন' : 'Add your first type'}
+                {language === 'bn' ? 'প্রথম ক্যাটাগরি যোগ করুন' : 'Add your first category'}
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{language === 'bn' ? 'নাম' : 'Name'}</TableHead>
-                  <TableHead>{language === 'bn' ? 'ক্যাটাগরি' : 'Category'}</TableHead>
-                  <TableHead className="text-right">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</TableHead>
-                  <TableHead className="text-center">{language === 'bn' ? 'সক্রিয়' : 'Active'}</TableHead>
-                  <TableHead className="text-right">{language === 'bn' ? 'অ্যাকশন' : 'Actions'}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {types.map((type) => (
-                  <TableRow key={type.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">
-                          {language === 'bn' && type.name_bn ? type.name_bn : type.name}
-                        </p>
-                        {type.description && (
-                          <p className="text-xs text-muted-foreground">
-                            {language === 'bn' && type.description_bn 
-                              ? type.description_bn 
-                              : type.description}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getCategoryBadgeVariant(type.category_type)}>
-                        {getCategoryLabel(type.category_type)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {type.is_fixed_amount ? (
-                        <span className="font-medium">৳{type.default_amount}</span>
-                      ) : (
-                        <span className="text-muted-foreground">
-                          {language === 'bn' ? 'নমনীয়' : 'Flexible'}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Switch
-                        checked={type.is_active}
-                        onCheckedChange={() => handleToggleActive(type)}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleOpenDialog(type)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{language === 'bn' ? 'নাম' : 'Name'}</TableHead>
+                    <TableHead>{language === 'bn' ? 'টাইপ' : 'Type'}</TableHead>
+                    <TableHead className="text-right">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</TableHead>
+                    <TableHead className="text-center">{language === 'bn' ? 'স্ট্যাটাস' : 'Status'}</TableHead>
+                    <TableHead className="text-right">{language === 'bn' ? 'অ্যাকশন' : 'Actions'}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {types.map((type) => (
+                    <TableRow key={type.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <p className="font-medium">
+                              {language === 'bn' && type.name_bn ? type.name_bn : type.name}
+                            </p>
+                            {type.description && (
+                              <p className="text-xs text-muted-foreground">
+                                {language === 'bn' && type.description_bn 
+                                  ? type.description_bn 
+                                  : type.description}
+                              </p>
+                            )}
+                          </div>
+                          {isDefaultCategory(type) && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Lock className="h-3 w-3 text-muted-foreground" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {language === 'bn' ? 'ডিফল্ট ক্যাটাগরি' : 'Default category'}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getCategoryBadgeVariant(type.category_type)}>
+                          {getCategoryLabel(type.category_type)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {type.is_fixed_amount ? (
+                          <span className="font-medium text-primary">৳{type.default_amount}</span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            {language === 'bn' ? 'নমনীয়' : 'Flexible'}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="inline-flex">
+                                <Switch
+                                  checked={type.is_active}
+                                  onCheckedChange={() => handleToggleActiveRequest(type)}
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {type.is_active 
+                                ? (language === 'bn' ? 'সক্রিয় - ক্লিক করে নিষ্ক্রিয় করুন' : 'Active - Click to disable')
+                                : (language === 'bn' ? 'নিষ্ক্রিয় - ক্লিক করে সক্রিয় করুন' : 'Inactive - Click to enable')}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleOpenDialog(type)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          {(type.payment_count || 0) > 0 && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Badge variant="outline" className="text-xs">
+                                    {type.payment_count} {language === 'bn' ? 'পেমেন্ট' : 'payments'}
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {language === 'bn' 
+                                    ? 'এই ক্যাটাগরিতে পেমেন্ট আছে তাই মুছে ফেলা যাবে না'
+                                    : 'This category has payments and cannot be deleted'}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -367,13 +518,13 @@ export function ContributionTypesSettings() {
           <DialogHeader>
             <DialogTitle>
               {editingType 
-                ? (language === 'bn' ? 'চাঁদার ধরন সম্পাদনা' : 'Edit Contribution Type')
-                : (language === 'bn' ? 'নতুন চাঁদার ধরন' : 'New Contribution Type')}
+                ? (language === 'bn' ? 'পেমেন্ট ক্যাটাগরি সম্পাদনা' : 'Edit Payment Category')
+                : (language === 'bn' ? 'নতুন পেমেন্ট ক্যাটাগরি' : 'New Payment Category')}
             </DialogTitle>
             <DialogDescription>
               {language === 'bn' 
-                ? 'পেমেন্ট ক্যাটাগরির বিবরণ দিন'
-                : 'Define the payment category details'}
+                ? 'পেমেন্ট ক্যাটাগরির বিবরণ দিন। এটি পেমেন্ট সংগ্রহের সময় ব্যবহৃত হবে।'
+                : 'Define the payment category details. This will be used when collecting payments.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -384,9 +535,16 @@ export function ContributionTypesSettings() {
                 <Label>{language === 'bn' ? 'নাম (ইংরেজি) *' : 'Name (English) *'}</Label>
                 <Input
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, name: e.target.value });
+                    if (nameError) validateName(e.target.value);
+                  }}
                   placeholder="Monthly Contribution"
+                  className={nameError ? 'border-destructive' : ''}
                 />
+                {nameError && (
+                  <p className="text-xs text-destructive">{nameError}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>নাম (বাংলা)</Label>
@@ -401,7 +559,7 @@ export function ContributionTypesSettings() {
 
             {/* Category Type */}
             <div className="space-y-2">
-              <Label>{language === 'bn' ? 'ক্যাটাগরি টাইপ' : 'Category Type'}</Label>
+              <Label>{language === 'bn' ? 'ক্যাটাগরি টাইপ *' : 'Category Type *'}</Label>
               <Select 
                 value={formData.category_type} 
                 onValueChange={(v) => setFormData({ 
@@ -425,10 +583,17 @@ export function ContributionTypesSettings() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                {formData.category_type === 'monthly' 
+                  ? (language === 'bn' ? 'মাসিক চাঁদা সাধারণত নির্ধারিত পরিমাণ হয়' : 'Monthly contributions are typically fixed amounts')
+                  : formData.category_type === 'fund_raise'
+                    ? (language === 'bn' ? 'ফান্ড রেইজ সাধারণত নমনীয় পরিমাণ হয়' : 'Fund raises are typically flexible amounts')
+                    : (language === 'bn' ? 'অন্যান্য ধরনের পেমেন্ট' : 'Other types of payments')}
+              </p>
             </div>
 
             {/* Amount Settings */}
-            <div className="space-y-4 rounded-lg border p-4">
+            <div className="space-y-4 rounded-lg border p-4 bg-muted/30">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
@@ -449,7 +614,7 @@ export function ContributionTypesSettings() {
               <div className="space-y-2">
                 <Label>
                   {formData.is_fixed_amount 
-                    ? (language === 'bn' ? 'নির্ধারিত পরিমাণ' : 'Fixed Amount')
+                    ? (language === 'bn' ? 'নির্ধারিত পরিমাণ *' : 'Fixed Amount *')
                     : (language === 'bn' ? 'ডিফল্ট পরিমাণ (ঐচ্ছিক)' : 'Default Amount (Optional)')}
                 </Label>
                 <div className="relative">
@@ -462,6 +627,11 @@ export function ContributionTypesSettings() {
                     min={0}
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {formData.is_fixed_amount
+                    ? (language === 'bn' ? 'এই পরিমাণ পেমেন্ট ফর্মে স্বয়ংক্রিয়ভাবে সেট হবে' : 'This amount will be auto-filled in payment forms')
+                    : (language === 'bn' ? 'ডিফল্ট হিসেবে দেখাবে, কিন্তু পরিবর্তন করা যাবে' : 'Will be shown as default, but can be changed')}
+                </p>
               </div>
             </div>
 
@@ -493,6 +663,26 @@ export function ContributionTypesSettings() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Disable Confirmation Dialog */}
+      <ConfirmDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+        title={language === 'bn' ? 'ক্যাটাগরি নিষ্ক্রিয় করুন' : 'Disable Category'}
+        description={
+          language === 'bn'
+            ? `আপনি কি "${confirmDialog.type?.name}" ক্যাটাগরি নিষ্ক্রিয় করতে চান? নিষ্ক্রিয় ক্যাটাগরি নতুন পেমেন্টে ব্যবহার করা যাবে না, তবে পুরানো পেমেন্ট রেকর্ড অপরিবর্তিত থাকবে।`
+            : `Are you sure you want to disable "${confirmDialog.type?.name}"? Inactive categories cannot be used for new payments, but existing payment records will remain unchanged.`
+        }
+        confirmLabel={language === 'bn' ? 'নিষ্ক্রিয় করুন' : 'Disable'}
+        cancelLabel={language === 'bn' ? 'বাতিল' : 'Cancel'}
+        variant="destructive"
+        onConfirm={() => {
+          if (confirmDialog.type) {
+            handleToggleActive(confirmDialog.type);
+          }
+        }}
+      />
     </>
   );
 }
