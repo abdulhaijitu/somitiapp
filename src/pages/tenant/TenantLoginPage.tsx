@@ -169,8 +169,19 @@ export function TenantLoginPage() {
                 'Sign In'
               )}
             </Button>
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={() => navigate('/forgot-password')}
+                className="text-muted-foreground hover:text-primary"
+              >
+                Forgot password?
+              </Button>
+            </div>
           </form>
-          <div className="mt-6 text-center">
+          <div className="mt-4 text-center">
             <Button
               variant="ghost"
               size="sm"
