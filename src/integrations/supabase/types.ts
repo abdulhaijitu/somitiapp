@@ -229,6 +229,7 @@ export type Database = {
           monthly_amount: number | null
           name: string
           name_bn: string | null
+          nid_number: string | null
           phone: string | null
           photo_url: string | null
           status: string
@@ -246,6 +247,7 @@ export type Database = {
           monthly_amount?: number | null
           name: string
           name_bn?: string | null
+          nid_number?: string | null
           phone?: string | null
           photo_url?: string | null
           status?: string
@@ -263,6 +265,7 @@ export type Database = {
           monthly_amount?: number | null
           name?: string
           name_bn?: string | null
+          nid_number?: string | null
           phone?: string | null
           photo_url?: string | null
           status?: string

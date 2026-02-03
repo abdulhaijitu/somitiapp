@@ -28,6 +28,7 @@ interface Member {
   email?: string | null;
   address?: string | null;
   member_number?: string | null;
+  nid_number?: string | null;
   status: string;
 }
 
@@ -42,6 +43,7 @@ interface EditMemberDialogProps {
     email?: string;
     address?: string;
     member_number?: string;
+    nid_number?: string;
     status: string;
   }) => void;
   isSubmitting: boolean;
@@ -63,6 +65,7 @@ export function EditMemberDialog({
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [memberNumber, setMemberNumber] = useState('');
+  const [nidNumber, setNidNumber] = useState('');
   const [status, setStatus] = useState('active');
   const [memberNumberError, setMemberNumberError] = useState<string | null>(null);
 
@@ -74,6 +77,7 @@ export function EditMemberDialog({
       setEmail(member.email || '');
       setAddress(member.address || '');
       setMemberNumber(member.member_number || '');
+      setNidNumber(member.nid_number || '');
       setStatus(member.status || 'active');
       setMemberNumberError(null);
     }
@@ -109,6 +113,7 @@ export function EditMemberDialog({
       email: email.trim() || undefined,
       address: address.trim() || undefined,
       member_number: memberNumber.trim() || undefined,
+      nid_number: nidNumber.trim() || undefined,
       status
     });
   };
@@ -191,6 +196,21 @@ export function EditMemberDialog({
               onChange={(e) => setAddress(e.target.value)}
               placeholder={language === 'bn' ? 'সম্পূর্ণ ঠিকানা' : 'Full address'}
             />
+          </div>
+
+          {/* NID Number */}
+          <div className="space-y-2">
+            <Label>{language === 'bn' ? 'জাতীয় পরিচয়পত্র নম্বর (NID)' : 'NID Number'}</Label>
+            <Input
+              value={nidNumber}
+              onChange={(e) => setNidNumber(e.target.value)}
+              placeholder={language === 'bn' ? 'যেমন: 1234567890123' : 'e.g., 1234567890123'}
+            />
+            <p className="text-xs text-muted-foreground">
+              {language === 'bn' 
+                ? 'ঐচ্ছিক • ১০ বা ১৭ ডিজিট' 
+                : 'Optional • 10 or 17 digits'}
+            </p>
           </div>
 
           {/* Status */}
