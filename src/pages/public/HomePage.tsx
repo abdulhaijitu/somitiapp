@@ -279,10 +279,13 @@ export function HomePage() {
             
             {/* Right - Dashboard Preview */}
             <div className="order-1 lg:order-2 relative">
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 opacity-60 blur-3xl" />
+              {/* Animated glow background */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-primary/30 via-accent/20 to-primary/30 opacity-60 blur-3xl animate-glow-pulse" />
               
-              <div className="relative">
-                <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-2xl overflow-hidden transform lg:rotate-1 hover:rotate-0 transition-transform duration-500">
+              <div className="relative animate-float-slow">
+                {/* Main Dashboard Card */}
+                <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-2xl overflow-hidden transform lg:rotate-1 hover:rotate-0 transition-all duration-500 hover:shadow-glow">
+                  {/* Browser Chrome */}
                   <div className="flex items-center gap-2 border-b border-border/50 bg-muted/50 px-4 py-3">
                     <div className="flex gap-1.5">
                       <div className="h-3 w-3 rounded-full bg-destructive/60" />
@@ -297,18 +300,21 @@ export function HomePage() {
                     </div>
                   </div>
                   
+                  {/* Dashboard Image */}
                   <div className="relative overflow-hidden group">
                     <img 
                       src={heroDashboard} 
                       alt="Somiti Dashboard" 
                       className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                     />
+                    {/* Shimmer overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
                 </div>
                 
-                {/* Floating Cards */}
-                <div className="absolute -top-4 -left-4 hidden md:block">
-                  <div className="rounded-xl bg-card/95 backdrop-blur-md border border-border/50 px-4 py-3 shadow-xl">
+                {/* Floating Card - Top Left */}
+                <div className="absolute -top-4 -left-4 hidden md:block animate-float">
+                  <div className="rounded-xl bg-card/95 backdrop-blur-md border border-border/50 px-4 py-3 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
                         <CheckCircle2 className="h-5 w-5 text-success" />
@@ -321,8 +327,9 @@ export function HomePage() {
                   </div>
                 </div>
                 
-                <div className="absolute -bottom-4 -right-4 hidden md:block">
-                  <div className="rounded-xl bg-card/95 backdrop-blur-md border border-border/50 px-4 py-3 shadow-xl">
+                {/* Floating Card - Bottom Right */}
+                <div className="absolute -bottom-4 -right-4 hidden md:block animate-float-delayed">
+                  <div className="rounded-xl bg-card/95 backdrop-blur-md border border-border/50 px-4 py-3 shadow-xl hover:shadow-2xl transition-shadow duration-300">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                         <Users className="h-5 w-5 text-primary" />
