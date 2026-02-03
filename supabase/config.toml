@@ -1,5 +1,8 @@
 project_id = "qiejhdddxpwvgcywrdnx"
 
+[functions.update-tenant-settings]
+verify_jwt = false
+
 [functions.validate-tenant]
 verify_jwt = false
 
