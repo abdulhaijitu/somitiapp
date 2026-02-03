@@ -2,6 +2,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { SEO, getOrganizationSchema } from '@/components/common/SEO';
+import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 import { 
   Users, 
   CreditCard, 
@@ -51,6 +53,10 @@ export function LandingPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        {...pageConfigs.home}
+        structuredData={getOrganizationSchema()}
+      />
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
@@ -222,11 +228,11 @@ export function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="container mx-auto flex flex-col items-center justify-between gap-4 px-4 text-sm text-muted-foreground md:flex-row">
-          <p>© 2024 Somiti. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} {defaultBrandConfig.appName}. All rights reserved.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Support</a>
+            <Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <a href="mailto:support@somitiapp.com" className="hover:text-foreground transition-colors">Support</a>
           </div>
         </div>
       </footer>

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { SEO } from '@/components/common/SEO';
+import { pageConfigs } from '@/lib/seo';
 
 export function TenantLoginPage() {
   const navigate = useNavigate();
@@ -113,6 +115,7 @@ export function TenantLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <SEO {...pageConfigs.login} />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">

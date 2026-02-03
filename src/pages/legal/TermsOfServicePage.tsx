@@ -3,12 +3,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { SEO } from '@/components/common/SEO';
+import { pageConfigs } from '@/lib/seo';
 
 export function TermsOfServicePage() {
   const { language } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO {...pageConfigs.terms} />
+      
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">

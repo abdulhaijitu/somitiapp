@@ -1,3 +1,31 @@
+# Somiti Crawl Rules
+# https://somitiapp.com/robots.txt
+
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /member-login
+Allow: /privacy
+Allow: /terms
+Allow: /pitch
+Allow: /mobile-roadmap
+
+# Disallow private/authenticated areas
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /super-admin
+Disallow: /super-admin/*
+Disallow: /member
+Disallow: /member/*
+Disallow: /reset-password
+Disallow: /forgot-password
+
+# Disallow API and function endpoints
+Disallow: /api/
+Disallow: /_next/
+Disallow: /supabase/
+
+# Allow search engine bots
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +38,11 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# Sitemap
+Sitemap: https://somitiapp.com/sitemap.xml

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NavLink } from '@/components/NavLink';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { NoIndexSEO } from '@/components/common/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard,
@@ -55,6 +56,9 @@ export function SuperAdminLayout({ children }: SuperAdminLayoutProps) {
 
   return (
     <div className="flex min-h-screen w-full bg-background">
+      {/* SEO - Prevent indexing of super admin pages */}
+      <NoIndexSEO title="Super Admin" />
+      
       {/* Mobile overlay */}
       {mobileOpen && (
         <div 

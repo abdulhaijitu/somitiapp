@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Phone, KeyRound, Users, ArrowLeft } from 'lucide-react';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { SEO } from '@/components/common/SEO';
+import { pageConfigs, defaultBrandConfig } from '@/lib/seo';
 
 type Step = 'phone' | 'otp';
 
@@ -149,6 +151,8 @@ export function MemberLoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/30">
+      <SEO {...pageConfigs.memberLogin} />
+      
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="container flex h-14 items-center justify-between px-4">
@@ -325,7 +329,7 @@ export function MemberLoginPage() {
       {/* Footer */}
       <footer className="border-t border-border py-4 text-center text-sm text-muted-foreground">
         <p className="font-bengali">
-          © {new Date().getFullYear()} SomitiApp. {t('All rights reserved.', 'সমস্ত অধিকার সংরক্ষিত।')}
+          © {new Date().getFullYear()} {defaultBrandConfig.appName}. {t('All rights reserved.', 'সমস্ত অধিকার সংরক্ষিত।')}
         </p>
       </footer>
     </div>

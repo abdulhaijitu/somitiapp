@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { SEO } from '@/components/common/SEO';
+import { pageConfigs } from '@/lib/seo';
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
@@ -58,6 +60,7 @@ export function ForgotPasswordPage() {
   if (isEmailSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <SEO {...pageConfigs.forgotPassword} />
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
@@ -97,6 +100,7 @@ export function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <SEO {...pageConfigs.forgotPassword} />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
