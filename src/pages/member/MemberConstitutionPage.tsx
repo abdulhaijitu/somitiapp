@@ -2,6 +2,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useConstitution } from '@/hooks/useConstitution';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { HtmlContent } from '@/components/editor';
 import { BookOpen, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -32,6 +33,13 @@ export function MemberConstitutionPage() {
       </div>
     );
   }
+
+  // Determine content to display based on language preference
+  const displayContent = language === 'bn' && constitution?.content_bn 
+    ? constitution.content_bn 
+    : constitution?.content;
+
+  const hasContent = displayContent && displayContent.trim() !== '' && displayContent !== '<p></p>';
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -77,13 +85,9 @@ export function MemberConstitutionPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {constitution ? (
-            <div className="prose prose-gray dark:prose-invert max-w-none">
-              <div className="whitespace-pre-wrap font-bengali leading-relaxed text-foreground/90">
-                {language === 'bn' && constitution.content_bn 
-                  ? constitution.content_bn 
-                  : constitution.content}
-              </div>
+          {hasContent ? (
+            <div className="max-w-4xl font-bengali">
+              <HtmlContent html={displayContent} />
             </div>
           ) : (
             <p className="text-muted-foreground text-center py-8 font-bengali">

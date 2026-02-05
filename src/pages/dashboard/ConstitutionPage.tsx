@@ -4,9 +4,8 @@ import { useTenant } from '@/contexts/TenantContext';
 import { useConstitution } from '@/hooks/useConstitution';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RichTextEditor, HtmlContent } from '@/components/editor';
 import { BookOpen, Edit, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -18,8 +17,6 @@ export function ConstitutionPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [contentEn, setContentEn] = useState('');
   const [contentBn, setContentBn] = useState('');
-
-  
 
   useEffect(() => {
     if (constitution) {
@@ -41,11 +38,20 @@ export function ConstitutionPage() {
   };
 
   const handleSave = async () => {
+    // Validate content is not empty
+    const strippedContent = contentEn.replace(/<[^>]*>/g, '').trim();
+    if (!strippedContent) {
+      return;
+    }
+    
     const success = await updateConstitution(contentEn, contentBn);
     if (success) {
       setIsEditing(false);
     }
   };
+
+  // Check if content is valid for saving
+  const isContentValid = contentEn.replace(/<[^>]*>/g, '').trim().length > 0;
 
   if (isLoading) {
     return (
@@ -62,8 +68,7 @@ export function ConstitutionPage() {
             <Skeleton className="h-6 w-48" />
           </CardHeader>
           <CardContent className="space-y-4">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-[400px] w-full" />
           </CardContent>
         </Card>
       </div>
@@ -93,9 +98,14 @@ export function ConstitutionPage() {
               <X className="h-4 w-4 mr-2" />
               {language === 'bn' ? 'বাতিল' : 'Cancel'}
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving || !isContentValid}
+            >
               <Save className="h-4 w-4 mr-2" />
-              {isSaving ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...') : (language === 'bn' ? 'সংরক্ষণ করুন' : 'Save')}
+              {isSaving 
+                ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...') 
+                : (language === 'bn' ? 'সংরক্ষণ করুন' : 'Save')}
             </Button>
           </div>
         )}
@@ -119,43 +129,51 @@ export function ConstitutionPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6 space-y-6">
+        <CardContent className="p-4 sm:p-6">
           {isEditing ? (
-            <>
+            <div className="space-y-6">
+              {/* English Constitution Editor */}
               <div className="space-y-2">
-                <Label htmlFor="content-en">
+                <label className="text-sm font-medium text-foreground">
                   {language === 'bn' ? 'ইংরেজি সংবিধান' : 'English Constitution'}
-                </Label>
-                <Textarea
-                  id="content-en"
-                  value={contentEn}
-                  onChange={(e) => setContentEn(e.target.value)}
+                </label>
+                <RichTextEditor
+                  content={contentEn}
+                  onChange={setContentEn}
+                  disabled={isSaving}
                   placeholder="Enter constitution content in English..."
-                  className="min-h-[200px]"
-                  disabled={isSaving}
                 />
               </div>
+
+              {/* Bengali Constitution Editor */}
               <div className="space-y-2">
-                <Label htmlFor="content-bn">
+                <label className="text-sm font-medium text-foreground">
                   {language === 'bn' ? 'বাংলা সংবিধান' : 'Bengali Constitution'}
-                </Label>
-                <Textarea
-                  id="content-bn"
-                  value={contentBn}
-                  onChange={(e) => setContentBn(e.target.value)}
-                  placeholder="বাংলায় সংবিধান লিখুন..."
-                  className="min-h-[200px] font-bengali"
+                </label>
+                <RichTextEditor
+                  content={contentBn}
+                  onChange={setContentBn}
                   disabled={isSaving}
+                  placeholder="বাংলায় সংবিধান লিখুন..."
+                  className="font-bengali"
                 />
               </div>
-            </>
+            </div>
           ) : (
-            <div className="prose prose-gray dark:prose-invert max-w-none">
+            <div className="max-w-4xl">
               {constitution ? (
-                <div className="whitespace-pre-wrap font-bengali leading-relaxed">
-                  {language === 'bn' && constitution.content_bn 
-                    ? constitution.content_bn 
-                    : constitution.content || (language === 'bn' ? 'কোনো সংবিধান যোগ করা হয়নি।' : 'No constitution has been added yet.')}
+                <div className="font-bengali">
+                  {language === 'bn' && constitution.content_bn ? (
+                    <HtmlContent html={constitution.content_bn} />
+                  ) : constitution.content ? (
+                    <HtmlContent html={constitution.content} />
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">
+                      {language === 'bn' 
+                        ? 'কোনো সংবিধান যোগ করা হয়নি।' 
+                        : 'No constitution has been added yet.'}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-center py-8">
