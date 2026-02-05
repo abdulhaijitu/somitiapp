@@ -1,41 +1,74 @@
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTenant } from '@/contexts/TenantContext';
+import { useConstitution } from '@/hooks/useConstitution';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, FileText, Edit } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { BookOpen, Edit, Save, X } from 'lucide-react';
+import { format } from 'date-fns';
 
 export function ConstitutionPage() {
   const { t, language } = useLanguage();
+  const { isAdmin } = useTenant();
+  const { constitution, isLoading, isSaving, updateConstitution } = useConstitution();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [contentEn, setContentEn] = useState('');
+  const [contentBn, setContentBn] = useState('');
 
-  const sections = [
-    {
-      id: '1',
-      title: language === 'bn' ? 'প্রস্তাবনা' : 'Preamble',
-      content: language === 'bn' 
-        ? 'এই সমিতি গঠিত হয়েছে সদস্যদের সামাজিক ও আর্থিক উন্নয়নের জন্য।'
-        : 'This somiti has been formed for the social and financial development of its members.'
-    },
-    {
-      id: '2',
-      title: language === 'bn' ? 'সদস্যপদ' : 'Membership',
-      content: language === 'bn'
-        ? 'যেকোনো বাংলাদেশি নাগরিক এই সমিতির সদস্য হতে পারবেন। সদস্য হতে হলে মাসিক চাঁদা প্রদান করতে হবে।'
-        : 'Any Bangladeshi citizen can become a member of this somiti. Members must pay monthly contributions.'
-    },
-    {
-      id: '3',
-      title: language === 'bn' ? 'কার্যনির্বাহী পরিষদ' : 'Executive Committee',
-      content: language === 'bn'
-        ? 'কার্যনির্বাহী পরিষদ সভাপতি, সাধারণ সম্পাদক, কোষাধ্যক্ষ এবং ৫ জন সদস্য নিয়ে গঠিত হবে।'
-        : 'The executive committee shall consist of President, General Secretary, Treasurer and 5 members.'
-    },
-    {
-      id: '4',
-      title: language === 'bn' ? 'আর্থিক ব্যবস্থাপনা' : 'Financial Management',
-      content: language === 'bn'
-        ? 'সকল আয়-ব্যয়ের হিসাব সঠিকভাবে সংরক্ষণ করতে হবে এবং বার্ষিক সভায় উপস্থাপন করতে হবে।'
-        : 'All income and expenses must be properly recorded and presented at the annual meeting.'
-    },
-  ];
+  
+
+  useEffect(() => {
+    if (constitution) {
+      setContentEn(constitution.content || '');
+      setContentBn(constitution.content_bn || '');
+    }
+  }, [constitution]);
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    if (constitution) {
+      setContentEn(constitution.content || '');
+      setContentBn(constitution.content_bn || '');
+    }
+  };
+
+  const handleSave = async () => {
+    const success = await updateConstitution(contentEn, contentBn);
+    if (success) {
+      setIsEditing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -45,13 +78,27 @@ export function ConstitutionPage() {
             {t('nav.constitution')}
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Rules and regulations of the somiti
+            {language === 'bn' ? 'সমিতির নিয়ম-নীতি ও পরিচালনা পদ্ধতি' : 'Rules and regulations of the somiti'}
           </p>
         </div>
-        <Button variant="outline" className="gap-2">
-          <Edit className="h-4 w-4" />
-          Edit Constitution
-        </Button>
+        {isAdmin && !isEditing && (
+          <Button variant="outline" className="gap-2" onClick={handleEdit}>
+            <Edit className="h-4 w-4" />
+            {language === 'bn' ? 'সম্পাদনা করুন' : 'Edit Constitution'}
+          </Button>
+        )}
+        {isEditing && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCancel} disabled={isSaving}>
+              <X className="h-4 w-4 mr-2" />
+              {language === 'bn' ? 'বাতিল' : 'Cancel'}
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? (language === 'bn' ? 'সংরক্ষণ হচ্ছে...' : 'Saving...') : (language === 'bn' ? 'সংরক্ষণ করুন' : 'Save')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <Card className="border-border">
@@ -64,33 +111,61 @@ export function ConstitutionPage() {
               <CardTitle className="font-bengali">
                 {language === 'bn' ? 'সমিতির সংবিধান' : 'Somiti Constitution'}
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Last updated: January 1, 2024
-              </p>
+              {constitution?.updated_at && (
+                <p className="text-sm text-muted-foreground">
+                  {language === 'bn' ? 'সর্বশেষ আপডেট:' : 'Last updated:'} {format(new Date(constitution.updated_at), 'PPP')}
+                </p>
+              )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          {sections.map((section, index) => (
-            <div 
-              key={section.id} 
-              className={`p-6 ${index !== sections.length - 1 ? 'border-b border-border' : ''}`}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                  {section.id}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground font-bengali">
-                    {section.title}
-                  </h3>
-                  <p className="mt-2 text-muted-foreground font-bengali leading-relaxed">
-                    {section.content}
-                  </p>
-                </div>
+        <CardContent className="p-6 space-y-6">
+          {isEditing ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="content-en">
+                  {language === 'bn' ? 'ইংরেজি সংবিধান' : 'English Constitution'}
+                </Label>
+                <Textarea
+                  id="content-en"
+                  value={contentEn}
+                  onChange={(e) => setContentEn(e.target.value)}
+                  placeholder="Enter constitution content in English..."
+                  className="min-h-[200px]"
+                  disabled={isSaving}
+                />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="content-bn">
+                  {language === 'bn' ? 'বাংলা সংবিধান' : 'Bengali Constitution'}
+                </Label>
+                <Textarea
+                  id="content-bn"
+                  value={contentBn}
+                  onChange={(e) => setContentBn(e.target.value)}
+                  placeholder="বাংলায় সংবিধান লিখুন..."
+                  className="min-h-[200px] font-bengali"
+                  disabled={isSaving}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="prose prose-gray dark:prose-invert max-w-none">
+              {constitution ? (
+                <div className="whitespace-pre-wrap font-bengali leading-relaxed">
+                  {language === 'bn' && constitution.content_bn 
+                    ? constitution.content_bn 
+                    : constitution.content || (language === 'bn' ? 'কোনো সংবিধান যোগ করা হয়নি।' : 'No constitution has been added yet.')}
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-8">
+                  {language === 'bn' 
+                    ? 'কোনো সংবিধান যোগ করা হয়নি। সম্পাদনা করতে উপরের বোতামে ক্লিক করুন।' 
+                    : 'No constitution has been added yet. Click the edit button above to add one.'}
+                </p>
+              )}
             </div>
-          ))}
+          )}
         </CardContent>
       </Card>
     </div>
