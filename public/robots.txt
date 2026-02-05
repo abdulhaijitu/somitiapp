@@ -3,8 +3,13 @@
 
 User-agent: *
 Allow: /
+Allow: /pricing
+Allow: /about
+Allow: /contact
+Allow: /install
 Allow: /login
 Allow: /member-login
+Allow: /member/login
 Allow: /privacy
 Allow: /terms
 Allow: /pitch
@@ -15,17 +20,17 @@ Disallow: /dashboard
 Disallow: /dashboard/*
 Disallow: /super-admin
 Disallow: /super-admin/*
-Disallow: /member
+Disallow: /member/
 Disallow: /member/*
 Disallow: /reset-password
 Disallow: /forgot-password
 
-# Disallow API and function endpoints
+# Disallow API and internal endpoints
 Disallow: /api/
-Disallow: /_next/
+Disallow: /_/
 Disallow: /supabase/
 
-# Allow search engine bots
+# Allow social media crawlers
 User-agent: Googlebot
 Allow: /
 
@@ -42,6 +47,9 @@ User-agent: LinkedInBot
 Allow: /
 
 User-agent: WhatsApp
+Allow: /
+
+User-agent: Slackbot
 Allow: /
 
 # Sitemap
