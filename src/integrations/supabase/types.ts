@@ -98,6 +98,44 @@ export type Database = {
         }
         Relationships: []
       }
+      constitutions: {
+        Row: {
+          content: string
+          content_bn: string | null
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          content_bn?: string | null
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          content_bn?: string | null
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "constitutions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_submissions: {
         Row: {
           created_at: string
