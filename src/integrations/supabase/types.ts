@@ -462,6 +462,59 @@ export type Database = {
           },
         ]
       }
+      notices: {
+        Row: {
+          content: string
+          content_bn: string | null
+          created_at: string
+          created_by: string
+          id: string
+          is_pinned: boolean
+          published_at: string | null
+          status: Database["public"]["Enums"]["notice_status"]
+          tenant_id: string
+          title: string
+          title_bn: string | null
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          content_bn?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_pinned?: boolean
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["notice_status"]
+          tenant_id: string
+          title: string
+          title_bn?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          content_bn?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_pinned?: boolean
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["notice_status"]
+          tenant_id?: string
+          title?: string
+          title_bn?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_settings: {
         Row: {
           admin_alert_on_failed_payment: boolean | null
@@ -1272,6 +1325,7 @@ export type Database = {
       app_role: "super_admin" | "admin" | "manager" | "member"
       delivery_status: "pending" | "sent" | "delivered" | "failed" | "read"
       due_status: "unpaid" | "partial" | "paid"
+      notice_status: "draft" | "published"
       notification_channel: "sms" | "in_app" | "email"
       notification_type:
         | "otp"
@@ -1428,6 +1482,7 @@ export const Constants = {
       app_role: ["super_admin", "admin", "manager", "member"],
       delivery_status: ["pending", "sent", "delivered", "failed", "read"],
       due_status: ["unpaid", "partial", "paid"],
+      notice_status: ["draft", "published"],
       notification_channel: ["sms", "in_app", "email"],
       notification_type: [
         "otp",

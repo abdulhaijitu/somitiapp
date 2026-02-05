@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.update-constitution]
 verify_jwt = false
+
+[functions.manage-notice]
+verify_jwt = false
