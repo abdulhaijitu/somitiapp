@@ -1,14 +1,31 @@
+import { useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useConstitution } from '@/hooks/useConstitution';
+import { useSectionNavigation } from '@/hooks/useSectionNavigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HtmlContent } from '@/components/editor';
+import { SectionNavigationSidebar, SectionNavigationMobile } from '@/components/constitution';
 import { BookOpen, Scale } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function MemberConstitutionPage() {
   const { language } = useLanguage();
   const { constitution, isLoading } = useConstitution();
+  
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+
+  // Determine content based on language
+  const displayContent = language === 'bn' && constitution?.content_bn 
+    ? constitution.content_bn 
+    : constitution?.content;
+
+  const { sections, activeSection, scrollToSection } = useSectionNavigation({
+    containerRef: contentContainerRef,
+    htmlContent: displayContent,
+  });
+
+  const hasContent = displayContent && displayContent.trim() !== '' && displayContent !== '<p></p>';
 
   if (isLoading) {
     return (
@@ -22,37 +39,41 @@ export function MemberConstitutionPage() {
             <Skeleton className="h-14 w-full" />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-32" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
+        <div className="flex gap-6">
+          <Skeleton className="hidden lg:block h-[400px] w-64 flex-shrink-0" />
+          <Card className="flex-1">
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-64 w-full" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
-  // Determine content to display based on language preference
-  const displayContent = language === 'bn' && constitution?.content_bn 
-    ? constitution.content_bn 
-    : constitution?.content;
-
-  const hasContent = displayContent && displayContent.trim() !== '' && displayContent !== '<p></p>';
-
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground lg:text-3xl font-bengali">
-          {language === 'bn' ? 'সমিতির সংবিধান' : 'Somiti Constitution'}
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          {language === 'bn' 
-            ? 'সমিতির নিয়ম-নীতি ও পরিচালনা পদ্ধতি' 
-            : 'Rules, regulations and governance of the somiti'}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground lg:text-3xl font-bengali">
+            {language === 'bn' ? 'সমিতির সংবিধান' : 'Somiti Constitution'}
+          </h1>
+          <p className="mt-1 text-muted-foreground">
+            {language === 'bn' 
+              ? 'সমিতির নিয়ম-নীতি ও পরিচালনা পদ্ধতি' 
+              : 'Rules, regulations and governance of the somiti'}
+          </p>
+        </div>
+        {/* Mobile section navigation */}
+        <SectionNavigationMobile
+          sections={sections}
+          activeSection={activeSection}
+          onSectionClick={scrollToSection}
+        />
       </div>
 
       {/* Constitution Header Card */}
@@ -76,28 +97,38 @@ export function MemberConstitutionPage() {
         </CardContent>
       </Card>
 
-      {/* Constitution Content */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-bengali">
-            <BookOpen className="h-5 w-5" />
-            {language === 'bn' ? 'সংবিধান' : 'Constitution'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {hasContent ? (
-            <div className="max-w-4xl font-bengali">
-              <HtmlContent html={displayContent} />
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-center py-8 font-bengali">
-              {language === 'bn' 
-                ? 'কোনো সংবিধান যোগ করা হয়নি।' 
-                : 'No constitution has been added yet.'}
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      {/* Main content with navigation */}
+      <div className="flex gap-6 items-start">
+        {/* Desktop section navigation */}
+        <SectionNavigationSidebar
+          sections={sections}
+          activeSection={activeSection}
+          onSectionClick={scrollToSection}
+        />
+
+        {/* Constitution Content */}
+        <Card className="flex-1">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-bengali">
+              <BookOpen className="h-5 w-5" />
+              {language === 'bn' ? 'সংবিধান' : 'Constitution'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent ref={contentContainerRef}>
+            {hasContent ? (
+              <div className="max-w-4xl font-bengali">
+                <HtmlContent html={displayContent} />
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8 font-bengali">
+                {language === 'bn' 
+                  ? 'কোনো সংবিধান যোগ করা হয়নি।' 
+                  : 'No constitution has been added yet.'}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Footer Note */}
       <Card className="bg-muted/30">
