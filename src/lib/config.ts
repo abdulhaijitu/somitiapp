@@ -8,9 +8,11 @@ export type Environment = 'development' | 'production';
 // Determine current environment
 export const getEnvironment = (): Environment => {
   const mode = import.meta.env.MODE;
+  // Check for production mode or production domain
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isProduction = mode === 'production' || 
-    window.location.hostname.includes('lovable.app') ||
-    window.location.hostname.includes('somitiapp.com');
+    hostname.includes('somitiapp.com') ||
+    hostname.endsWith('.app'); // Covers preview/staging domains
   
   return isProduction ? 'production' : 'development';
 };
@@ -28,7 +30,7 @@ export const config = {
   // Domain configuration
   domain: {
     base: 'somitiapp.com',
-    preview: 'somitiapp.lovable.app',
+    preview: 'somitiapp.app', // Preview/staging domain
     get current() {
       return window.location.hostname;
     },

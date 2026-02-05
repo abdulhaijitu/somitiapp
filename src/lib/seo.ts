@@ -142,6 +142,14 @@ export const pageConfigs: Record<string, SEOProps> = {
     ogType: 'website',
     twitterCard: 'summary',
   },
+  install: {
+    title: 'Install App',
+    description: 'Install the Somiti app on your device for quick access to member management, payments, and notifications.',
+    keywords: ['pwa install', 'somiti app', 'mobile app', 'offline access', 'সমিতি অ্যাপ'],
+    noIndex: false,
+    ogType: 'website',
+    twitterCard: 'summary',
+  },
   forgotPassword: {
     title: 'Reset Password',
     description: 'Reset your account password. We will send you a secure link to create a new password.',
@@ -188,7 +196,7 @@ export function shouldIndexRoute(pathname: string): boolean {
   const privatePatterns = [
     '/dashboard',
     '/super-admin',
-    '/member',
+    '/member/', // Note: /member/login is handled separately as it's public-facing
     '/admin',
     '/settings',
     '/reset-password',

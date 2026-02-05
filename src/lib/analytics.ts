@@ -38,11 +38,16 @@ export function shouldEnableAnalytics(): boolean {
   return true;
 }
 
-// Routes where analytics should be loaded
+// Routes where analytics should be loaded (public pages only)
 const TRACKED_ROUTES = [
   '/',
+  '/pricing',
+  '/about',
+  '/contact',
+  '/install',
   '/login',
   '/member-login',
+  '/member/login',
   '/forgot-password',
   '/privacy',
   '/terms',
