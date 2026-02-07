@@ -14,23 +14,26 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
   const navigate = useNavigate();
   const { isLoading, isAuthenticated, isSuperAdmin, refreshTenantContext } = useTenant();
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasRedirected = useRef(false);
 
+  // Timeout guard — only for initial loading
   useEffect(() => {
-    if (isLoading) {
-      setHasTimedOut(false);
-      hasRedirected.current = false;
+    if (isLoading && !hasTimedOut) {
       timeoutRef.current = setTimeout(() => {
         setHasTimedOut(true);
       }, AUTH_TIMEOUT_MS);
-    } else {
+    }
+
+    if (!isLoading) {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isLoading]);
+  }, [isLoading, hasTimedOut]);
 
   useEffect(() => {
     if (isLoading || hasTimedOut || hasRedirected.current) return;
@@ -56,8 +59,8 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
             <Button variant="outline" onClick={() => navigate('/super-admin/login')}>
               Go to Login
             </Button>
-            <Button onClick={() => { setHasTimedOut(false); refreshTenantContext(); }} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
+            <Button onClick={() => { setHasTimedOut(false); setIsRetrying(true); hasRedirected.current = false; refreshTenantContext(); }} disabled={isRetrying} className="gap-2">
+              {isRetrying ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
               Retry
             </Button>
           </div>
