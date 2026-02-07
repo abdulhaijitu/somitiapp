@@ -6,69 +6,75 @@ import {
   TrendingUp, 
   AlertCircle,
   ArrowUpRight,
-  ArrowDownRight
+  UserPlus,
+  Bell,
+  Receipt,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
 
-// Mock data for the dashboard
-const recentPayments = [
-  { id: 1, member: 'আব্দুল করিম', amount: 1000, date: '2024-01-15', status: 'paid' },
-  { id: 2, member: 'ফাতেমা বেগম', amount: 1000, date: '2024-01-14', status: 'paid' },
-  { id: 3, member: 'মোহাম্মদ আলী', amount: 500, date: '2024-01-13', status: 'partial' },
-  { id: 4, member: 'নূরজাহান খাতুন', amount: 1000, date: '2024-01-12', status: 'paid' },
-  { id: 5, member: 'রহিম উদ্দিন', amount: 0, date: '2024-01-11', status: 'pending' },
-];
-
-const recentActivity = [
-  { id: 1, action: 'New member added', name: 'সালমা আক্তার', time: '2 hours ago' },
-  { id: 2, action: 'Payment received', name: 'আব্দুল করিম', time: '4 hours ago' },
-  { id: 3, action: 'Notice published', name: 'Annual Meeting', time: '1 day ago' },
-  { id: 4, action: 'Member updated', name: 'মোহাম্মদ আলী', time: '2 days ago' },
-];
+function formatBDT(amount: number): string {
+  return `৳ ${amount.toLocaleString('en-IN')}`;
+}
 
 export function DashboardOverview() {
   const { t } = useLanguage();
+  const {
+    stats,
+    isLoadingStats,
+    recentPayments,
+    isLoadingPayments,
+    recentActivity,
+    isLoadingActivity,
+  } = useDashboardStats();
 
-  const stats = [
+  const now = new Date();
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const statCards = [
     {
       title: t('dashboard.totalMembers'),
-      value: '156',
-      subtitle: '+12 this month',
+      value: stats ? String(stats.totalMembers) : '—',
+      subtitle: stats ? `+${stats.newMembersThisMonth} this month` : '',
       icon: <Users className="h-5 w-5 text-primary" />,
-      trend: { value: 8.2, isPositive: true },
     },
     {
       title: t('dashboard.totalCollection'),
-      value: `৳ 4,52,000`,
-      subtitle: 'This year',
+      value: stats ? formatBDT(stats.totalCollectionThisYear) : '—',
+      subtitle: `${now.getFullYear()}`,
       icon: <CreditCard className="h-5 w-5 text-primary" />,
-      trend: { value: 12.5, isPositive: true },
     },
     {
       title: t('dashboard.monthlyPayments'),
-      value: `৳ 1,45,000`,
-      subtitle: 'January 2024',
+      value: stats ? formatBDT(stats.monthlyCollection) : '—',
+      subtitle: `${monthNames[now.getMonth()]} ${now.getFullYear()}`,
       icon: <TrendingUp className="h-5 w-5 text-primary" />,
-      trend: { value: 3.1, isPositive: true },
     },
     {
       title: t('dashboard.outstandingDues'),
-      value: `৳ 23,500`,
-      subtitle: '15 members',
+      value: stats ? formatBDT(stats.outstandingDues) : '—',
+      subtitle: stats ? `${stats.overdueMembers} members` : '',
       icon: <AlertCircle className="h-5 w-5 text-warning" />,
-      trend: { value: 5.3, isPositive: false },
       variant: 'warning' as const,
     },
   ];
 
+  const activityIcon = (type: string) => {
+    switch (type) {
+      case 'payment': return <Receipt className="h-4 w-4 text-primary" />;
+      case 'member': return <UserPlus className="h-4 w-4 text-primary" />;
+      case 'notice': return <Bell className="h-4 w-4 text-primary" />;
+      default: return <ArrowUpRight className="h-4 w-4 text-primary" />;
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Onboarding Checklist - shows for new tenants */}
       <OnboardingChecklist />
 
-      {/* Page title */}
       <div>
         <h1 className="text-2xl font-bold text-foreground lg:text-3xl">
           {t('dashboard.title')}
@@ -80,19 +86,22 @@ export function DashboardOverview() {
 
       {/* Stats grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            subtitle={stat.subtitle}
-            icon={stat.icon}
-            trend={stat.trend}
-            variant={stat.variant || 'glass'}
-            className="animate-slide-up"
-            style={{ animationDelay: `${index * 50}ms` }}
-          />
-        ))}
+        {isLoadingStats
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 rounded-lg" />
+            ))
+          : statCards.map((stat, index) => (
+              <StatCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                subtitle={stat.subtitle}
+                icon={stat.icon}
+                variant={stat.variant || 'glass'}
+                className="animate-slide-up"
+                style={{ animationDelay: `${index * 50}ms` }}
+              />
+            ))}
       </div>
 
       {/* Content grid */}
@@ -100,52 +109,58 @@ export function DashboardOverview() {
         {/* Recent Payments */}
         <Card className="border-border">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold">
-              Recent Payments
-            </CardTitle>
+            <CardTitle className="text-lg font-semibold">Recent Payments</CardTitle>
             <Button variant="ghost" size="sm" className="text-primary">
               {t('common.viewAll')}
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {recentPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary font-bengali">
-                      {payment.member.charAt(0)}
+            {isLoadingPayments ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 rounded-lg" />
+                ))}
+              </div>
+            ) : recentPayments.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">No payments yet</p>
+            ) : (
+              <div className="space-y-3">
+                {recentPayments.map((payment) => (
+                  <div
+                    key={payment.id}
+                    className="flex items-center justify-between rounded-lg border border-border bg-card p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-medium text-primary font-bengali">
+                        {payment.memberName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground font-bengali">
+                          {payment.memberName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{payment.date}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground font-bengali">
-                        {payment.member}
+                    <div className="text-right">
+                      <p className="font-semibold text-foreground">
+                        {formatBDT(payment.amount)}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {payment.date}
-                      </p>
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          payment.status === 'paid'
+                            ? 'bg-success/10 text-success'
+                            : payment.status === 'pending'
+                            ? 'bg-warning/10 text-warning'
+                            : 'bg-destructive/10 text-destructive'
+                        }`}
+                      >
+                        {payment.status === 'paid' ? 'Paid' : payment.status === 'pending' ? 'Pending' : payment.status}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-foreground">
-                      ৳ {payment.amount.toLocaleString()}
-                    </p>
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        payment.status === 'paid'
-                          ? 'bg-success/10 text-success'
-                          : payment.status === 'partial'
-                          ? 'bg-warning/10 text-warning'
-                          : 'bg-destructive/10 text-destructive'
-                      }`}
-                    >
-                      {payment.status === 'paid' ? 'Paid' : payment.status === 'partial' ? 'Partial' : 'Pending'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -155,58 +170,40 @@ export function DashboardOverview() {
             <CardTitle className="text-lg font-semibold">
               {t('dashboard.recentActivity')}
             </CardTitle>
-            <Button variant="ghost" size="sm" className="text-primary">
-              {t('common.viewAll')}
-            </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex gap-3">
-                  <div className="relative flex flex-col items-center">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                      <ArrowUpRight className="h-4 w-4 text-primary" />
+            {isLoadingActivity ? (
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-14 rounded-lg" />
+                ))}
+              </div>
+            ) : recentActivity.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">No recent activity</p>
+            ) : (
+              <div className="space-y-4">
+                {recentActivity.map((activity, idx) => (
+                  <div key={activity.id} className="flex gap-3">
+                    <div className="relative flex flex-col items-center">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        {activityIcon(activity.type)}
+                      </div>
+                      {idx !== recentActivity.length - 1 && (
+                        <div className="my-1 h-full w-px bg-border" />
+                      )}
                     </div>
-                    {activity.id !== recentActivity.length && (
-                      <div className="my-1 h-full w-px bg-border" />
-                    )}
+                    <div className="flex-1 pb-4">
+                      <p className="text-sm font-medium text-foreground">{activity.action}</p>
+                      <p className="text-sm text-muted-foreground font-bengali">{activity.name}</p>
+                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 pb-4">
-                    <p className="text-sm font-medium text-foreground">
-                      {activity.action}
-                    </p>
-                    <p className="text-sm text-muted-foreground font-bengali">
-                      {activity.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Payment Trends Chart Placeholder */}
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            {t('dashboard.paymentTrends')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30">
-            <div className="text-center">
-              <TrendingUp className="mx-auto h-12 w-12 text-muted-foreground/50" />
-              <p className="mt-2 text-sm text-muted-foreground">
-                Payment trends chart will be displayed here
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
