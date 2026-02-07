@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,6 +95,7 @@ export function DuesPage() {
   const { language } = useLanguage();
   const { tenant, checkPermission } = useTenant();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const [loading, setLoading] = useState(true);
   const [dues, setDues] = useState<Due[]>([]);
@@ -229,78 +231,78 @@ export function DuesPage() {
               : 'Track and manage member monthly dues'}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="gap-2" onClick={loadDues}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={loadDues}>
             <RefreshCw className="h-4 w-4" />
-            {language === 'bn' ? 'রিফ্রেশ' : 'Refresh'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'রিফ্রেশ' : 'Refresh'}</span>
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2">
             <Download className="h-4 w-4" />
-            {language === 'bn' ? 'এক্সপোর্ট' : 'Export'}
+            <span className="hidden sm:inline">{language === 'bn' ? 'এক্সপোর্ট' : 'Export'}</span>
           </Button>
           <PermissionGate requiredRole="admin" showAccessDenied={false}>
-            <Button className="gap-2" onClick={() => setBulkWizardOpen(true)}>
+            <Button size="sm" className="gap-2" onClick={() => setBulkWizardOpen(true)}>
               <Plus className="h-4 w-4" />
-              {language === 'bn' ? 'বাল্ক বকেয়া তৈরি' : 'Create Bulk Dues'}
+              {language === 'bn' ? 'বাল্ক বকেয়া' : 'Bulk Dues'}
             </Button>
           </PermissionGate>
         </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 stagger-children">
         <Card className="border-border">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="h-4 w-4" />
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <TrendingUp className="h-3.5 w-3.5" />
               {language === 'bn' ? 'মোট বকেয়া' : 'Total Due'}
             </div>
-            <div className="mt-1 text-2xl font-bold">
+            <div className="mt-1.5 text-2xl font-bold">
               ৳{stats.totalAmount.toLocaleString()}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-0.5 text-xs text-muted-foreground">
               {stats.total} {language === 'bn' ? 'সদস্য' : 'members'}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-destructive/20 bg-destructive/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-destructive uppercase tracking-wide">
+              <AlertCircle className="h-3.5 w-3.5" />
               {language === 'bn' ? 'বাকি' : 'Unpaid'}
             </div>
-            <div className="mt-1 text-2xl font-bold text-destructive">
+            <div className="mt-1.5 text-2xl font-bold text-destructive">
               {stats.unpaid}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-0.5 text-xs text-muted-foreground">
               ৳{(stats.totalAmount - stats.paidAmount).toLocaleString()} {language === 'bn' ? 'বাকি' : 'remaining'}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-warning/20 bg-warning/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-warning">
-              <Clock className="h-4 w-4" />
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-warning uppercase tracking-wide">
+              <Clock className="h-3.5 w-3.5" />
               {language === 'bn' ? 'আংশিক' : 'Partial'}
             </div>
-            <div className="mt-1 text-2xl font-bold text-warning">
+            <div className="mt-1.5 text-2xl font-bold text-warning">
               {stats.partial}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-success/20 bg-success/5">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-sm text-success">
-              <CheckCircle className="h-4 w-4" />
+          <CardContent className="pt-5 pb-4">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-success uppercase tracking-wide">
+              <CheckCircle className="h-3.5 w-3.5" />
               {language === 'bn' ? 'পরিশোধিত' : 'Paid'}
             </div>
-            <div className="mt-1 text-2xl font-bold text-success">
+            <div className="mt-1.5 text-2xl font-bold text-success">
               {stats.paid}
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-0.5 text-xs text-muted-foreground">
               ৳{stats.paidAmount.toLocaleString()} {language === 'bn' ? 'আদায়' : 'collected'}
             </div>
           </CardContent>
@@ -310,24 +312,26 @@ export function DuesPage() {
       {/* Filters */}
       <Card className="border-border">
         <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder={language === 'bn' ? 'সদস্য খুঁজুন...' : 'Search member...'}
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="pl-9"
-                />
-              </div>
+          <div className="flex flex-col gap-3">
+            {/* Search */}
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={language === 'bn' ? 'সদস্য খুঁজুন...' : 'Search member...'}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="pl-9"
+              />
+            </div>
 
+            {/* Filter row */}
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-row sm:gap-4">
               <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-                <SelectTrigger className="w-[120px]">
-                  <Calendar className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-full sm:w-[120px]">
+                  <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
                   <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
                 </SelectTrigger>
                 <SelectContent className="z-50">
@@ -340,7 +344,7 @@ export function DuesPage() {
               </Select>
 
               <Select value={selectedMonth.toString()} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
                 </SelectTrigger>
                 <SelectContent className="z-50">
@@ -353,7 +357,7 @@ export function DuesPage() {
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder={language === 'bn' ? 'সব স্ট্যাটাস' : 'All Status'} />
                 </SelectTrigger>
                 <SelectContent className="z-50">
@@ -385,92 +389,169 @@ export function DuesPage() {
         </Card>
       ) : (
         <Card className="border-border">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{language === 'bn' ? 'সদস্য' : 'Member'}</TableHead>
-                  <TableHead>{language === 'bn' ? 'মাস' : 'Month'}</TableHead>
-                  <TableHead className="text-right">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</TableHead>
-                  <TableHead className="text-right">{language === 'bn' ? 'পরিশোধিত' : 'Paid'}</TableHead>
-                  <TableHead className="text-right">{language === 'bn' ? 'বাকি' : 'Remaining'}</TableHead>
-                  <TableHead>{language === 'bn' ? 'স্ট্যাটাস' : 'Status'}</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          <CardContent className={isMobile ? "p-3" : "p-0"}>
+            {/* Mobile Card View */}
+            {isMobile ? (
+              <div className="space-y-3">
                 {paginatedDues.map((due) => {
                   const dueDate = new Date(due.due_month);
                   const monthName = months[dueDate.getMonth()];
                   const remaining = Number(due.amount) - Number(due.paid_amount);
                   
                   return (
-                    <TableRow key={due.id}>
-                      <TableCell>
+                    <div key={due.id} className="rounded-lg border border-border p-3 space-y-2">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">
+                          <p className="font-medium text-sm">
                             {language === 'bn' && due.members?.name_bn 
                               ? due.members.name_bn 
                               : due.members?.name}
                           </p>
                           {due.members?.member_number && (
-                            <p className="text-xs text-muted-foreground">
-                              #{due.members.member_number}
-                            </p>
+                            <p className="text-xs text-muted-foreground">#{due.members.member_number}</p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {language === 'bn' ? monthName.labelBn : monthName.label} {dueDate.getFullYear()}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        ৳{Number(due.amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right text-success">
-                        ৳{Number(due.paid_amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right text-destructive">
-                        {remaining > 0 ? `৳${remaining.toLocaleString()}` : '-'}
-                      </TableCell>
-                      <TableCell>
-                        <DueStatusBadge status={due.status} />
-                      </TableCell>
-                      <TableCell>
-                        {due.status !== 'paid' && checkPermission('admin') && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedDueForWaiver({
-                                    id: due.id,
-                                    amount: due.amount,
-                                    paid_amount: due.paid_amount,
-                                    member_name: language === 'bn' && due.members?.name_bn 
-                                      ? due.members.name_bn 
-                                      : due.members?.name || '',
-                                    due_month: due.due_month
-                                  });
-                                  setWaiveDueOpen(true);
-                                }}
-                                className="gap-2 text-warning"
-                              >
-                                <Ban className="h-4 w-4" />
-                                {language === 'bn' ? 'মওকুফ করুন' : 'Waive Due'}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </TableCell>
-                    </TableRow>
+                        <div className="flex items-center gap-2">
+                          <DueStatusBadge status={due.status} />
+                          {due.status !== 'paid' && checkPermission('admin') && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedDueForWaiver({
+                                      id: due.id,
+                                      amount: due.amount,
+                                      paid_amount: due.paid_amount,
+                                      member_name: language === 'bn' && due.members?.name_bn 
+                                        ? due.members.name_bn 
+                                        : due.members?.name || '',
+                                      due_month: due.due_month
+                                    });
+                                    setWaiveDueOpen(true);
+                                  }}
+                                  className="gap-2 text-warning"
+                                >
+                                  <Ban className="h-4 w-4" />
+                                  {language === 'bn' ? 'মওকুফ করুন' : 'Waive Due'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</span>
+                          <p className="font-semibold">৳{Number(due.amount).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">{language === 'bn' ? 'পরিশোধিত' : 'Paid'}</span>
+                          <p className="font-semibold text-success">৳{Number(due.paid_amount).toLocaleString()}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">{language === 'bn' ? 'বাকি' : 'Due'}</span>
+                          <p className="font-semibold text-destructive">
+                            {remaining > 0 ? `৳${remaining.toLocaleString()}` : '-'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </TableBody>
-            </Table>
+              </div>
+            ) : (
+              /* Desktop Table View */
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{language === 'bn' ? 'সদস্য' : 'Member'}</TableHead>
+                    <TableHead>{language === 'bn' ? 'মাস' : 'Month'}</TableHead>
+                    <TableHead className="text-right">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</TableHead>
+                    <TableHead className="text-right">{language === 'bn' ? 'পরিশোধিত' : 'Paid'}</TableHead>
+                    <TableHead className="text-right">{language === 'bn' ? 'বাকি' : 'Remaining'}</TableHead>
+                    <TableHead>{language === 'bn' ? 'স্ট্যাটাস' : 'Status'}</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedDues.map((due) => {
+                    const dueDate = new Date(due.due_month);
+                    const monthName = months[dueDate.getMonth()];
+                    const remaining = Number(due.amount) - Number(due.paid_amount);
+                    
+                    return (
+                      <TableRow key={due.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {language === 'bn' && due.members?.name_bn 
+                                ? due.members.name_bn 
+                                : due.members?.name}
+                            </p>
+                            {due.members?.member_number && (
+                              <p className="text-xs text-muted-foreground">
+                                #{due.members.member_number}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {language === 'bn' ? monthName.labelBn : monthName.label} {dueDate.getFullYear()}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          ৳{Number(due.amount).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right text-success">
+                          ৳{Number(due.paid_amount).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right text-destructive">
+                          {remaining > 0 ? `৳${remaining.toLocaleString()}` : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <DueStatusBadge status={due.status} />
+                        </TableCell>
+                        <TableCell>
+                          {due.status !== 'paid' && checkPermission('admin') && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedDueForWaiver({
+                                      id: due.id,
+                                      amount: due.amount,
+                                      paid_amount: due.paid_amount,
+                                      member_name: language === 'bn' && due.members?.name_bn 
+                                        ? due.members.name_bn 
+                                        : due.members?.name || '',
+                                      due_month: due.due_month
+                                    });
+                                    setWaiveDueOpen(true);
+                                  }}
+                                  className="gap-2 text-warning"
+                                >
+                                  <Ban className="h-4 w-4" />
+                                  {language === 'bn' ? 'মওকুফ করুন' : 'Waive Due'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (

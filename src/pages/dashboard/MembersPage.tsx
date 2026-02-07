@@ -440,29 +440,37 @@ const handleCreateMember = async (data: {
       </div>
 
       {/* Stats summary */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 stagger-children">
         <Card className="border-border">
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Members</div>
-            <div className="mt-1 text-2xl font-bold text-foreground">{stats.total}</div>
+          <CardContent className="pt-5 pb-4">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {language === 'bn' ? 'মোট সদস্য' : 'Total Members'}
+            </div>
+            <div className="mt-1.5 text-2xl font-bold text-foreground">{stats.total}</div>
           </CardContent>
         </Card>
         <Card className="border-border">
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Active</div>
-            <div className="mt-1 text-2xl font-bold text-success">{stats.active}</div>
+          <CardContent className="pt-5 pb-4">
+            <div className="text-xs font-medium text-success uppercase tracking-wide">
+              {language === 'bn' ? 'সক্রিয়' : 'Active'}
+            </div>
+            <div className="mt-1.5 text-2xl font-bold text-success">{stats.active}</div>
           </CardContent>
         </Card>
         <Card className="border-border">
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Inactive</div>
-            <div className="mt-1 text-2xl font-bold text-muted-foreground">{stats.inactive}</div>
+          <CardContent className="pt-5 pb-4">
+            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              {language === 'bn' ? 'নিষ্ক্রিয়' : 'Inactive'}
+            </div>
+            <div className="mt-1.5 text-2xl font-bold text-muted-foreground">{stats.inactive}</div>
           </CardContent>
         </Card>
         <Card className="border-border">
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Dues</div>
-            <div className="mt-1 text-2xl font-bold text-destructive">৳ {stats.totalDues.toLocaleString()}</div>
+          <CardContent className="pt-5 pb-4">
+            <div className="text-xs font-medium text-destructive uppercase tracking-wide">
+              {language === 'bn' ? 'মোট বকেয়া' : 'Total Dues'}
+            </div>
+            <div className="mt-1.5 text-2xl font-bold text-destructive">৳ {stats.totalDues.toLocaleString()}</div>
           </CardContent>
         </Card>
       </div>
