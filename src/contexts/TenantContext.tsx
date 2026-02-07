@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
@@ -55,6 +55,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const loadingRef = useRef(false);
 
   // Computed properties
   const isAuthenticated = !!userId;
@@ -79,36 +81,28 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return userRoles.some(ur => roles.includes(ur.role));
   }, [userRoles, isSuperAdmin]);
 
-  const loadTenantContext = useCallback(async () => {
+  const clearState = useCallback(() => {
+    setUserId(null);
+    setUserRoles([]);
+    setTenant(null);
+    setSubscription(null);
+    setError(null);
+  }, []);
+
+  // Core function: load tenant data for a given user ID
+  const loadUserData = useCallback(async (currentUserId: string) => {
+    if (!mountedRef.current) return;
+    
     try {
-      setIsLoading(true);
       setError(null);
 
-      // Get current user session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        setError('Failed to verify authentication');
-        return;
-      }
-
-      if (!session?.user) {
-        // Not authenticated - this is not an error
-        setUserId(null);
-        setUserRoles([]);
-        setTenant(null);
-        setSubscription(null);
-        return;
-      }
-
-      setUserId(session.user.id);
-
-      // Fetch user roles (server-side source of truth)
+      // Fetch user roles
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role, tenant_id')
-        .eq('user_id', session.user.id);
+        .eq('user_id', currentUserId);
+
+      if (!mountedRef.current) return;
 
       if (rolesError) {
         console.error('Roles fetch error:', rolesError);
@@ -118,17 +112,17 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
       setUserRoles(roles || []);
 
-      // Check if super admin
       const isSuperAdminUser = roles?.some(r => r.role === 'super_admin');
       
-      // If super admin is impersonating a tenant, use impersonation target
+      // If super admin is impersonating a tenant
       if (isSuperAdminUser && isImpersonating && impersonationTarget?.tenantId) {
-        // Load impersonated tenant data
         const { data: impersonatedTenant, error: impTenantError } = await supabase
           .from('tenants')
           .select('*')
           .eq('id', impersonationTarget.tenantId)
           .maybeSingle();
+
+        if (!mountedRef.current) return;
 
         if (impTenantError || !impersonatedTenant) {
           console.error('Impersonated tenant fetch error:', impTenantError);
@@ -138,29 +132,26 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
         setTenant(impersonatedTenant);
 
-        // Fetch subscription for impersonated tenant
         const { data: impSubData } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('tenant_id', impersonationTarget.tenantId)
           .maybeSingle();
 
-        setSubscription(impSubData);
+        if (mountedRef.current) setSubscription(impSubData);
         return;
       }
       
       if (isSuperAdminUser) {
-        // Super admin doesn't need tenant context when not impersonating
         setTenant(null);
         setSubscription(null);
         return;
       }
 
-      // Get tenant from user roles (server-resolved, not client)
+      // Get tenant from user roles
       const tenantRole = roles?.find(r => r.tenant_id);
       
       if (!tenantRole?.tenant_id) {
-        // No tenant association - might be new user or issue
         setTenant(null);
         setSubscription(null);
         return;
@@ -173,6 +164,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         .eq('id', tenantRole.tenant_id)
         .maybeSingle();
 
+      if (!mountedRef.current) return;
+
       if (tenantError) {
         console.error('Tenant fetch error:', tenantError);
         setError('Failed to load organization data');
@@ -184,7 +177,6 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Check tenant status
       if (tenantData.status === 'suspended') {
         setError('Your organization has been suspended. Please contact support.');
         setTenant(tenantData);
@@ -205,6 +197,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         .eq('tenant_id', tenantRole.tenant_id)
         .maybeSingle();
 
+      if (!mountedRef.current) return;
+
       if (subError && subError.code !== 'PGRST116') {
         console.error('Subscription fetch error:', subError);
       }
@@ -212,23 +206,71 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setSubscription(subData);
 
     } catch (err) {
-      console.error('TenantContext error:', err);
-      setError('An unexpected error occurred');
-    } finally {
-      setIsLoading(false);
+      console.error('loadUserData error:', err);
+      if (mountedRef.current) setError('An unexpected error occurred');
     }
   }, [isImpersonating, impersonationTarget]);
 
-  const refreshTenantContext = useCallback(async () => {
-    await loadTenantContext();
-  }, [loadTenantContext]);
-
-  // Initial load and reload when impersonation changes
+  // Single auth listener — the ONLY source of truth for auth state
   useEffect(() => {
-    loadTenantContext();
-  }, [loadTenantContext]);
+    mountedRef.current = true;
 
-  // Show subscription warning toast (runs only when subscription changes)
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mountedRef.current) return;
+
+        console.log('[TenantContext] Auth event:', event, !!session?.user);
+
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+          if (session?.user) {
+            setUserId(session.user.id);
+            setIsLoading(true);
+            await loadUserData(session.user.id);
+            if (mountedRef.current) setIsLoading(false);
+          } else {
+            clearState();
+            setIsLoading(false);
+          }
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refresh — don't reload if we already have data
+          if (session?.user && !userId) {
+            setUserId(session.user.id);
+            setIsLoading(true);
+            await loadUserData(session.user.id);
+            if (mountedRef.current) setIsLoading(false);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          clearState();
+          setIsLoading(false);
+        }
+      }
+    );
+
+    return () => {
+      mountedRef.current = false;
+      authSub.unsubscribe();
+    };
+  }, [loadUserData, clearState]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Reload when impersonation changes (for super admin)
+  useEffect(() => {
+    if (userId && isImpersonating) {
+      setIsLoading(true);
+      loadUserData(userId).finally(() => {
+        if (mountedRef.current) setIsLoading(false);
+      });
+    }
+  }, [isImpersonating, impersonationTarget?.tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh function for manual use
+  const refreshTenantContext = useCallback(async () => {
+    if (!userId) return;
+    setIsLoading(true);
+    await loadUserData(userId);
+    if (mountedRef.current) setIsLoading(false);
+  }, [userId, loadUserData]);
+
+  // Show subscription warning toast
   useEffect(() => {
     if (subscription && subscriptionDaysRemaining <= 7 && subscriptionDaysRemaining > 0) {
       toast({
@@ -239,50 +281,20 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [subscription?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Listen for auth changes - skip redundant reloads on TOKEN_REFRESHED
-  useEffect(() => {
-    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN') {
-          await loadTenantContext();
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Token refresh doesn't need a full reload if we already have data
-          if (!userId && session?.user) {
-            await loadTenantContext();
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setUserId(null);
-          setUserRoles([]);
-          setTenant(null);
-          setSubscription(null);
-          setError(null);
-        }
-      }
-    );
-
-    return () => {
-      authSub.unsubscribe();
-    };
-  }, [loadTenantContext, userId]);
-
-  // Re-validate session when tab becomes visible again (prevents stuck loading)
+  // Re-validate session when tab becomes visible
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && userId) {
-        // Quick session check - only reload if session is gone
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          setUserId(null);
-          setUserRoles([]);
-          setTenant(null);
-          setSubscription(null);
+        if (!session && mountedRef.current) {
+          clearState();
         }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [userId]);
+  }, [userId, clearState]);
 
   const value: TenantContextValue = {
     tenant,
