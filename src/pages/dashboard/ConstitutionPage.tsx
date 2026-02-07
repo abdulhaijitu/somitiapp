@@ -33,7 +33,7 @@ export function ConstitutionPage() {
   const { sections, activeSection, scrollToSection } = useSectionNavigation({
     containerRef: contentContainerRef,
     htmlContent: isEditing ? undefined : displayContent,
-    editorContent: undefined,
+    editorContent: isEditing ? currentContent : undefined,
   });
 
   useEffect(() => {
