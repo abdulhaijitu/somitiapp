@@ -123,6 +123,28 @@ export function MemberDuesPage() {
     refetchInterval: 30000
   });
 
+  // Fetch pending payment requests to disable Pay button for already-requested dues
+  const { data: pendingPaymentDueIds } = useQuery({
+    queryKey: ['member-pending-payments', memberData?.id, tenant?.id],
+    queryFn: async () => {
+      if (!memberData?.id || !tenant?.id) return new Set<string>();
+
+      const { data, error } = await supabase
+        .from('payments')
+        .select('due_id')
+        .eq('member_id', memberData.id)
+        .eq('tenant_id', tenant.id)
+        .eq('status', 'pending')
+        .not('due_id', 'is', null);
+
+      if (error) return new Set<string>();
+      return new Set((data || []).map(p => p.due_id).filter(Boolean) as string[]);
+    },
+    enabled: !!memberData?.id && !!tenant?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000
+  });
+
   // Get advance balance
   const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
     memberData?.id || null,
@@ -180,8 +202,8 @@ export function MemberDuesPage() {
     });
     
     if (result.success) {
-      // Refresh dues list
       queryClient.invalidateQueries({ queryKey: ['member-dues-list'] });
+      queryClient.invalidateQueries({ queryKey: ['member-pending-payments'] });
     }
     
     setRequestingDueId(null);
@@ -419,19 +441,31 @@ export function MemberDuesPage() {
                         
                         {/* Pay Online Button */}
                         {(due.status === 'unpaid' || due.status === 'partial') && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleRequestPayment(due)}
-                            disabled={isRequesting && requestingDueId === due.id}
-                            className="gap-2"
-                          >
-                            {isRequesting && requestingDueId === due.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <CreditCard className="h-4 w-4" />
-                            )}
-                            {language === 'bn' ? 'অনলাইনে পরিশোধ' : 'Pay Online'}
-                          </Button>
+                          pendingPaymentDueIds?.has(due.id) ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled
+                              className="gap-2 text-warning border-warning/30"
+                            >
+                              <Clock className="h-4 w-4" />
+                              {language === 'bn' ? 'অপেক্ষমান' : 'Pending'}
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleRequestPayment(due)}
+                              disabled={isRequesting && requestingDueId === due.id}
+                              className="gap-2"
+                            >
+                              {isRequesting && requestingDueId === due.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <CreditCard className="h-4 w-4" />
+                              )}
+                              {language === 'bn' ? 'পে করুন' : 'Pay Now'}
+                            </Button>
+                          )
                         )}
                       </div>
                     </div>
