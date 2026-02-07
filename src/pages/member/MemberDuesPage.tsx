@@ -131,7 +131,12 @@ export function MemberDuesPage() {
   );
 
   // Year selector
-  const { years, currentYear } = useMemberYears(memberData?.joined_at, memberData?.created_at);
+  const { years, currentYear } = useMemberYears(
+    memberData?.id,
+    tenant?.id,
+    memberData?.joined_at,
+    memberData?.created_at
+  );
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // Get yearly summary for selected year
