@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics";
 import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
 import Index from "./pages/Index";
@@ -58,11 +59,13 @@ const queryClient = new QueryClient();
 function DashboardWrapper() {
   return (
     <LanguageProvider>
-      <RequireTenantAuth>
-        <DashboardLayout>
-          <Outlet />
-        </DashboardLayout>
-      </RequireTenantAuth>
+      <ErrorBoundary>
+        <RequireTenantAuth>
+          <DashboardLayout>
+            <Outlet />
+          </DashboardLayout>
+        </RequireTenantAuth>
+      </ErrorBoundary>
     </LanguageProvider>
   );
 }
@@ -70,11 +73,13 @@ function DashboardWrapper() {
 function SuperAdminWrapper() {
   return (
     <LanguageProvider>
-      <RequireSuperAdmin>
-        <SuperAdminLayout>
-          <Outlet />
-        </SuperAdminLayout>
-      </RequireSuperAdmin>
+      <ErrorBoundary>
+        <RequireSuperAdmin>
+          <SuperAdminLayout>
+            <Outlet />
+          </SuperAdminLayout>
+        </RequireSuperAdmin>
+      </ErrorBoundary>
     </LanguageProvider>
   );
 }
@@ -82,11 +87,13 @@ function SuperAdminWrapper() {
 function MemberWrapper() {
   return (
     <LanguageProvider>
-      <RequireMemberAuth>
-        <MemberLayout>
-          <Outlet />
-        </MemberLayout>
-      </RequireMemberAuth>
+      <ErrorBoundary>
+        <RequireMemberAuth>
+          <MemberLayout>
+            <Outlet />
+          </MemberLayout>
+        </RequireMemberAuth>
+      </ErrorBoundary>
     </LanguageProvider>
   );
 }

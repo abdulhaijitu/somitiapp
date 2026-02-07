@@ -1,32 +1,47 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Shield } from 'lucide-react';
+import { Loader2, Shield, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface RequireSuperAdminProps {
   children: ReactNode;
 }
 
+const AUTH_TIMEOUT_MS = 15000;
+
 export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     checkSuperAdminAccess();
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   const checkSuperAdminAccess = async () => {
+    setHasTimedOut(false);
+    setIsLoading(true);
+
+    timeoutRef.current = setTimeout(() => {
+      setHasTimedOut(true);
+      setIsLoading(false);
+    }, AUTH_TIMEOUT_MS);
+
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !session?.user) {
-        console.log('No session found, redirecting to login');
         navigate('/super-admin/login');
         return;
       }
 
-      // Check if user has super_admin role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -41,7 +56,6 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
       }
 
       if (!roleData) {
-        console.log('User is not a super admin');
         await supabase.auth.signOut();
         navigate('/super-admin/login');
         return;
@@ -52,14 +66,14 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
       console.error('Auth check error:', error);
       navigate('/super-admin/login');
     } finally {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       setIsLoading(false);
     }
   };
 
-  // Listen for auth state changes
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event) => {
         if (event === 'SIGNED_OUT') {
           navigate('/super-admin/login');
         }
@@ -70,6 +84,31 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
       subscription.unsubscribe();
     };
   }, [navigate]);
+
+  if (hasTimedOut) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4 max-w-sm px-4">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-warning/10">
+            <AlertTriangle className="h-7 w-7 text-warning" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">Connection Timeout</h3>
+          <p className="text-sm text-muted-foreground">
+            Verification is taking too long. Please check your internet connection and try again.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button variant="outline" onClick={() => navigate('/super-admin/login')}>
+              Go to Login
+            </Button>
+            <Button onClick={checkSuperAdminAccess} className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

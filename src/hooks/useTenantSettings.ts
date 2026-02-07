@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -24,68 +24,69 @@ export function useTenantSettings() {
   const { toast } = useToast();
   const { language } = useLanguage();
 
-  // Fetch current tenant data
-  useEffect(() => {
-    async function fetchTenant() {
-      try {
-        setIsLoading(true);
-        
-        // Get current user
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error('No authenticated user');
-          setIsLoading(false);
-          return;
-        }
-
-        // Get user's tenant via role
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('tenant_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (roleError || !roleData?.tenant_id) {
-          console.error('Failed to get user role:', roleError);
-          setIsLoading(false);
-          return;
-        }
-
-        // Fetch tenant data
-        const { data: tenantData, error: tenantError } = await supabase
-          .from('tenants')
-          .select('id, name, name_bn, address, subdomain')
-          .eq('id', roleData.tenant_id)
-          .single();
-
-        if (tenantError) {
-          console.error('Failed to fetch tenant:', tenantError);
-          toast({
-            title: language === 'bn' ? 'ত্রুটি' : 'Error',
-            description: language === 'bn' 
-              ? 'প্রতিষ্ঠানের তথ্য লোড করতে ব্যর্থ' 
-              : 'Failed to load organization information',
-            variant: 'destructive',
-          });
-        } else {
-          setTenant(tenantData);
-        }
-      } catch (error) {
-        console.error('Unexpected error fetching tenant:', error);
-      } finally {
-        setIsLoading(false);
+  const fetchTenant = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No authenticated user');
+        return;
       }
-    }
 
-    fetchTenant();
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('tenant_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (roleError || !roleData?.tenant_id) {
+        console.error('Failed to get user role:', roleError);
+        return;
+      }
+
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('id, name, name_bn, address, subdomain')
+        .eq('id', roleData.tenant_id)
+        .single();
+
+      if (tenantError) {
+        console.error('Failed to fetch tenant:', tenantError);
+        toast({
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' 
+            ? 'প্রতিষ্ঠানের তথ্য লোড করতে ব্যর্থ' 
+            : 'Failed to load organization information',
+          variant: 'destructive',
+        });
+      } else {
+        setTenant(tenantData);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching tenant:', error);
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' 
+          ? 'একটি অপ্রত্যাশিত ত্রুটি ঘটেছে' 
+          : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast, language]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchTenant();
+  }, [fetchTenant]);
 
   // Update tenant settings via edge function
   const updateTenantSettings = async (data: UpdateTenantData): Promise<boolean> => {
     setIsSaving(true);
     
     try {
-      // Get current session token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         toast({
@@ -98,7 +99,6 @@ export function useTenantSettings() {
         return false;
       }
 
-      // Call edge function
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-tenant-settings`,
         {
@@ -120,7 +120,6 @@ export function useTenantSettings() {
       if (!response.ok) {
         console.error('Update failed:', result);
         
-        // Handle specific error codes
         let errorMessage = result.error || 'Failed to update organization information';
         
         if (result.code === 'SUBSCRIPTION_EXPIRED') {
@@ -178,10 +177,6 @@ export function useTenantSettings() {
     isLoading,
     isSaving,
     updateTenantSettings,
-    refetchTenant: () => {
-      // Trigger re-fetch by resetting state
-      setIsLoading(true);
-      setTenant(null);
-    },
+    refetchTenant: fetchTenant,
   };
 }
