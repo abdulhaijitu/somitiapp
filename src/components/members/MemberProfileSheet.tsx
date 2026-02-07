@@ -32,6 +32,8 @@ import { format } from 'date-fns';
 import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
 import { useYearlySummary } from '@/hooks/useYearlySummary';
 import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
+import { useMemberYears } from '@/hooks/useMemberYears';
+import { YearSelector } from '@/components/common/YearSelector';
 
 interface Member {
   id: string;
@@ -90,10 +92,20 @@ export function MemberProfileSheet({
     member?.tenant_id || tenant?.id || null
   );
 
-  // Get yearly summary for this member
+  // Year selector state
+  const { years, currentYear } = useMemberYears(member?.joined_at, member?.created_at);
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  // Reset to current year when member changes
+  useEffect(() => {
+    setSelectedYear(currentYear);
+  }, [member?.id, currentYear]);
+
+  // Get yearly summary for selected year
   const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
     member?.id || null,
-    member?.tenant_id || tenant?.id || null
+    member?.tenant_id || tenant?.id || null,
+    selectedYear
   );
 
   useEffect(() => {
@@ -308,6 +320,20 @@ export function MemberProfileSheet({
             >
               Edit Profile
             </Button>
+
+            {/* Year Selector */}
+            {years.length > 1 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {language === 'bn' ? 'বছর নির্বাচন করুন' : 'Select Year'}
+                </h3>
+                <YearSelector
+                  years={years}
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                />
+              </div>
+            )}
 
             {/* Yearly Summary */}
             <YearlySummaryCard 
