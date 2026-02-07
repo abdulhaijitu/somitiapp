@@ -58,6 +58,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
   const initialLoadDoneRef = useRef(false);
+  const dataLoadedRef = useRef(false);
 
   // Computed properties
   const isAuthenticated = !!userId;
@@ -216,7 +217,6 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
     const userIdRef = { current: userId };
-    const dataLoadedRef = { current: !!tenant };
 
     const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
       if (!mountedRef.current) return;
@@ -286,12 +286,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [isImpersonating, impersonationTarget?.tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh function for manual use
+  // Refresh function for manual use — silent (no global loader) since data is already cached
   const refreshTenantContext = useCallback(async () => {
     if (!userId) return;
-    setIsLoading(true);
+    // Don't set isLoading — this prevents timeout guards from triggering on manual refresh
     await loadUserData(userId);
-    if (mountedRef.current) setIsLoading(false);
   }, [userId, loadUserData]);
 
   // Show subscription warning toast
