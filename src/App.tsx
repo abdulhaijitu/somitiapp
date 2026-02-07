@@ -62,14 +62,16 @@ const AboutPage = lazy(() => import("@/pages/public/AboutPage").then(m => ({ def
 const ContactPage = lazy(() => import("@/pages/public/ContactPage").then(m => ({ default: m.ContactPage })));
 const InstallAppPage = lazy(() => import("@/pages/public/InstallAppPage").then(m => ({ default: m.InstallAppPage })));
 
-// Optimized QueryClient with stale/cache config to reduce refetches
+// Optimized QueryClient — cache-first, no tab-switch refetching
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000,   // 10 minutes (formerly cacheTime)
+      staleTime: 5 * 60 * 1000,    // 5 minutes
+      gcTime: 10 * 60 * 1000,      // 10 minutes
       retry: 1,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: false,  // Never refetch on tab return
+      refetchOnReconnect: false,    // Don't refetch on reconnect
+      refetchOnMount: false,        // Use cache if available
     },
   },
 });
