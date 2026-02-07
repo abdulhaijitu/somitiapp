@@ -50,7 +50,8 @@ export function SettingsPage() {
       </div>
 
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-3xl grid-cols-5">
+        <div className="tabs-scroll">
+        <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:max-w-3xl sm:grid-cols-5">
           <TabsTrigger value="general" className="gap-2">
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">{language === 'bn' ? 'সাধারণ' : 'General'}</span>
@@ -72,6 +73,7 @@ export function SettingsPage() {
             <span className="hidden sm:inline">{language === 'bn' ? 'নোটিফিকেশন' : 'Notifications'}</span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="general" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-3">
