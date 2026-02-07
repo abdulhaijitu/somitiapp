@@ -922,15 +922,29 @@ export function PaymentsPage() {
       {/* Tabs and table */}
       <Card className="border-border overflow-hidden">
         <Tabs defaultValue="all" className="w-full" onValueChange={(v) => {
-          setStatusFilter(v);
+          if (v === 'approval') {
+            setStatusFilter('all');
+            setTypeFilter('pending_approval');
+          } else {
+            setStatusFilter(v);
+            if (typeFilter === 'pending_approval') setTypeFilter('all');
+          }
           setCurrentPage(1);
         }}>
           <CardHeader className="pb-3">
-            <TabsList>
+            <TabsList className="tabs-scroll">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="paid">{t('payments.paid')}</TabsTrigger>
               <TabsTrigger value="pending">{t('payments.pending')}</TabsTrigger>
               <TabsTrigger value="failed">Failed</TabsTrigger>
+              {stats.pendingApprovalCount > 0 && (
+                <TabsTrigger value="approval" className="gap-1.5">
+                  {language === 'bn' ? 'অনুমোদন' : 'Approvals'}
+                  <Badge variant="destructive" className="h-5 min-w-5 px-1 text-[10px]">
+                    {stats.pendingApprovalCount}
+                  </Badge>
+                </TabsTrigger>
+              )}
             </TabsList>
           </CardHeader>
           
