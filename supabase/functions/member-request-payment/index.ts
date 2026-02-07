@@ -101,6 +101,18 @@ Deno.serve(async (req: Request) => {
       return errorResponse(`Amount cannot exceed remaining due: ৳${remaining}`, 400);
     }
 
+    // Check for existing paid payment for this due
+    const { data: paidPayment } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('due_id', due_id)
+      .eq('status', 'paid')
+      .maybeSingle();
+
+    if (paidPayment) {
+      return errorResponse('This due has already been paid', 400);
+    }
+
     // Check for existing pending payment request for this due
     const { data: existingPayment } = await supabase
       .from('payments')

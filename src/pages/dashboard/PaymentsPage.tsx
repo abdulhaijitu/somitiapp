@@ -276,9 +276,13 @@ export function PaymentsPage() {
 
     setIsUpdating(true);
     try {
+      const previousStatus = editingPayment?.status;
+      const newStatus = data.status;
+      const statusChanged = previousStatus !== newStatus;
+
       const updateData: Record<string, any> = {
         amount: data.amount,
-        status: data.status,
+        status: newStatus,
         period_month: data.period_month,
         period_year: data.period_year,
         notes: data.notes || null,
@@ -286,7 +290,7 @@ export function PaymentsPage() {
       };
 
       // If status changed to 'paid', set payment_date
-      if (data.status === 'paid' && editingPayment?.status !== 'paid') {
+      if (newStatus === 'paid' && previousStatus !== 'paid') {
         updateData.payment_date = new Date().toISOString();
       }
 
@@ -305,9 +309,32 @@ export function PaymentsPage() {
         return;
       }
 
-      // Update linked due status if payment has a due_id
-      if (editingPayment?.due_id) {
-        await recalculateDueStatus(editingPayment.due_id);
+      // Handle status transitions
+      if (statusChanged) {
+        // Reversing a paid payment (paid -> cancelled/failed/refunded)
+        if (previousStatus === 'paid' && ['cancelled', 'failed', 'refunded'].includes(newStatus)) {
+          try {
+            await supabase.functions.invoke('reverse-payment', {
+              body: { payment_id: data.id }
+            });
+          } catch (reverseError) {
+            console.error('Reversal error:', reverseError);
+          }
+        }
+        // Marking as paid (pending/failed -> paid) — reconcile
+        else if (newStatus === 'paid' && previousStatus !== 'paid') {
+          try {
+            await supabase.functions.invoke('reconcile-payment', {
+              body: { payment_id: data.id }
+            });
+          } catch (reconcileError) {
+            console.error('Reconciliation error:', reconcileError);
+          }
+        }
+        // Non-paid status change — just recalculate due
+        else if (editingPayment?.due_id) {
+          await recalculateDueStatus(editingPayment.due_id);
+        }
       }
 
       toast({
@@ -434,6 +461,28 @@ export function PaymentsPage() {
     }
 
     try {
+      // Duplicate check: if linked to a due, check for existing paid/pending payment
+      if (data.due_id) {
+        const { data: existingPayment } = await supabase
+          .from('payments')
+          .select('id, status')
+          .eq('due_id', data.due_id)
+          .in('status', ['paid', 'pending'])
+          .eq('tenant_id', tenant.id)
+          .maybeSingle();
+
+        if (existingPayment) {
+          toast({
+            title: language === 'bn' ? 'ডুপ্লিকেট পেমেন্ট' : 'Duplicate Payment',
+            description: language === 'bn' 
+              ? 'এই বকেয়ার জন্য ইতিমধ্যে একটি পেমেন্ট আছে।' 
+              : 'A payment already exists for this due.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
       const reference = `OFF-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       
       const { data: paymentData, error } = await supabase
