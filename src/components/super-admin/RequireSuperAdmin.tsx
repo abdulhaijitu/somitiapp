@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/TenantContext';
 import { Loader2, Shield, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -12,78 +12,34 @@ const AUTH_TIMEOUT_MS = 15000;
 
 export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { isLoading, isAuthenticated, isSuperAdmin, refreshTenantContext } = useTenant();
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    checkSuperAdminAccess();
-
-    return () => {
+    if (isLoading) {
+      setHasTimedOut(false);
+      hasRedirected.current = false;
+      timeoutRef.current = setTimeout(() => {
+        setHasTimedOut(true);
+      }, AUTH_TIMEOUT_MS);
+    } else {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  const checkSuperAdminAccess = async () => {
-    setHasTimedOut(false);
-    setIsLoading(true);
-
-    timeoutRef.current = setTimeout(() => {
-      setHasTimedOut(true);
-      setIsLoading(false);
-    }, AUTH_TIMEOUT_MS);
-
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.user) {
-        navigate('/super-admin/login');
-        return;
-      }
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', session.user.id)
-        .eq('role', 'super_admin')
-        .maybeSingle();
-
-      if (roleError) {
-        console.error('Role check error:', roleError);
-        navigate('/super-admin/login');
-        return;
-      }
-
-      if (!roleData) {
-        await supabase.auth.signOut();
-        navigate('/super-admin/login');
-        return;
-      }
-
-      setIsAuthorized(true);
-    } catch (error) {
-      console.error('Auth check error:', error);
-      navigate('/super-admin/login');
-    } finally {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setIsLoading(false);
     }
-  };
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [isLoading]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event) => {
-        if (event === 'SIGNED_OUT') {
-          navigate('/super-admin/login');
-        }
-      }
-    );
+    if (isLoading || hasTimedOut || hasRedirected.current) return;
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+    if (!isAuthenticated || !isSuperAdmin) {
+      hasRedirected.current = true;
+      navigate('/super-admin/login');
+    }
+  }, [isLoading, isAuthenticated, isSuperAdmin, navigate, hasTimedOut]);
 
   if (hasTimedOut) {
     return (
@@ -100,7 +56,7 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
             <Button variant="outline" onClick={() => navigate('/super-admin/login')}>
               Go to Login
             </Button>
-            <Button onClick={checkSuperAdminAccess} className="gap-2">
+            <Button onClick={() => { setHasTimedOut(false); refreshTenantContext(); }} className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Retry
             </Button>
@@ -126,7 +82,7 @@ export function RequireSuperAdmin({ children }: RequireSuperAdminProps) {
     );
   }
 
-  if (!isAuthorized) {
+  if (!isAuthenticated || !isSuperAdmin) {
     return null;
   }
 

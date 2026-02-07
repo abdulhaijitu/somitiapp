@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
+import { TenantProvider } from "@/contexts/TenantContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics";
 import { CookieConsentBanner } from "@/components/common/CookieConsentBanner";
@@ -60,11 +61,13 @@ function DashboardWrapper() {
   return (
     <LanguageProvider>
       <ErrorBoundary>
-        <RequireTenantAuth>
-          <DashboardLayout>
-            <Outlet />
-          </DashboardLayout>
-        </RequireTenantAuth>
+        <TenantProvider>
+          <RequireTenantAuth>
+            <DashboardLayout>
+              <Outlet />
+            </DashboardLayout>
+          </RequireTenantAuth>
+        </TenantProvider>
       </ErrorBoundary>
     </LanguageProvider>
   );
@@ -74,11 +77,13 @@ function SuperAdminWrapper() {
   return (
     <LanguageProvider>
       <ErrorBoundary>
-        <RequireSuperAdmin>
-          <SuperAdminLayout>
-            <Outlet />
-          </SuperAdminLayout>
-        </RequireSuperAdmin>
+        <TenantProvider>
+          <RequireSuperAdmin>
+            <SuperAdminLayout>
+              <Outlet />
+            </SuperAdminLayout>
+          </RequireSuperAdmin>
+        </TenantProvider>
       </ErrorBoundary>
     </LanguageProvider>
   );
@@ -88,11 +93,13 @@ function MemberWrapper() {
   return (
     <LanguageProvider>
       <ErrorBoundary>
-        <RequireMemberAuth>
-          <MemberLayout>
-            <Outlet />
-          </MemberLayout>
-        </RequireMemberAuth>
+        <TenantProvider>
+          <RequireMemberAuth>
+            <MemberLayout>
+              <Outlet />
+            </MemberLayout>
+          </RequireMemberAuth>
+        </TenantProvider>
       </ErrorBoundary>
     </LanguageProvider>
   );

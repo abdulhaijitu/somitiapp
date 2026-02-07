@@ -1,6 +1,6 @@
 import { NavLink } from '@/components/NavLink';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useTenant, TenantProvider } from '@/contexts/TenantContext';
+import { useTenant } from '@/contexts/TenantContext';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -311,9 +311,5 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  return (
-    <TenantProvider>
-      <DashboardLayoutContent>{children}</DashboardLayoutContent>
-    </TenantProvider>
-  );
+  return <DashboardLayoutContent>{children}</DashboardLayoutContent>;
 }
