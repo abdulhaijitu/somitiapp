@@ -62,8 +62,10 @@ import { PermissionGate } from '@/components/common/PermissionGate';
 
 import { EmptyState } from '@/components/common/EmptyState';
 import { format, isAfter, startOfMonth, subMonths } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { useApprovePaymentRequest } from '@/hooks/useApprovePaymentRequest';
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PaymentMetadata {
   member_requested?: boolean;
@@ -112,6 +114,7 @@ interface Member {
 const PAGE_SIZE = 20;
 
 export function PaymentsPage() {
+  const isMobile = useIsMobile();
   const { t, language } = useLanguage();
   const { tenant } = useTenant();
   const { toast } = useToast();
@@ -716,22 +719,24 @@ export function PaymentsPage() {
             Track and manage all payments
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="gap-2">
             <Download className="h-4 w-4" />
-            {t('common.export')}
+            <span className="hidden sm:inline">{t('common.export')}</span>
           </Button>
           <PermissionGate requiredRole="admin" showAccessDenied={false}>
             <Button 
               variant="outline"
+              size="sm"
               className="gap-2"
               onClick={() => setIsBulkWizardOpen(true)}
             >
               <Users className="h-4 w-4" />
-              {language === 'bn' ? 'বাল্ক পেমেন্ট' : 'Bulk Payments'}
+              <span className="hidden sm:inline">{language === 'bn' ? 'বাল্ক পেমেন্ট' : 'Bulk Payments'}</span>
             </Button>
           </PermissionGate>
           <Button 
+            size="sm"
             className="gap-2 bg-gradient-primary hover:opacity-90"
             onClick={() => setIsCreateOpen(true)}
           >
@@ -742,7 +747,7 @@ export function PaymentsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card className="border-border">
           <CardContent className="pt-6">
             <div className="text-sm text-muted-foreground">This Month</div>
@@ -785,63 +790,9 @@ export function PaymentsPage() {
       {/* Filters bar */}
       <Card className="border-border">
         <CardContent className="py-4">
-          <div className="flex flex-wrap gap-4 items-center">
-            <Select value={selectedYear?.toString() || 'all'} onValueChange={(v) => {
-              setSelectedYear(v === 'all' ? null : parseInt(v));
-              setCurrentPage(1);
-            }}>
-              <SelectTrigger className="w-[120px]">
-                <Calendar className="h-4 w-4 mr-2" />
-                <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
-              </SelectTrigger>
-              <SelectContent className="z-50">
-                <SelectItem value="all">{language === 'bn' ? 'সব বছর' : 'All Years'}</SelectItem>
-                {getYearOptions().map(year => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedMonth?.toString() || 'all'} onValueChange={(v) => {
-              setSelectedMonth(v === 'all' ? null : parseInt(v));
-              setCurrentPage(1);
-            }}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
-              </SelectTrigger>
-              <SelectContent className="z-50">
-                <SelectItem value="all">{language === 'bn' ? 'সব মাস' : 'All Months'}</SelectItem>
-                {months.map(m => (
-                  <SelectItem key={m.value} value={m.value.toString()}>
-                    {language === 'bn' ? m.labelBn : m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={typeFilter} onValueChange={(v) => {
-              setTypeFilter(v as 'all' | 'online' | 'offline' | 'pending_approval');
-              setCurrentPage(1);
-            }}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Payment type" />
-              </SelectTrigger>
-              <SelectContent className="z-50">
-                <SelectItem value="all">All types</SelectItem>
-                <SelectItem value="online">Online only</SelectItem>
-                <SelectItem value="offline">Offline only</SelectItem>
-                <SelectItem value="pending_approval">
-                  <div className="flex items-center gap-2">
-                    <Clock4 className="h-4 w-4 text-warning" />
-                    Awaiting Approval {stats.pendingApprovalCount > 0 && `(${stats.pendingApprovalCount})`}
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="relative flex-1 min-w-[200px]">
+          <div className="flex flex-col gap-3">
+            {/* Search */}
+            <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input 
                 placeholder={t('common.search')} 
@@ -854,9 +805,67 @@ export function PaymentsPage() {
               />
             </div>
 
-            <Button variant="outline" size="icon" onClick={loadPayments}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
+            {/* Filter row */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-4">
+              <Select value={selectedYear?.toString() || 'all'} onValueChange={(v) => {
+                setSelectedYear(v === 'all' ? null : parseInt(v));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-full sm:w-[120px]">
+                  <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                  <SelectValue placeholder={language === 'bn' ? 'বছর' : 'Year'} />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="all">{language === 'bn' ? 'সব বছর' : 'All Years'}</SelectItem>
+                  {getYearOptions().map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedMonth?.toString() || 'all'} onValueChange={(v) => {
+                setSelectedMonth(v === 'all' ? null : parseInt(v));
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-full sm:w-[150px]">
+                  <SelectValue placeholder={language === 'bn' ? 'মাস' : 'Month'} />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="all">{language === 'bn' ? 'সব মাস' : 'All Months'}</SelectItem>
+                  {months.map(m => (
+                    <SelectItem key={m.value} value={m.value.toString()}>
+                      {language === 'bn' ? m.labelBn : m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select value={typeFilter} onValueChange={(v) => {
+                setTypeFilter(v as 'all' | 'online' | 'offline' | 'pending_approval');
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Payment type" />
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="online">Online only</SelectItem>
+                  <SelectItem value="offline">Offline only</SelectItem>
+                  <SelectItem value="pending_approval">
+                    <div className="flex items-center gap-2">
+                      <Clock4 className="h-4 w-4 text-warning" />
+                      Awaiting Approval {stats.pendingApprovalCount > 0 && `(${stats.pendingApprovalCount})`}
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" size="icon" onClick={loadPayments} className="h-10 w-10">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -887,112 +896,47 @@ export function PaymentsPage() {
               />
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-card z-10">
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Member</TableHead>
-                        <TableHead>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="gap-1 -ml-3 h-8"
-                            onClick={() => toggleSort('date')}
-                          >
-                            {t('payments.date')}
-                            <ArrowUpDown className="h-3 w-3" />
-                          </Button>
-                        </TableHead>
-                        <TableHead>Period</TableHead>
-                        <TableHead>{t('payments.method')}</TableHead>
-                        <TableHead className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="gap-1 h-8"
-                            onClick={() => toggleSort('amount')}
-                          >
-                            {t('payments.amount')}
-                            <ArrowUpDown className="h-3 w-3" />
-                          </Button>
-                        </TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedPayments.map((payment) => {
-                        const overdue = isOverdue(payment);
-                        return (
-                          <TableRow 
-                            key={payment.id} 
-                            className={`table-row-hover ${overdue ? 'bg-destructive/5' : ''}`}
-                          >
-                            <TableCell className="font-mono text-sm">
-                              <div className="flex items-center gap-2">
-                                {overdue && (
-                                  <AlertCircle className="h-4 w-4 text-destructive" />
-                                )}
-                                {payment.reference || payment.invoice_id?.substring(0, 12) || '-'}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className={`font-medium ${language === 'bn' && payment.members?.name_bn ? 'font-bengali' : ''}`}>
+                {/* Mobile Card View */}
+                {isMobile ? (
+                  <div className="p-3 space-y-3">
+                    {paginatedPayments.map((payment) => {
+                      const overdue = isOverdue(payment);
+                      return (
+                        <div 
+                          key={payment.id} 
+                          className={cn(
+                            "rounded-lg border border-border p-3 space-y-2",
+                            overdue && "border-destructive/30 bg-destructive/5"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className={`font-medium text-sm ${language === 'bn' && payment.members?.name_bn ? 'font-bengali' : ''}`}>
                                 {language === 'bn' && payment.members?.name_bn 
                                   ? payment.members.name_bn 
                                   : payment.members?.name || '-'}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                {payment.payment_date 
-                                  ? format(new Date(payment.payment_date), 'MMM d, yyyy')
-                                  : format(new Date(payment.created_at), 'MMM d, yyyy')}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">
-                              {payment.period_month && payment.period_year
-                                ? `${payment.period_month}/${payment.period_year}`
-                                : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <PaymentMethodBadge 
-                                method={payment.payment_method} 
-                                type={payment.payment_type} 
-                              />
-                            </TableCell>
-                            <TableCell className="text-right font-medium">
-                              ৳ {Number(payment.amount).toLocaleString()}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <PaymentStatusBadge status={payment.status} />
-                                {needsApproval(payment) && (
-                                  <Badge variant="outline" className="text-warning border-warning/50 text-xs">
-                                    {language === 'bn' ? 'অনুমোদন প্রয়োজন' : 'Needs Approval'}
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
+                              </p>
+                              <p className="text-xs text-muted-foreground font-mono">
+                                {payment.reference || payment.invoice_id?.substring(0, 12) || '-'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <PaymentStatusBadge status={payment.status} />
                               {needsApproval(payment) ? (
                                 <div className="flex items-center gap-1">
                                   <Button
                                     size="sm"
                                     variant="default"
-                                    className="h-7 gap-1 px-2"
+                                    className="h-8 gap-1 px-2 touch-target"
                                     onClick={() => handleApprovePayment(payment)}
                                     disabled={isApproving && approvingPaymentId === payment.id}
                                   >
                                     <CheckCircle2 className="h-3.5 w-3.5" />
-                                    {language === 'bn' ? 'অনুমোদন' : 'Approve'}
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    className="h-7 gap-1 px-2 text-destructive hover:text-destructive"
+                                    className="h-8 gap-1 px-2 text-destructive touch-target"
                                     onClick={() => handleRejectPayment(payment)}
                                   >
                                     <XCircle className="h-3.5 w-3.5" />
@@ -1005,97 +949,194 @@ export function PaymentsPage() {
                                       <MoreHorizontal className="h-4 w-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="gap-2">
-                                      <Eye className="h-4 w-4" />
-                                      {language === 'bn' ? 'বিস্তারিত দেখুন' : 'View Details'}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem 
-                                      className="gap-2"
-                                      onClick={() => handleEditPayment(payment)}
-                                    >
+                                  <DropdownMenuContent align="end" className="z-50">
+                                    <DropdownMenuItem className="gap-2" onClick={() => handleEditPayment(payment)}>
                                       <Pencil className="h-4 w-4" />
-                                      {language === 'bn' ? 'সম্পাদনা' : 'Edit Payment'}
+                                      {language === 'bn' ? 'সম্পাদনা' : 'Edit'}
                                     </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
                                     {payment.payment_type === 'online' && payment.status === 'pending' && (
-                                      <DropdownMenuItem 
-                                        className="gap-2"
-                                        onClick={() => handleVerifyPayment(payment)}
-                                        disabled={isVerifying}
-                                      >
+                                      <DropdownMenuItem className="gap-2" onClick={() => handleVerifyPayment(payment)} disabled={isVerifying}>
                                         <RefreshCw className="h-4 w-4" />
-                                        {language === 'bn' ? 'যাচাই করুন' : 'Verify Payment'}
+                                        {language === 'bn' ? 'যাচাই' : 'Verify'}
                                       </DropdownMenuItem>
                                     )}
                                     {payment.status === 'failed' && (
-                                      <DropdownMenuItem 
-                                        className="gap-2"
-                                        onClick={() => handleRetryPayment(payment)}
-                                      >
+                                      <DropdownMenuItem className="gap-2" onClick={() => handleRetryPayment(payment)}>
                                         <RotateCcw className="h-4 w-4" />
-                                        {language === 'bn' ? 'পুনরায় চেষ্টা' : 'Retry Payment'}
-                                      </DropdownMenuItem>
-                                    )}
-                                    {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
-                                      <DropdownMenuItem 
-                                        className="gap-2"
-                                        onClick={() => {
-                                          navigator.clipboard.writeText(payment.payment_url!);
-                                          toast({
-                                            title: language === 'bn' ? 'কপি হয়েছে' : 'Copied',
-                                            description: language === 'bn' ? 'পেমেন্ট লিংক কপি করা হয়েছে' : 'Payment link copied to clipboard'
-                                          });
-                                        }}
-                                      >
-                                        <ExternalLink className="h-4 w-4" />
-                                        {language === 'bn' ? 'লিংক কপি করুন' : 'Copy Payment Link'}
-                                      </DropdownMenuItem>
-                                    )}
-                                    {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
-                                      <DropdownMenuItem 
-                                        className="gap-2"
-                                        onClick={() => window.open(payment.payment_url!, '_blank')}
-                                      >
-                                        <Send className="h-4 w-4" />
-                                        {language === 'bn' ? 'পেমেন্ট পেজ খুলুন' : 'Open Payment Page'}
+                                        {language === 'bn' ? 'পুনরায়' : 'Retry'}
                                       </DropdownMenuItem>
                                     )}
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">{language === 'bn' ? 'পরিমাণ' : 'Amount'}</span>
+                              <p className="font-semibold">৳{Number(payment.amount).toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">{language === 'bn' ? 'তারিখ' : 'Date'}</span>
+                              <p className="font-medium">
+                                {payment.payment_date 
+                                  ? format(new Date(payment.payment_date), 'dd MMM')
+                                  : format(new Date(payment.created_at), 'dd MMM')}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">{language === 'bn' ? 'মাধ্যম' : 'Method'}</span>
+                              <div className="mt-0.5">
+                                <PaymentMethodBadge method={payment.payment_method} type={payment.payment_type} />
+                              </div>
+                            </div>
+                          </div>
+                          {needsApproval(payment) && (
+                            <div className="pt-1">
+                              <Badge variant="outline" className="text-warning border-warning/50 text-xs">
+                                {language === 'bn' ? 'অনুমোদন প্রয়োজন' : 'Needs Approval'}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  /* Desktop Table View */
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-card z-10">
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead>Reference</TableHead>
+                          <TableHead>Member</TableHead>
+                          <TableHead>
+                            <Button variant="ghost" size="sm" className="gap-1 -ml-3 h-8" onClick={() => toggleSort('date')}>
+                              {t('payments.date')}
+                              <ArrowUpDown className="h-3 w-3" />
+                            </Button>
+                          </TableHead>
+                          <TableHead>Period</TableHead>
+                          <TableHead>{t('payments.method')}</TableHead>
+                          <TableHead className="text-right">
+                            <Button variant="ghost" size="sm" className="gap-1 h-8" onClick={() => toggleSort('amount')}>
+                              {t('payments.amount')}
+                              <ArrowUpDown className="h-3 w-3" />
+                            </Button>
+                          </TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedPayments.map((payment) => {
+                          const overdue = isOverdue(payment);
+                          return (
+                            <TableRow key={payment.id} className={`table-row-hover ${overdue ? 'bg-destructive/5' : ''}`}>
+                              <TableCell className="font-mono text-sm">
+                                <div className="flex items-center gap-2">
+                                  {overdue && <AlertCircle className="h-4 w-4 text-destructive" />}
+                                  {payment.reference || payment.invoice_id?.substring(0, 12) || '-'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <span className={`font-medium ${language === 'bn' && payment.members?.name_bn ? 'font-bengali' : ''}`}>
+                                  {language === 'bn' && payment.members?.name_bn ? payment.members.name_bn : payment.members?.name || '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2 text-muted-foreground">
+                                  <Calendar className="h-4 w-4" />
+                                  {payment.payment_date 
+                                    ? format(new Date(payment.payment_date), 'MMM d, yyyy')
+                                    : format(new Date(payment.created_at), 'MMM d, yyyy')}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">
+                                {payment.period_month && payment.period_year ? `${payment.period_month}/${payment.period_year}` : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <PaymentMethodBadge method={payment.payment_method} type={payment.payment_type} />
+                              </TableCell>
+                              <TableCell className="text-right font-medium">
+                                ৳ {Number(payment.amount).toLocaleString()}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <PaymentStatusBadge status={payment.status} />
+                                  {needsApproval(payment) && (
+                                    <Badge variant="outline" className="text-warning border-warning/50 text-xs">
+                                      {language === 'bn' ? 'অনুমোদন প্রয়োজন' : 'Needs Approval'}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {needsApproval(payment) ? (
+                                  <div className="flex items-center gap-1">
+                                    <Button size="sm" variant="default" className="h-7 gap-1 px-2" onClick={() => handleApprovePayment(payment)} disabled={isApproving && approvingPaymentId === payment.id}>
+                                      <CheckCircle2 className="h-3.5 w-3.5" />
+                                      {language === 'bn' ? 'অনুমোদন' : 'Approve'}
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="h-7 gap-1 px-2 text-destructive hover:text-destructive" onClick={() => handleRejectPayment(payment)}>
+                                      <XCircle className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem className="gap-2"><Eye className="h-4 w-4" />{language === 'bn' ? 'বিস্তারিত দেখুন' : 'View Details'}</DropdownMenuItem>
+                                      <DropdownMenuItem className="gap-2" onClick={() => handleEditPayment(payment)}><Pencil className="h-4 w-4" />{language === 'bn' ? 'সম্পাদনা' : 'Edit Payment'}</DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      {payment.payment_type === 'online' && payment.status === 'pending' && (
+                                        <DropdownMenuItem className="gap-2" onClick={() => handleVerifyPayment(payment)} disabled={isVerifying}>
+                                          <RefreshCw className="h-4 w-4" />{language === 'bn' ? 'যাচাই করুন' : 'Verify Payment'}
+                                        </DropdownMenuItem>
+                                      )}
+                                      {payment.status === 'failed' && (
+                                        <DropdownMenuItem className="gap-2" onClick={() => handleRetryPayment(payment)}>
+                                          <RotateCcw className="h-4 w-4" />{language === 'bn' ? 'পুনরায় চেষ্টা' : 'Retry Payment'}
+                                        </DropdownMenuItem>
+                                      )}
+                                      {payment.payment_type === 'online' && payment.payment_url && payment.status === 'pending' && (
+                                        <>
+                                          <DropdownMenuItem className="gap-2" onClick={() => { navigator.clipboard.writeText(payment.payment_url!); toast({ title: language === 'bn' ? 'কপি হয়েছে' : 'Copied', description: language === 'bn' ? 'পেমেন্ট লিংক কপি করা হয়েছে' : 'Payment link copied to clipboard' }); }}>
+                                            <ExternalLink className="h-4 w-4" />{language === 'bn' ? 'লিংক কপি করুন' : 'Copy Payment Link'}
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem className="gap-2" onClick={() => window.open(payment.payment_url!, '_blank')}>
+                                            <Send className="h-4 w-4" />{language === 'bn' ? 'পেমেন্ট পেজ খুলুন' : 'Open Payment Page'}
+                                          </DropdownMenuItem>
+                                        </>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
 
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between px-4 py-3 border-t border-border">
                     <p className="text-sm text-muted-foreground">
-                      Showing {((currentPage - 1) * PAGE_SIZE) + 1} to {Math.min(currentPage * PAGE_SIZE, filteredAndSortedPayments.length)} of {filteredAndSortedPayments.length}
+                      {((currentPage - 1) * PAGE_SIZE) + 1}-{Math.min(currentPage * PAGE_SIZE, filteredAndSortedPayments.length)} / {filteredAndSortedPayments.length}
                     </p>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(p => p - 1)}
-                        disabled={currentPage === 1}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <span className="text-sm text-muted-foreground">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(p => p + 1)}
-                        disabled={currentPage === totalPages}
-                      >
+                      <span className="text-sm text-muted-foreground">{currentPage}/{totalPages}</span>
+                      <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
