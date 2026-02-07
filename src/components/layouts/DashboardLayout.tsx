@@ -184,7 +184,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
         {/* Sidebar - Hidden on mobile, visible on desktop */}
         <aside
           className={cn(
-            "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 lg:relative",
+            "fixed inset-y-0 left-0 z-50 flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 lg:sticky lg:top-0",
             collapsed ? "w-16" : "w-64",
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           )}
