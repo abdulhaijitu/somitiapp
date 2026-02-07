@@ -210,8 +210,8 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                 <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
               </Button>
             </div>
-            {/* Tenant Name */}
-            {!collapsed && (
+            {/* Tenant Name / Avatar */}
+            {!collapsed ? (
               <div className="px-4 pb-3">
                 <div className="rounded-md bg-primary/10 px-3 py-2">
                   <p className="text-xs text-muted-foreground font-medium">
@@ -220,6 +220,12 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                   <p className="text-sm font-bold text-primary truncate font-bengali">
                     {displayTenantName}
                   </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center pb-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary" title={displayTenantName}>
+                  {displayTenantName.substring(0, 2).toUpperCase()}
                 </div>
               </div>
             )}
