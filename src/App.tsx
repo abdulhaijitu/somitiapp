@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { AnalyticsProvider, AnalyticsSetup } from "@/components/common/Analytics";
@@ -54,35 +54,57 @@ import { ResetPasswordPage } from "@/pages/tenant/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 
-// Dashboard wrapper component (with auth protection)
-function DashboardWrapper({ children }: { children: React.ReactNode }) {
+// Persistent layout wrappers using Outlet — mounted ONCE, child pages swap via Outlet
+function DashboardWrapper() {
   return (
     <LanguageProvider>
       <RequireTenantAuth>
-        <DashboardLayout>{children}</DashboardLayout>
+        <DashboardLayout>
+          <Outlet />
+        </DashboardLayout>
       </RequireTenantAuth>
     </LanguageProvider>
   );
 }
 
-// Super Admin wrapper component (with auth protection)
-function SuperAdminWrapper({ children }: { children: React.ReactNode }) {
+function SuperAdminWrapper() {
   return (
     <LanguageProvider>
       <RequireSuperAdmin>
-        <SuperAdminLayout>{children}</SuperAdminLayout>
+        <SuperAdminLayout>
+          <Outlet />
+        </SuperAdminLayout>
       </RequireSuperAdmin>
     </LanguageProvider>
   );
 }
 
-// Member Portal wrapper component (with auth protection)
-function MemberWrapper({ children }: { children: React.ReactNode }) {
+function MemberWrapper() {
   return (
     <LanguageProvider>
       <RequireMemberAuth>
-        <MemberLayout>{children}</MemberLayout>
+        <MemberLayout>
+          <Outlet />
+        </MemberLayout>
       </RequireMemberAuth>
+    </LanguageProvider>
+  );
+}
+
+function PublicWrapper() {
+  return (
+    <LanguageProvider>
+      <PublicLayout>
+        <Outlet />
+      </PublicLayout>
+    </LanguageProvider>
+  );
+}
+
+function LangWrapper() {
+  return (
+    <LanguageProvider>
+      <Outlet />
     </LanguageProvider>
   );
 }
@@ -100,311 +122,60 @@ const App = () => (
               {/* Home */}
               <Route path="/" element={<Index />} />
               
-              {/* Public Pages */}
-              <Route
-                path="/pricing"
-                element={
-                  <LanguageProvider>
-                    <PublicLayout>
-                      <PricingPage />
-                    </PublicLayout>
-                  </LanguageProvider>
-                }
-              />
-              <Route
-                path="/about"
-                element={
-                  <LanguageProvider>
-                    <PublicLayout>
-                      <AboutPage />
-                    </PublicLayout>
-                  </LanguageProvider>
-                }
-              />
-              <Route
-                path="/contact"
-                element={
-                  <LanguageProvider>
-                    <PublicLayout>
-                      <ContactPage />
-                    </PublicLayout>
-                  </LanguageProvider>
-                }
-              />
-              <Route
-                path="/install"
-                element={
-                  <LanguageProvider>
-                    <PublicLayout>
-                      <InstallAppPage />
-                    </PublicLayout>
-                  </LanguageProvider>
-                }
-              />
+              {/* Public Pages with shared layout */}
+              <Route element={<PublicWrapper />}>
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/install" element={<InstallAppPage />} />
+              </Route>
           
-          {/* Tenant Login (public) */}
-          <Route
-            path="/login"
-            element={
-              <LanguageProvider>
-                <TenantLoginPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/forgot-password"
-            element={
-              <LanguageProvider>
-                <ForgotPasswordPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={
-              <LanguageProvider>
-                <ResetPasswordPage />
-              </LanguageProvider>
-            }
-          />
+              {/* Pages that only need LanguageProvider */}
+              <Route element={<LangWrapper />}>
+                <Route path="/login" element={<TenantLoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/member/login" element={<MemberLoginPage />} />
+                <Route path="/super-admin/login" element={<SuperAdminLoginPage />} />
+                <Route path="/dashboard/payments/success" element={<PaymentSuccessPage />} />
+                <Route path="/dashboard/payments/cancelled" element={<PaymentCancelledPage />} />
+                <Route path="/terms" element={<TermsOfServicePage />} />
+                <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                <Route path="/pitch" element={<PitchDeckPage />} />
+                <Route path="/mobile-roadmap" element={<MobileRoadmapPage />} />
+              </Route>
           
-          {/* Tenant Dashboard routes (protected) */}
+              {/* Tenant Dashboard routes (protected) — layout mounted ONCE */}
+              <Route element={<DashboardWrapper />}>
+                <Route path="/dashboard" element={<DashboardOverview />} />
+                <Route path="/dashboard/members" element={<MembersPage />} />
+                <Route path="/dashboard/payments" element={<PaymentsPage />} />
+                <Route path="/dashboard/reports" element={<ReportsPage />} />
+                <Route path="/dashboard/notices" element={<NoticesPage />} />
+                <Route path="/dashboard/constitution" element={<ConstitutionPage />} />
+                <Route path="/dashboard/settings" element={<SettingsPage />} />
+                <Route path="/dashboard/dues" element={<DuesPage />} />
+              </Route>
           
-          {/* Tenant Dashboard routes (protected) */}
-          <Route
-            path="/dashboard"
-            element={
-              <DashboardWrapper>
-                <DashboardOverview />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/members"
-            element={
-              <DashboardWrapper>
-                <MembersPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/payments"
-            element={
-              <DashboardWrapper>
-                <PaymentsPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/payments/success"
-            element={
-              <LanguageProvider>
-                <PaymentSuccessPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/dashboard/payments/cancelled"
-            element={
-              <LanguageProvider>
-                <PaymentCancelledPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/dashboard/reports"
-            element={
-              <DashboardWrapper>
-                <ReportsPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/notices"
-            element={
-              <DashboardWrapper>
-                <NoticesPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/constitution"
-            element={
-              <DashboardWrapper>
-                <ConstitutionPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/settings"
-            element={
-              <DashboardWrapper>
-                <SettingsPage />
-              </DashboardWrapper>
-            }
-          />
-          <Route
-            path="/dashboard/dues"
-            element={
-              <DashboardWrapper>
-                <DuesPage />
-              </DashboardWrapper>
-            }
-          />
+              {/* Member Portal routes (protected) — layout mounted ONCE */}
+              <Route element={<MemberWrapper />}>
+                <Route path="/member" element={<MemberDashboard />} />
+                <Route path="/member/payments" element={<MemberPaymentsPage />} />
+                <Route path="/member/dues" element={<MemberDuesPage />} />
+                <Route path="/member/notices" element={<MemberNoticesPage />} />
+                <Route path="/member/constitution" element={<MemberConstitutionPage />} />
+              </Route>
           
-          {/* Member Login (public) */}
-          <Route
-            path="/member/login"
-            element={
-              <LanguageProvider>
-                <MemberLoginPage />
-              </LanguageProvider>
-            }
-          />
-          
-          {/* Member Portal routes (protected) */}
-          <Route
-            path="/member"
-            element={
-              <MemberWrapper>
-                <MemberDashboard />
-              </MemberWrapper>
-            }
-          />
-          <Route
-            path="/member/payments"
-            element={
-              <MemberWrapper>
-                <MemberPaymentsPage />
-              </MemberWrapper>
-            }
-          />
-          <Route
-            path="/member/dues"
-            element={
-              <MemberWrapper>
-                <MemberDuesPage />
-              </MemberWrapper>
-            }
-          />
-          <Route
-            path="/member/notices"
-            element={
-              <MemberWrapper>
-                <MemberNoticesPage />
-              </MemberWrapper>
-            }
-          />
-          <Route
-            path="/member/constitution"
-            element={
-              <MemberWrapper>
-                <MemberConstitutionPage />
-              </MemberWrapper>
-            }
-          />
-          
-          {/* Super Admin Login (public) */}
-          <Route
-            path="/super-admin/login"
-            element={
-              <LanguageProvider>
-                <SuperAdminLoginPage />
-              </LanguageProvider>
-            }
-          />
-          
-          {/* Super Admin routes (protected) */}
-          <Route
-            path="/super-admin"
-            element={
-              <SuperAdminWrapper>
-                <SuperAdminDashboard />
-              </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/tenants"
-            element={
-              <SuperAdminWrapper>
-                <TenantsManagementPage />
-              </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/subscriptions"
-            element={
-              <SuperAdminWrapper>
-                <SubscriptionsManagementPage />
-              </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/audit-logs"
-            element={
-              <SuperAdminWrapper>
-                <AuditLogsPage />
-              </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/settings"
-            element={
-              <SuperAdminWrapper>
-                <SuperAdminSettingsPage />
-          </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/monitoring"
-            element={
-              <SuperAdminWrapper>
-                <SystemMonitoringPage />
-              </SuperAdminWrapper>
-            }
-          />
-          <Route
-            path="/super-admin/revenue"
-            element={
-              <SuperAdminWrapper>
-                <RevenueDashboardPage />
-              </SuperAdminWrapper>
-            }
-          />
-          
-          {/* Legal Pages */}
-          <Route
-            path="/terms"
-            element={
-              <LanguageProvider>
-                <TermsOfServicePage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/privacy"
-            element={
-              <LanguageProvider>
-                <PrivacyPolicyPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/pitch"
-            element={
-              <LanguageProvider>
-                <PitchDeckPage />
-              </LanguageProvider>
-            }
-          />
-          <Route
-            path="/mobile-roadmap"
-            element={
-              <LanguageProvider>
-                <MobileRoadmapPage />
-              </LanguageProvider>
-            }
-          />
+              {/* Super Admin routes (protected) — layout mounted ONCE */}
+              <Route element={<SuperAdminWrapper />}>
+                <Route path="/super-admin" element={<SuperAdminDashboard />} />
+                <Route path="/super-admin/tenants" element={<TenantsManagementPage />} />
+                <Route path="/super-admin/subscriptions" element={<SubscriptionsManagementPage />} />
+                <Route path="/super-admin/audit-logs" element={<AuditLogsPage />} />
+                <Route path="/super-admin/settings" element={<SuperAdminSettingsPage />} />
+                <Route path="/super-admin/monitoring" element={<SystemMonitoringPage />} />
+                <Route path="/super-admin/revenue" element={<RevenueDashboardPage />} />
+              </Route>
           
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
