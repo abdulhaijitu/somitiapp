@@ -221,7 +221,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
         console.log('[TenantContext] Auth event:', event, !!session?.user);
 
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+        if (event === 'INITIAL_SESSION') {
           if (session?.user) {
             setUserId(session.user.id);
             setIsLoading(true);
@@ -231,13 +231,22 @@ export function TenantProvider({ children }: { children: ReactNode }) {
             clearState();
             setIsLoading(false);
           }
+        } else if (event === 'SIGNED_IN') {
+          if (session?.user) {
+            // Only reload if user changed (not a tab-switch re-emit)
+            if (session.user.id !== userId) {
+              setUserId(session.user.id);
+              setIsLoading(true);
+              await loadUserData(session.user.id);
+              if (mountedRef.current) setIsLoading(false);
+            }
+          }
         } else if (event === 'TOKEN_REFRESHED') {
-          // Token refresh — don't reload if we already have data
+          // Silent token refresh — never show loading, just update userId if missing
           if (session?.user && !userId) {
             setUserId(session.user.id);
-            setIsLoading(true);
+            // Load data silently without setting isLoading
             await loadUserData(session.user.id);
-            if (mountedRef.current) setIsLoading(false);
           }
         } else if (event === 'SIGNED_OUT') {
           clearState();
@@ -281,13 +290,21 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [subscription?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-validate session when tab becomes visible
+  // Silent session validation on tab return — NO loading, NO state clearing unless truly signed out
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && userId) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session && mountedRef.current) {
-          clearState();
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session && mountedRef.current) {
+            // Only clear if we're certain the session is gone (not a network blip)
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            if (!retrySession && mountedRef.current) {
+              clearState();
+            }
+          }
+        } catch {
+          // Network error on tab return — do nothing, keep current state
         }
       }
     };
