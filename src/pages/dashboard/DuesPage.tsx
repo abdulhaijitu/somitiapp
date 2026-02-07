@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
@@ -123,7 +123,7 @@ export function DuesPage() {
     }
   }, [tenant?.id, selectedYear, selectedMonth]);
 
-  const loadDues = async () => {
+  const loadDues = useCallback(async () => {
     if (!tenant?.id) return;
     
     setLoading(true);
@@ -151,7 +151,7 @@ export function DuesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenant?.id, dueMonth, toast, language]);
 
   const filteredDues = useMemo(() => {
     let result = [...dues];

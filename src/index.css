@@ -166,8 +166,9 @@
     font-family: var(--font-bengali);
   }
 
-  /* Smooth transitions for theme switching */
-  * {
+  /* Smooth transitions only for interactive elements, not all elements */
+  a, button, input, select, textarea,
+  [role="button"], [role="tab"], [role="menuitem"] {
     @apply transition-colors duration-200;
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -153,7 +153,7 @@ export function PaymentsPage() {
     loadMembers();
   }, []);
 
-  const loadPayments = async () => {
+  const loadPayments = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -186,7 +186,7 @@ export function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, language]);
 
   const calculateStats = (paymentsData: Payment[]) => {
     const now = new Date();
