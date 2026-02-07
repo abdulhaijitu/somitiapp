@@ -20,22 +20,19 @@ export function SuperAdminLoginPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    const timeoutId = setTimeout(() => setIsLoading(false), 15000);
+
     try {
-      // Sign in with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const signInPromise = supabase.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Login request timed out. Please try again.')), 12000)
+      );
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
+      const { data: authData, error: authError } = await Promise.race([signInPromise, timeoutPromise]);
 
-      if (!authData.user) {
-        throw new Error('Authentication failed');
-      }
+      if (authError) throw new Error(authError.message);
+      if (!authData.user) throw new Error('Authentication failed');
 
-      // Check if user has super_admin role
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
@@ -44,22 +41,16 @@ export function SuperAdminLoginPage() {
         .maybeSingle();
 
       if (roleError) {
-        console.error('Role check error:', roleError);
         await supabase.auth.signOut();
         throw new Error('Failed to verify permissions');
       }
 
       if (!roleData) {
-        // User is not a super admin
         await supabase.auth.signOut();
         throw new Error('Access denied. Super Admin privileges required.');
       }
 
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome to Super Admin Panel',
-      });
-
+      toast({ title: 'Login Successful', description: 'Welcome to Super Admin Panel' });
       navigate('/super-admin');
     } catch (error: any) {
       console.error('Login error:', error);
@@ -69,6 +60,7 @@ export function SuperAdminLoginPage() {
         variant: 'destructive',
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
