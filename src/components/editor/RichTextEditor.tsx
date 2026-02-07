@@ -77,6 +77,8 @@ export function RichTextEditor({
           'prose-td:border prose-td:border-border prose-td:p-2',
         ),
       },
+      scrollThreshold: 0,
+      scrollMargin: 0,
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -104,9 +106,9 @@ export function RichTextEditor({
   }
 
   return (
-    <div className={cn('border border-border rounded-lg overflow-hidden bg-background', className)}>
+    <div className={cn('border border-border rounded-lg overflow-clip bg-background', className)}>
       {!disabled && <EditorToolbar editor={editor} />}
-      <div className="bg-card">
+      <div className="bg-card overflow-y-auto max-h-[70vh]">
         <EditorContent editor={editor} />
       </div>
     </div>

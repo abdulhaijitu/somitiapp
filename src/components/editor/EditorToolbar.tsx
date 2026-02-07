@@ -106,7 +106,7 @@ export function EditorToolbar({ editor }: EditorToolbarProps) {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-muted/30 sticky top-0 z-10">
+      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-muted/30">
         {/* Text Formatting */}
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
