@@ -9,31 +9,35 @@ interface RequireTenantAuthProps {
   children: ReactNode;
 }
 
-const AUTH_TIMEOUT_MS = 15000;
+const AUTH_TIMEOUT_MS = 10000;
 
 export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
   const navigate = useNavigate();
   const { isImpersonating, target } = useImpersonation();
   const { isLoading, isAuthenticated, isAdmin, isManager, error, refreshTenantContext } = useTenant();
   const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasRedirected = useRef(false);
 
-  // Timeout guard for loading
+  // Timeout guard — only for initial loading, resets properly
   useEffect(() => {
-    if (isLoading) {
-      setHasTimedOut(false);
-      hasRedirected.current = false;
+    if (isLoading && !hasTimedOut) {
       timeoutRef.current = setTimeout(() => {
         setHasTimedOut(true);
       }, AUTH_TIMEOUT_MS);
-    } else {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }
+
+    if (!isLoading) {
+      // Loading finished — clear any pending timeout
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      setIsRetrying(false);
+    }
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isLoading]);
+  }, [isLoading, hasTimedOut]);
 
   // Redirect if not authorized (after loading completes)
   useEffect(() => {
@@ -51,6 +55,13 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
     }
   }, [isLoading, isAuthenticated, isAdmin, isManager, isImpersonating, target, navigate, hasTimedOut]);
 
+  const handleRetry = () => {
+    setHasTimedOut(false);
+    setIsRetrying(true);
+    hasRedirected.current = false;
+    refreshTenantContext();
+  };
+
   if (hasTimedOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -66,8 +77,12 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
             <Button variant="outline" onClick={() => navigate('/login')}>
               Go to Login
             </Button>
-            <Button onClick={() => { setHasTimedOut(false); refreshTenantContext(); }} className="gap-2">
-              <RefreshCw className="h-4 w-4" />
+            <Button onClick={handleRetry} disabled={isRetrying} className="gap-2">
+              {isRetrying ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
               Retry
             </Button>
           </div>

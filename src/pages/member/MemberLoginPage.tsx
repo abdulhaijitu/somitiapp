@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageToggle } from '@/components/LanguageToggle';
@@ -29,6 +29,33 @@ export function MemberLoginPage() {
   const [memberName, setMemberName] = useState('');
   const [demoOtp, setDemoOtp] = useState('');
   const [sessionData, setSessionData] = useState<{ token: string; userId: string } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Helper: invoke edge function with timeout & abort
+  const invokeWithTimeout = async (fnName: string, body: any, timeoutMs = 10000) => {
+    // Abort previous in-flight request
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const { data, error } = await supabase.functions.invoke(fnName, {
+        body,
+      });
+      clearTimeout(timeoutId);
+      if (controller.signal.aborted) throw new Error('Request timed out');
+      if (error) throw error;
+      return data;
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError' || controller.signal.aborted) {
+        throw new Error(language === 'bn' ? 'অনুরোধের সময়সীমা শেষ। আবার চেষ্টা করুন।' : 'Request timed out. Please try again.');
+      }
+      throw err;
+    }
+  };
 
   const t = (en: string, bn: string) => language === 'bn' ? bn : en;
 
@@ -46,11 +73,7 @@ export function MemberLoginPage() {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('member-otp', {
-        body: { action: 'send', phone }
-      });
-
-      if (error) throw error;
+      const data = await invokeWithTimeout('member-otp', { action: 'send', phone });
 
       if (!data.success) {
         toast({
@@ -95,12 +118,8 @@ export function MemberLoginPage() {
 
     setIsLoading(true);
     try {
-      // Step 1: Verify OTP
-      const { data: verifyData, error: verifyError } = await supabase.functions.invoke('member-otp', {
-        body: { action: 'verify', phone, otp }
-      });
-
-      if (verifyError) throw verifyError;
+      // Step 1: Verify OTP (with timeout)
+      const verifyData = await invokeWithTimeout('member-otp', { action: 'verify', phone, otp });
 
       if (!verifyData.success) {
         toast({
@@ -111,15 +130,11 @@ export function MemberLoginPage() {
         return;
       }
 
-      // Step 2: Exchange token for session
-      const { data: sessionResult, error: sessionError } = await supabase.functions.invoke('member-session', {
-        body: { 
-          session_token: verifyData.session_token,
-          user_id: verifyData.user_id
-        }
+      // Step 2: Exchange token for session (with timeout)
+      const sessionResult = await invokeWithTimeout('member-session', {
+        session_token: verifyData.session_token,
+        user_id: verifyData.user_id
       });
-
-      if (sessionError) throw sessionError;
 
       if (!sessionResult.success) {
         throw new Error(sessionResult.error);

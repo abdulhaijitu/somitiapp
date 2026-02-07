@@ -29,10 +29,15 @@ export function TenantLoginPage() {
 
   const checkExistingSession = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Add timeout to session check
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('timeout')), 8000)
+      );
+
+      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
       
       if (session?.user) {
-        // Check if user has admin or manager role for a tenant
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role, tenant_id')
@@ -46,6 +51,7 @@ export function TenantLoginPage() {
         }
       }
     } catch (error) {
+      // Timeout or network error — just show login form
       console.error('Session check error:', error);
     } finally {
       setCheckingSession(false);
