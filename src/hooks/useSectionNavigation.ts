@@ -36,45 +36,15 @@ export function useSectionNavigation({
     
     const parsedSections: Section[] = [];
     
-    // First try proper heading tags
     headings.forEach((heading, index) => {
       const text = heading.textContent?.trim();
       if (text) {
         const tagName = heading.tagName.toLowerCase();
         const level = tagName === 'h1' ? 1 : tagName === 'h2' ? 2 : 3;
         const id = `section-${index}-${text.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, '-').slice(0, 30)}`;
-        
         parsedSections.push({ id, title: text, level });
       }
     });
-
-    // Fallback: if no headings found, detect bold-only paragraphs as sections
-    if (parsedSections.length === 0) {
-      const paragraphs = doc.querySelectorAll('p');
-      let sectionIndex = 0;
-      paragraphs.forEach((p) => {
-        // Check if paragraph contains only bold/strong text (possibly with underline)
-        const children = p.childNodes;
-        const isBoldOnly = children.length > 0 && Array.from(children).every((child) => {
-          if (child.nodeType === Node.TEXT_NODE) return !child.textContent?.trim();
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            const el = child as HTMLElement;
-            const tag = el.tagName.toLowerCase();
-            return tag === 'strong' || tag === 'b' || 
-              (tag === 'u' && el.querySelector('strong, b')) ||
-              ((tag === 'strong' || tag === 'b') && el.querySelector('u'));
-          }
-          return false;
-        });
-
-        const text = p.textContent?.trim();
-        if (isBoldOnly && text && text.length > 0 && text.length < 200) {
-          const id = `section-${sectionIndex}-${text.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, '-').slice(0, 30)}`;
-          parsedSections.push({ id, title: text, level: 1 });
-          sectionIndex++;
-        }
-      });
-    }
 
     return parsedSections;
   }, []);
@@ -95,42 +65,16 @@ export function useSectionNavigation({
   const assignHeadingIds = useCallback(() => {
     if (!containerRef.current || sections.length === 0) return;
 
-    // Try proper headings first
     const headings = containerRef.current.querySelectorAll('h1, h2, h3');
-    
-    if (headings.length > 0) {
-      let sectionIndex = 0;
-      headings.forEach((heading) => {
-        const text = heading.textContent?.trim();
-        if (text && sections[sectionIndex]) {
-          heading.id = sections[sectionIndex].id;
-          sectionIndex++;
-        }
-      });
-    } else {
-      // Fallback: assign IDs to bold-only paragraphs
-      const paragraphs = containerRef.current.querySelectorAll('p');
-      let sectionIndex = 0;
-      paragraphs.forEach((p) => {
-        const children = p.childNodes;
-        const isBoldOnly = children.length > 0 && Array.from(children).every((child) => {
-          if (child.nodeType === Node.TEXT_NODE) return !child.textContent?.trim();
-          if (child.nodeType === Node.ELEMENT_NODE) {
-            const el = child as HTMLElement;
-            const tag = el.tagName.toLowerCase();
-            return tag === 'strong' || tag === 'b' || 
-              (tag === 'u' && el.querySelector('strong, b')) ||
-              ((tag === 'strong' || tag === 'b') && el.querySelector('u'));
-          }
-          return false;
-        });
-        const text = p.textContent?.trim();
-        if (isBoldOnly && text && text.length > 0 && text.length < 200 && sections[sectionIndex]) {
-          p.id = sections[sectionIndex].id;
-          sectionIndex++;
-        }
-      });
-    }
+    let sectionIndex = 0;
+
+    headings.forEach((heading) => {
+      const text = heading.textContent?.trim();
+      if (text && sections[sectionIndex]) {
+        heading.id = sections[sectionIndex].id;
+        sectionIndex++;
+      }
+    });
   }, [containerRef, sections]);
 
   // Assign IDs after sections are parsed and DOM updates
