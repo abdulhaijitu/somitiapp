@@ -341,6 +341,41 @@
   }
 
   .animate-fade-in {
-    animation: fade-in 0.2s ease-out;
+  animation: fade-in 0.2s ease-out;
+  }
+
+  /* Rich text editor & prose list styles */
+  .ProseMirror ul,
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+  }
+
+  .ProseMirror ol,
+  .prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+  }
+
+  .ProseMirror ul ul,
+  .prose ul ul {
+    list-style-type: circle;
+  }
+
+  .ProseMirror ul ul ul,
+  .prose ul ul ul {
+    list-style-type: square;
+  }
+
+  .ProseMirror li,
+  .prose li {
+    margin: 0.25em 0;
+  }
+
+  .ProseMirror li p,
+  .prose li p {
+    margin: 0;
   }
 }
