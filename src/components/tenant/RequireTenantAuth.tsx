@@ -11,58 +11,80 @@ interface RequireTenantAuthProps {
 
 const AUTH_TIMEOUT_MS = 10000;
 
+type AuthGuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'timeout';
+
 export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
   const navigate = useNavigate();
   const { isImpersonating, target } = useImpersonation();
-  const { isLoading, isAuthenticated, isAdmin, isManager, error, refreshTenantContext } = useTenant();
-  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const { isLoading, isAuthenticated, isAdmin, isManager, refreshTenantContext } = useTenant();
+  const [guardState, setGuardState] = useState<AuthGuardState>('loading');
   const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasRedirected = useRef(false);
 
-  // Timeout guard — only for initial loading, resets properly
+  // Determine guard state from context — strict state machine
   useEffect(() => {
-    if (isLoading && !hasTimedOut) {
+    if (isLoading) {
+      // Only set loading if we're not already in timeout (timeout is a dead-end until user acts)
+      if (guardState !== 'timeout') {
+        setGuardState('loading');
+      }
+      return;
+    }
+
+    // Loading finished — clear timeout, determine final state
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+    setIsRetrying(false);
+
+    if (isImpersonating && target?.type === 'tenant_admin') {
+      setGuardState('authenticated');
+    } else if (isAuthenticated && (isAdmin || isManager)) {
+      setGuardState('authenticated');
+    } else {
+      setGuardState('unauthenticated');
+    }
+  }, [isLoading, isAuthenticated, isAdmin, isManager, isImpersonating, target]);
+
+  // Timeout guard — only runs when in loading state
+  useEffect(() => {
+    if (guardState === 'loading') {
       timeoutRef.current = setTimeout(() => {
-        setHasTimedOut(true);
+        setGuardState('timeout');
       }, AUTH_TIMEOUT_MS);
     }
 
-    if (!isLoading) {
-      // Loading finished — clear any pending timeout
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setIsRetrying(false);
-    }
-
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
+      }
     };
-  }, [isLoading, hasTimedOut]);
+  }, [guardState]);
 
-  // Redirect if not authorized (after loading completes)
+  // Redirect on unauthenticated — only once
   useEffect(() => {
-    if (isLoading || hasTimedOut || hasRedirected.current) return;
-    
-    // If impersonating as tenant admin, skip checks
-    if (isImpersonating && target?.type === 'tenant_admin') return;
-
-    if (!isAuthenticated) {
-      hasRedirected.current = true;
-      navigate('/login');
-    } else if (!isAdmin && !isManager) {
+    if (guardState === 'unauthenticated' && !hasRedirected.current) {
       hasRedirected.current = true;
       navigate('/login');
     }
-  }, [isLoading, isAuthenticated, isAdmin, isManager, isImpersonating, target, navigate, hasTimedOut]);
+  }, [guardState, navigate]);
 
   const handleRetry = () => {
-    setHasTimedOut(false);
     setIsRetrying(true);
     hasRedirected.current = false;
-    refreshTenantContext();
+    setGuardState('loading');
+    refreshTenantContext({ withLoading: true });
   };
 
-  if (hasTimedOut) {
+  const handleGoToLogin = () => {
+    hasRedirected.current = true;
+    navigate('/login');
+  };
+
+  if (guardState === 'timeout') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4 max-w-sm px-4">
@@ -74,7 +96,7 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
             Verification is taking too long. Please check your internet connection and try again.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate('/login')}>
+            <Button variant="outline" onClick={handleGoToLogin}>
               Go to Login
             </Button>
             <Button onClick={handleRetry} disabled={isRetrying} className="gap-2">
@@ -91,7 +113,7 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
     );
   }
 
-  if (isLoading) {
+  if (guardState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -107,14 +129,10 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
     );
   }
 
-  // If impersonating, allow through
-  if (isImpersonating && target?.type === 'tenant_admin') {
+  if (guardState === 'authenticated') {
     return <>{children}</>;
   }
 
-  if (!isAuthenticated || (!isAdmin && !isManager)) {
-    return null;
-  }
-
-  return <>{children}</>;
+  // unauthenticated — render nothing while redirect happens
+  return null;
 }

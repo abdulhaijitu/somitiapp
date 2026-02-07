@@ -11,50 +11,78 @@ interface RequireMemberAuthProps {
 
 const AUTH_TIMEOUT_MS = 10000;
 
+type AuthGuardState = 'loading' | 'authenticated' | 'unauthenticated' | 'timeout';
+
 export function RequireMemberAuth({ children }: RequireMemberAuthProps) {
   const navigate = useNavigate();
   const { isImpersonating, target } = useImpersonation();
   const { isLoading, isAuthenticated, isMember, refreshTenantContext } = useTenant();
-  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [guardState, setGuardState] = useState<AuthGuardState>('loading');
   const [isRetrying, setIsRetrying] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const hasRedirected = useRef(false);
 
+  // Determine guard state from context — strict state machine
   useEffect(() => {
-    if (isLoading && !hasTimedOut) {
+    if (isLoading) {
+      if (guardState !== 'timeout') {
+        setGuardState('loading');
+      }
+      return;
+    }
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+    setIsRetrying(false);
+
+    if (isImpersonating && target?.type === 'member') {
+      setGuardState('authenticated');
+    } else if (isAuthenticated && isMember) {
+      setGuardState('authenticated');
+    } else {
+      setGuardState('unauthenticated');
+    }
+  }, [isLoading, isAuthenticated, isMember, isImpersonating, target]);
+
+  // Timeout guard
+  useEffect(() => {
+    if (guardState === 'loading') {
       timeoutRef.current = setTimeout(() => {
-        setHasTimedOut(true);
+        setGuardState('timeout');
       }, AUTH_TIMEOUT_MS);
     }
 
-    if (!isLoading) {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setIsRetrying(false);
-    }
-
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = undefined;
+      }
     };
-  }, [isLoading, hasTimedOut]);
+  }, [guardState]);
 
+  // Redirect on unauthenticated
   useEffect(() => {
-    if (isLoading || hasTimedOut || hasRedirected.current) return;
-    if (isImpersonating && target?.type === 'member') return;
-
-    if (!isAuthenticated || !isMember) {
+    if (guardState === 'unauthenticated' && !hasRedirected.current) {
       hasRedirected.current = true;
       navigate('/member/login');
     }
-  }, [isLoading, isAuthenticated, isMember, isImpersonating, target, navigate, hasTimedOut]);
+  }, [guardState, navigate]);
 
   const handleRetry = () => {
-    setHasTimedOut(false);
     setIsRetrying(true);
     hasRedirected.current = false;
-    refreshTenantContext();
+    setGuardState('loading');
+    refreshTenantContext({ withLoading: true });
   };
 
-  if (hasTimedOut) {
+  const handleGoToLogin = () => {
+    hasRedirected.current = true;
+    navigate('/member/login');
+  };
+
+  if (guardState === 'timeout') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4 max-w-sm px-4">
@@ -66,7 +94,7 @@ export function RequireMemberAuth({ children }: RequireMemberAuthProps) {
             Verification is taking too long. Please check your internet connection and try again.
           </p>
           <div className="flex gap-3 justify-center">
-            <Button variant="outline" onClick={() => navigate('/member/login')}>
+            <Button variant="outline" onClick={handleGoToLogin}>
               Go to Login
             </Button>
             <Button onClick={handleRetry} disabled={isRetrying} className="gap-2">
@@ -83,7 +111,7 @@ export function RequireMemberAuth({ children }: RequireMemberAuthProps) {
     );
   }
 
-  if (isLoading) {
+  if (guardState === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -99,13 +127,9 @@ export function RequireMemberAuth({ children }: RequireMemberAuthProps) {
     );
   }
 
-  if (isImpersonating && target?.type === 'member') {
+  if (guardState === 'authenticated') {
     return <>{children}</>;
   }
 
-  if (!isAuthenticated || !isMember) {
-    return null;
-  }
-
-  return <>{children}</>;
+  return null;
 }
