@@ -93,7 +93,12 @@ export function MemberProfileSheet({
   );
 
   // Year selector state
-  const { years, currentYear } = useMemberYears(member?.joined_at, member?.created_at);
+  const { years, currentYear } = useMemberYears(
+    member?.id,
+    member?.tenant_id || tenant?.id,
+    member?.joined_at,
+    member?.created_at
+  );
   const [selectedYear, setSelectedYear] = useState(currentYear);
 
   // Reset to current year when member changes
