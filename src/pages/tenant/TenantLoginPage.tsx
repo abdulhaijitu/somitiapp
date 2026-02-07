@@ -62,23 +62,26 @@ export function TenantLoginPage() {
     e.preventDefault();
     setIsLoading(true);
     trackLoginAttempt();
+
+    // Timeout guard for the entire login flow
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     try {
-      // Sign in with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Sign in with timeout guard
+      const signInPromise = supabase.auth.signInWithPassword({ email, password });
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        controller.signal.addEventListener('abort', () => reject(new Error('Login request timed out. Please try again.')));
       });
 
-      if (authError) {
-        throw new Error(authError.message);
-      }
+      const { data: authData, error: authError } = await Promise.race([signInPromise, timeoutPromise]);
 
-      if (!authData.user) {
-        throw new Error('Authentication failed');
-      }
+      if (authError) throw new Error(authError.message);
+      if (!authData.user) throw new Error('Authentication failed');
 
-      // Check if user has admin or manager role for a tenant
+      // Check role with same abort guard
+      if (controller.signal.aborted) throw new Error('Login request timed out. Please try again.');
+
       const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role, tenant_id')
@@ -87,35 +90,28 @@ export function TenantLoginPage() {
         .maybeSingle();
 
       if (roleError) {
-        console.error('Role check error:', roleError);
         await supabase.auth.signOut();
         throw new Error('Failed to verify permissions');
       }
 
       if (!roleData || !roleData.tenant_id) {
-        // User is not a tenant admin/manager
         await supabase.auth.signOut();
         throw new Error('Access denied. Tenant Admin privileges required.');
       }
 
       trackLoginSuccess();
-      
-      toast({
-        title: 'Login Successful',
-        description: 'Welcome to your Dashboard',
-      });
-
+      toast({ title: 'Login Successful', description: 'Welcome to your Dashboard' });
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Login error:', error);
       trackLoginFailure();
-      
       toast({
         title: 'Login Failed',
         description: error.message || 'Invalid credentials',
         variant: 'destructive',
       });
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };

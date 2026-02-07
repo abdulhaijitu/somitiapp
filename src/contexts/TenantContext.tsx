@@ -216,6 +216,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
     const userIdRef = { current: userId };
+    const dataLoadedRef = { current: !!tenant };
 
     const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
       if (!mountedRef.current) return;
@@ -230,6 +231,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           await loadUserData(session.user.id);
           if (mountedRef.current) {
             initialLoadDoneRef.current = true;
+            dataLoadedRef.current = true;
             setIsLoading(false);
           }
         } else {
@@ -238,14 +240,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         }
       } else if (event === 'SIGNED_IN') {
-        if (session?.user && session.user.id !== userIdRef.current) {
+        if (session?.user) {
+          const isNewUser = session.user.id !== userIdRef.current;
           setUserId(session.user.id);
           userIdRef.current = session.user.id;
-          if (!initialLoadDoneRef.current) setIsLoading(true);
-          await loadUserData(session.user.id);
-          if (mountedRef.current) {
-            initialLoadDoneRef.current = true;
-            setIsLoading(false);
+          // Always load on fresh sign-in or if data wasn't loaded
+          if (isNewUser || !dataLoadedRef.current) {
+            setIsLoading(true);
+            await loadUserData(session.user.id);
+            if (mountedRef.current) {
+              initialLoadDoneRef.current = true;
+              dataLoadedRef.current = true;
+              setIsLoading(false);
+            }
           }
         }
       } else if (event === 'TOKEN_REFRESHED') {
