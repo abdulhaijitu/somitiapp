@@ -237,12 +237,17 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     loadTenantContext();
   }, [loadTenantContext, isImpersonating, impersonationTarget?.tenantId]);
 
-  // Listen for auth changes
+  // Listen for auth changes - skip redundant reloads on TOKEN_REFRESHED
   useEffect(() => {
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN') {
           await loadTenantContext();
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Token refresh doesn't need a full reload if we already have data
+          if (!userId && session?.user) {
+            await loadTenantContext();
+          }
         } else if (event === 'SIGNED_OUT') {
           setUserId(null);
           setUserRoles([]);
@@ -256,7 +261,26 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return () => {
       authSub.unsubscribe();
     };
-  }, [loadTenantContext]);
+  }, [loadTenantContext, userId]);
+
+  // Re-validate session when tab becomes visible again (prevents stuck loading)
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && userId) {
+        // Quick session check - only reload if session is gone
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setUserId(null);
+          setUserRoles([]);
+          setTenant(null);
+          setSubscription(null);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [userId]);
 
   const value: TenantContextValue = {
     tenant,
