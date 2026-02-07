@@ -20,20 +20,14 @@ import {
   Mail, 
   MapPin, 
   Calendar, 
-  CreditCard,
-  TrendingUp,
-  AlertCircle,
-  Wallet
+  CreditCard
 } from 'lucide-react';
 import { MemberStatusBadge } from './MemberStatusBadge';
 import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { format } from 'date-fns';
 import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
-import { useYearlySummary } from '@/hooks/useYearlySummary';
-import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
-import { useMemberYears } from '@/hooks/useMemberYears';
-import { YearSelector } from '@/components/common/YearSelector';
+import { MemberFinancialSummary } from './MemberFinancialSummary';
 
 interface Member {
   id: string;
@@ -79,81 +73,19 @@ export function MemberProfileSheet({
   const { tenant } = useTenant();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
-  const [monthlyDueAmount, setMonthlyDueAmount] = useState<number>(1000);
-  const [stats, setStats] = useState({
-    totalPaid: 0,
-    totalDue: 0,
-    paymentCount: 0
-  });
+  const [stats, setStats] = useState({ totalPaid: 0, totalDue: 0, paymentCount: 0 });
 
   // Get advance balance for this member
-  const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
+  const { advanceBalance } = useAdvanceBalance(
     member?.id || null,
     member?.tenant_id || tenant?.id || null
-  );
-
-  // Year selector state
-  const { years, currentYear } = useMemberYears(
-    member?.id,
-    member?.tenant_id || tenant?.id,
-    member?.joined_at,
-    member?.created_at
-  );
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-
-  // Reset to current year when member changes
-  useEffect(() => {
-    setSelectedYear(currentYear);
-  }, [member?.id, currentYear]);
-
-  // Get yearly summary for selected year
-  const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
-    member?.id || null,
-    member?.tenant_id || tenant?.id || null,
-    selectedYear
   );
 
   useEffect(() => {
     if (member && open) {
       loadPayments();
-      loadMonthlyDueSetting();
     }
   }, [member, open]);
-
-  const loadMonthlyDueSetting = async () => {
-    const tenantId = member?.tenant_id || tenant?.id;
-    if (!tenantId) return;
-
-    try {
-      // First try to get from monthly_due_settings
-      const { data: dueSetting, error: dueError } = await supabase
-        .from('monthly_due_settings')
-        .select('fixed_amount')
-        .eq('tenant_id', tenantId)
-        .eq('is_enabled', true)
-        .maybeSingle();
-
-      if (!dueError && dueSetting) {
-        setMonthlyDueAmount(Number(dueSetting.fixed_amount));
-        return;
-      }
-
-      // Fallback: get from contribution_types (monthly category)
-      const { data: contributionType, error: ctError } = await supabase
-        .from('contribution_types')
-        .select('default_amount')
-        .eq('tenant_id', tenantId)
-        .eq('category_type', 'monthly')
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (!ctError && contributionType && contributionType.default_amount) {
-        setMonthlyDueAmount(Number(contributionType.default_amount));
-      }
-    } catch (error) {
-      console.error('Error loading monthly due setting:', error);
-    }
-  };
 
   const loadPayments = async () => {
     if (!member) return;
@@ -174,7 +106,6 @@ export function MemberProfileSheet({
 
       setPayments(data || []);
 
-      // Calculate stats
       const paid = (data || [])
         .filter(p => p.status === 'paid')
         .reduce((sum, p) => sum + Number(p.amount), 0);
@@ -198,6 +129,7 @@ export function MemberProfileSheet({
   if (!member) return null;
 
   const displayName = language === 'bn' && member.name_bn ? member.name_bn : member.name;
+  const tenantId = member.tenant_id || tenant?.id || null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -230,7 +162,9 @@ export function MemberProfileSheet({
           <TabsContent value="info" className="mt-4 space-y-6">
             {/* Contact Info */}
             <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Contact Information</h3>
+              <h3 className="text-sm font-medium text-muted-foreground">
+                {language === 'bn' ? 'যোগাযোগ তথ্য' : 'Contact Information'}
+              </h3>
               
               {member.phone && (
                 <div className="flex items-center gap-3">
@@ -255,104 +189,41 @@ export function MemberProfileSheet({
               
               <div className="flex items-center gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>Joined {format(new Date(member.joined_at || member.created_at), 'MMMM d, yyyy')}</span>
+                <span>
+                  {language === 'bn' ? 'যোগদান ' : 'Joined '}
+                  {format(new Date(member.joined_at || member.created_at), 'MMMM d, yyyy')}
+                </span>
               </div>
             </div>
 
             <Separator />
 
-            {/* Financial Summary */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Financial Summary</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <TrendingUp className="h-4 w-4" />
-                    Monthly Amount
-                  </div>
-                  <p className="mt-1 text-xl font-bold text-foreground">
-                    ৳ {monthlyDueAmount.toLocaleString()}
-                  </p>
-                </div>
-                
-                <div className="rounded-lg border border-border p-4">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CreditCard className="h-4 w-4" />
-                    Total Paid
-                  </div>
-                  <p className="mt-1 text-xl font-bold text-success">
-                    ৳ {stats.totalPaid.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Advance Balance */}
-              {advanceBalance > 0 && (
-                <div className="rounded-lg border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Wallet className="h-4 w-4" />
-                    {language === 'bn' ? 'অগ্রিম ব্যালেন্স' : 'Advance Balance'}
-                  </div>
-                  <p className="mt-1 text-xl font-bold text-primary">
-                    ৳ {advanceBalance.toLocaleString()}
-                  </p>
-                  <p className="mt-1 text-xs text-primary/70">
-                    {language === 'bn' 
-                      ? 'ভবিষ্যৎ চাঁদার সাথে সমন্বয় হবে' 
-                      : 'Will be applied to future dues'}
-                  </p>
-                </div>
-              )}
-
-              {stats.totalDue > 0 && (
-                <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">
-                  <div className="flex items-center gap-2 text-sm text-destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    {language === 'bn' ? 'বকেয়া' : 'Outstanding Dues'}
-                  </div>
-                  <p className="mt-1 text-xl font-bold text-destructive">
-                    ৳ {stats.totalDue.toLocaleString()}
-                  </p>
-                </div>
-              )}
-            </div>
+            {/* Combined Financial Summary + Year Selector */}
+            <MemberFinancialSummary
+              memberId={member.id}
+              tenantId={tenantId}
+              joinedAt={member.joined_at}
+              createdAt={member.created_at}
+              advanceBalance={advanceBalance}
+              variant="admin"
+            />
 
             <Button 
               onClick={onEdit} 
               variant="outline" 
               className="w-full"
             >
-              Edit Profile
+              {language === 'bn' ? 'প্রোফাইল সম্পাদনা' : 'Edit Profile'}
             </Button>
-
-            {/* Year Selector */}
-            {years.length > 1 && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  {language === 'bn' ? 'বছর নির্বাচন করুন' : 'Select Year'}
-                </h3>
-                <YearSelector
-                  years={years}
-                  selectedYear={selectedYear}
-                  onYearChange={setSelectedYear}
-                />
-              </div>
-            )}
-
-            {/* Yearly Summary */}
-            <YearlySummaryCard 
-              summary={yearlySummary || null} 
-              loading={yearlyLoading} 
-              variant="admin" 
-            />
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-muted-foreground">Payment History</h3>
-                <Badge variant="outline">{stats.paymentCount} payments</Badge>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {language === 'bn' ? 'পেমেন্ট ইতিহাস' : 'Payment History'}
+                </h3>
+                <Badge variant="outline">{stats.paymentCount} {language === 'bn' ? 'টি' : 'payments'}</Badge>
               </div>
 
               {loading ? (
@@ -371,7 +242,7 @@ export function MemberProfileSheet({
               ) : payments.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <CreditCard className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                  <p>No payment history yet</p>
+                  <p>{language === 'bn' ? 'কোনো পেমেন্ট নেই' : 'No payment history yet'}</p>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin">

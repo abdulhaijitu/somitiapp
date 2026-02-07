@@ -23,11 +23,8 @@ import { format, parseISO } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
 import { useMemberPaymentRequest } from '@/hooks/useMemberPaymentRequest';
 import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
-import { useYearlySummary } from '@/hooks/useYearlySummary';
-import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
 import { AdvanceBalanceCard } from '@/components/members/AdvanceBalanceCard';
-import { useMemberYears } from '@/hooks/useMemberYears';
-import { YearSelector } from '@/components/common/YearSelector';
+import { MemberFinancialSummary } from '@/components/members/MemberFinancialSummary';
 
 interface DueWithContribution {
   id: string;
@@ -130,21 +127,8 @@ export function MemberDuesPage() {
     tenant?.id || null
   );
 
-  // Year selector
-  const { years, currentYear } = useMemberYears(
-    memberData?.id,
-    tenant?.id,
-    memberData?.joined_at,
-    memberData?.created_at
-  );
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-  // Get yearly summary for selected year
-  const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
-    memberData?.id || null,
-    tenant?.id || null,
-    selectedYear
-  );
+
 
   const formatCurrency = (amount: number) => {
     return language === 'bn' 
@@ -286,31 +270,19 @@ export function MemberDuesPage() {
             <AdvanceBalanceCard advanceBalance={advanceBalance} loading={balanceLoading} />
           )}
 
-          {/* Year Selector */}
-          {years.length > 1 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {language === 'bn' ? 'বছর নির্বাচন করুন' : 'Select Year'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <YearSelector
-                  years={years}
-                  selectedYear={selectedYear}
-                  onYearChange={setSelectedYear}
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Yearly Summary */}
-          <YearlySummaryCard 
-            summary={yearlySummary || null} 
-            loading={yearlyLoading} 
-            variant="member" 
-          />
+          {/* Financial Summary with Year Selector */}
+          <Card>
+            <CardContent className="pt-6">
+              <MemberFinancialSummary
+                memberId={memberData?.id || null}
+                tenantId={tenant?.id || null}
+                joinedAt={memberData?.joined_at}
+                createdAt={memberData?.created_at}
+                advanceBalance={0}
+                variant="member"
+              />
+            </CardContent>
+          </Card>
 
           {/* Summary Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
