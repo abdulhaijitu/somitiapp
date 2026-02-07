@@ -251,8 +251,8 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
             ))}
           </nav>
 
-          {/* Bottom section */}
-          <div className="border-t border-sidebar-border p-2">
+          {/* Bottom section - always visible */}
+          <div className="shrink-0 border-t border-sidebar-border p-2">
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
