@@ -28,10 +28,12 @@ export function ConstitutionPage() {
     ? constitution.content_bn 
     : constitution?.content;
 
+  // Disable section navigation during editing to prevent DOM mutations
+  // that cause the editor to shift/jump
   const { sections, activeSection, scrollToSection } = useSectionNavigation({
     containerRef: contentContainerRef,
-    htmlContent: isEditing ? currentContent : displayContent,
-    editorContent: isEditing ? currentContent : undefined,
+    htmlContent: isEditing ? undefined : displayContent,
+    editorContent: undefined,
   });
 
   useEffect(() => {
