@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Dialog,
@@ -18,7 +18,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Loader2, Upload, User } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -29,6 +30,7 @@ interface Member {
   address?: string | null;
   member_number?: string | null;
   nid_number?: string | null;
+  photo_url?: string | null;
   status: string;
 }
 
@@ -44,6 +46,7 @@ interface EditMemberDialogProps {
     address?: string;
     member_number?: string;
     nid_number?: string;
+    photo_url?: string;
     status: string;
   }) => void;
   isSubmitting: boolean;
@@ -59,6 +62,7 @@ export function EditMemberDialog({
   existingMemberNumbers = []
 }: EditMemberDialogProps) {
   const { t, language } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   const [nameBn, setNameBn] = useState('');
   const [phone, setPhone] = useState('');
@@ -68,6 +72,8 @@ export function EditMemberDialog({
   const [nidNumber, setNidNumber] = useState('');
   const [status, setStatus] = useState('active');
   const [memberNumberError, setMemberNumberError] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (member) {
@@ -80,6 +86,8 @@ export function EditMemberDialog({
       setNidNumber(member.nid_number || '');
       setStatus(member.status || 'active');
       setMemberNumberError(null);
+      setPhotoPreview(member.photo_url || null);
+      setPhotoFile(null);
     }
   }, [member]);
 
@@ -102,6 +110,19 @@ export function EditMemberDialog({
     validateMemberNumber(value);
   };
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) return;
+      setPhotoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = () => {
     if (!member || !name.trim()) return;
     if (memberNumber && !validateMemberNumber(memberNumber)) return;
@@ -114,6 +135,7 @@ export function EditMemberDialog({
       address: address.trim() || undefined,
       member_number: memberNumber.trim() || undefined,
       nid_number: nidNumber.trim() || undefined,
+      photo_url: photoPreview || undefined,
       status
     });
   };
@@ -131,6 +153,39 @@ export function EditMemberDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Photo Upload */}
+          <div className="flex flex-col items-center gap-3">
+            <Avatar className="h-20 w-20 cursor-pointer border-2 border-dashed border-border hover:border-primary transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {photoPreview ? (
+                <AvatarImage src={photoPreview} alt="Member photo" />
+              ) : (
+                <AvatarFallback className="bg-muted">
+                  <User className="h-8 w-8 text-muted-foreground" />
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fileInputRef.current?.click()}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {language === 'bn' ? 'ছবি আপলোড' : 'Upload Photo'}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {language === 'bn' ? 'ঐচ্ছিক • সর্বোচ্চ 2MB' : 'Optional • Max 2MB'}
+            </p>
+          </div>
           {/* Member Number */}
           <div className="space-y-2">
             <Label>{language === 'bn' ? 'সদস্য নম্বর' : 'Member Number'}</Label>
