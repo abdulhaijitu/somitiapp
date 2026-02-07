@@ -80,7 +80,7 @@ function PWAInstallPromptWrapper() {
 
 function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const { t, language } = useLanguage();
-  const { tenant, isLoading, isSubscriptionValid, checkPermission, error, isSuperAdmin } = useTenant();
+  const { tenant, isLoading, isSubscriptionValid, subscription, subscriptionDaysRemaining, checkPermission, error, isSuperAdmin } = useTenant();
   const { isImpersonating, target: impersonationTarget } = useImpersonation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -252,7 +252,41 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
           </nav>
 
           {/* Bottom section - always visible */}
-          <div className="shrink-0 border-t border-sidebar-border p-2">
+          <div className="shrink-0 border-t border-sidebar-border p-2 space-y-2">
+            {/* Subscription Badge */}
+            {!collapsed ? (
+              <div className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium",
+                isSubscriptionValid 
+                  ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                  : "bg-destructive/10 text-destructive"
+              )}>
+                <Shield className="h-4 w-4 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">
+                    {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Free'}
+                  </p>
+                  <p className="text-[10px] opacity-75">
+                    {isSubscriptionValid 
+                      ? (language === 'bn' ? `${subscriptionDaysRemaining} দিন বাকি` : `${subscriptionDaysRemaining} days left`)
+                      : (language === 'bn' ? 'মেয়াদ শেষ' : 'Expired')}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center" title={`${subscription?.plan || 'Free'} - ${isSubscriptionValid ? `${subscriptionDaysRemaining} days left` : 'Expired'}`}>
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold",
+                  isSubscriptionValid 
+                    ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                    : "bg-destructive/10 text-destructive"
+                )}>
+                  {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() : 'F'}
+                </div>
+              </div>
+            )}
+
+            {/* Logout */}
             <button
               onClick={handleLogout}
               disabled={isLoggingOut}
