@@ -119,6 +119,48 @@ Deno.serve(async (req: Request) => {
       return errorResponse('Cannot create payment for inactive member', 400);
     }
 
+    // Validate against yearly contribution cap
+    const currentYear = new Date().getFullYear();
+    const { data: yearlySummary, error: capError } = await supabase!
+      .rpc('get_member_yearly_summary', {
+        _member_id: member_id,
+        _tenant_id: tenantId,
+        _year: currentYear
+      });
+
+    if (!capError && yearlySummary && !yearlySummary.error) {
+      const remainingAllowance = Number(yearlySummary.remaining_allowance);
+      if (amount > remainingAllowance) {
+        // Log rejection
+        await supabase!.from('audit_logs').insert({
+          action: 'YEARLY_CAP_PAYMENT_REJECTED',
+          entity_type: 'payment',
+          entity_id: member_id,
+          user_id: userId,
+          details: {
+            tenant_id: tenantId,
+            member_id,
+            year: currentYear,
+            attempted_amount: amount,
+            yearly_cap: Number(yearlySummary.yearly_cap),
+            total_paid: Number(yearlySummary.total_paid),
+            remaining_allowance: remainingAllowance
+          }
+        });
+
+        return errorResponse(
+          `Yearly contribution limit exceeded. Remaining allowance: ৳${remainingAllowance.toLocaleString()}`,
+          400,
+          {
+            code: 'YEARLY_CAP_EXCEEDED',
+            yearly_cap: Number(yearlySummary.yearly_cap),
+            total_paid: Number(yearlySummary.total_paid),
+            remaining_allowance: remainingAllowance
+          }
+        );
+      }
+    }
+
     // Generate unique reference with idempotency component
     const reference = `PAY-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 

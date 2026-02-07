@@ -23,6 +23,8 @@ import { format, parseISO } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
 import { useMemberPaymentRequest } from '@/hooks/useMemberPaymentRequest';
 import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
+import { useYearlySummary } from '@/hooks/useYearlySummary';
+import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
 import { AdvanceBalanceCard } from '@/components/members/AdvanceBalanceCard';
 
 interface DueWithContribution {
@@ -122,6 +124,12 @@ export function MemberDuesPage() {
 
   // Get advance balance
   const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
+    memberData?.id || null,
+    tenant?.id || null
+  );
+
+  // Get yearly summary
+  const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
     memberData?.id || null,
     tenant?.id || null
   );
@@ -265,6 +273,13 @@ export function MemberDuesPage() {
           {advanceBalance > 0 && (
             <AdvanceBalanceCard advanceBalance={advanceBalance} loading={balanceLoading} />
           )}
+
+          {/* Yearly Summary */}
+          <YearlySummaryCard 
+            summary={yearlySummary || null} 
+            loading={yearlyLoading} 
+            variant="member" 
+          />
 
           {/* Summary Cards */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
