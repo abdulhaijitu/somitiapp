@@ -72,7 +72,9 @@ export function MemberPaymentsPage() {
         total: count || 0
       };
     },
-    enabled: !!memberData?.id
+    enabled: !!memberData?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000
   });
 
   const totalPages = Math.ceil((paymentsData?.total || 0) / ITEMS_PER_PAGE);

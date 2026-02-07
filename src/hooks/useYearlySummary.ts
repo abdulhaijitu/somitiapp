@@ -48,6 +48,8 @@ export function useYearlySummary(
 
       return result as unknown as YearlySummary;
     },
-    enabled: !!memberId && !!tenantId
+    enabled: !!memberId && !!tenantId,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000
   });
 }

@@ -41,7 +41,8 @@ export function MemberDashboard() {
       if (error) throw error;
       return member;
     },
-    enabled: !!userId && !!tenant?.id
+    enabled: !!userId && !!tenant?.id,
+    refetchOnWindowFocus: true
   });
 
   // Fetch payment summary
@@ -79,7 +80,9 @@ export function MemberDashboard() {
         lastPaymentDate
       };
     },
-    enabled: !!memberData?.id
+    enabled: !!memberData?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000
   });
 
   const isLoading = memberLoading || paymentsLoading;
