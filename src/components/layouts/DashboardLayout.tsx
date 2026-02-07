@@ -189,25 +189,40 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
             mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
           )}
         >
-          {/* Logo */}
-          <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
+          {/* Logo & Tenant Branding */}
+          <div className="flex flex-col border-b border-sidebar-border">
+            <div className="flex h-14 items-center justify-between px-4">
+              {!collapsed && (
+                <div className="flex items-center gap-2">
+                  <img src={logoIcon} alt="Somiti" className="h-7 w-7 rounded-lg object-contain" />
+                  <span className="text-base font-bold text-sidebar-foreground">Somiti</span>
+                </div>
+              )}
+              {collapsed && (
+                <img src={logoIcon} alt="Somiti" className="mx-auto h-7 w-7 rounded-lg object-contain" />
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent lg:flex"
+                onClick={() => setCollapsed(!collapsed)}
+              >
+                <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+              </Button>
+            </div>
+            {/* Tenant Name */}
             {!collapsed && (
-              <div className="flex items-center gap-2">
-                <img src={logoIcon} alt="Somiti" className="h-8 w-8 rounded-lg object-contain" />
-                <span className="text-lg font-bold text-sidebar-foreground">Somiti</span>
+              <div className="px-4 pb-3">
+                <div className="rounded-md bg-primary/10 px-3 py-2">
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {language === 'bn' ? 'সংগঠন' : 'Organization'}
+                  </p>
+                  <p className="text-sm font-bold text-primary truncate font-bengali">
+                    {displayTenantName}
+                  </p>
+                </div>
               </div>
             )}
-            {collapsed && (
-              <img src={logoIcon} alt="Somiti" className="mx-auto h-8 w-8 rounded-lg object-contain" />
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hidden h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent lg:flex"
-              onClick={() => setCollapsed(!collapsed)}
-            >
-              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-            </Button>
           </div>
 
           {/* Navigation */}
