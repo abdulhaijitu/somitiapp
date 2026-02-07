@@ -117,7 +117,7 @@ export function MembersPage() {
     loadMembers();
   }, []);
 
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -177,7 +177,7 @@ export function MembersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, language]);
 
 const handleCreateMember = async (data: {
     name: string;

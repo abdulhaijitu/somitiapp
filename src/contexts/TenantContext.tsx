@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
@@ -296,7 +296,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [userId, clearState]);
 
-  const value: TenantContextValue = {
+  const value = useMemo<TenantContextValue>(() => ({
     tenant,
     subscription,
     userRoles,
@@ -313,7 +313,12 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     error,
     refreshTenantContext,
     checkPermission
-  };
+  }), [
+    tenant, subscription, userRoles, userId, isLoading,
+    isAuthenticated, isSuperAdmin, isAdmin, isManager, isMember,
+    isSubscriptionValid, isSubscriptionExpiringSoon, subscriptionDaysRemaining,
+    error, refreshTenantContext, checkPermission
+  ]);
 
   return (
     <TenantContext.Provider value={value}>
