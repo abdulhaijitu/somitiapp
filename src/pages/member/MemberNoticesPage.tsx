@@ -1,13 +1,16 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useNotices } from '@/hooks/useNotices';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/common/EmptyState';
 import { DataTableSkeleton } from '@/components/common/DataTableSkeleton';
-import { Bell, Calendar, Pin, User } from 'lucide-react';
+import { Bell, Calendar, Pin, User, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function MemberNoticesPage() {
+  const navigate = useNavigate();
   const { language } = useLanguage();
   const { notices, isLoading, fetchNotices } = useNotices();
 
@@ -110,9 +113,17 @@ export function MemberNoticesPage() {
               </CardHeader>
               
               <CardContent className={notice.is_pinned ? 'pl-14' : ''}>
-                <p className="text-foreground/80 font-bengali leading-relaxed whitespace-pre-wrap">
+                <p className="text-foreground/80 font-bengali leading-relaxed whitespace-pre-wrap line-clamp-3">
                   {language === 'bn' && notice.content_bn ? notice.content_bn : notice.content}
                 </p>
+                <Button
+                  variant="link"
+                  className="px-0 mt-2 gap-1 text-primary"
+                  onClick={() => navigate(`/member/notices/${notice.id}`)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {language === 'bn' ? 'বিস্তারিত দেখুন ও আলোচনা করুন' : 'View Details & Discussion'}
+                </Button>
               </CardContent>
             </Card>
           ))}

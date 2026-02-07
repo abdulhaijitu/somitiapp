@@ -462,6 +462,111 @@ export type Database = {
           },
         ]
       }
+      notice_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          id: string
+          notice_id: string
+          tenant_id: string
+          updated_at: string
+          user_id: string
+          user_name: string
+          user_role: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          id?: string
+          notice_id: string
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+          user_name: string
+          user_role: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          id?: string
+          notice_id?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+          user_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_comments_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: false
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notice_comments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notice_decisions: {
+        Row: {
+          created_at: string
+          decided_at: string
+          decided_by: string
+          decided_by_name: string
+          decision_text: string
+          id: string
+          notice_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string
+          decided_by: string
+          decided_by_name: string
+          decision_text: string
+          id?: string
+          notice_id: string
+          status: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string
+          decided_by?: string
+          decided_by_name?: string
+          decision_text?: string
+          id?: string
+          notice_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notice_decisions_notice_id_fkey"
+            columns: ["notice_id"]
+            isOneToOne: true
+            referencedRelation: "notices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notice_decisions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notices: {
         Row: {
           content: string

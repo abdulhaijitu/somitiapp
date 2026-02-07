@@ -29,6 +29,7 @@ const PaymentSuccessPage = lazy(() => import("@/pages/dashboard/PaymentSuccessPa
 const PaymentCancelledPage = lazy(() => import("@/pages/dashboard/PaymentCancelledPage").then(m => ({ default: m.PaymentCancelledPage })));
 const ReportsPage = lazy(() => import("@/pages/dashboard/ReportsPage").then(m => ({ default: m.ReportsPage })));
 const NoticesPage = lazy(() => import("@/pages/dashboard/NoticesPage").then(m => ({ default: m.NoticesPage })));
+const NoticeDetailPage = lazy(() => import("@/pages/dashboard/NoticeDetailPage").then(m => ({ default: m.NoticeDetailPage })));
 const ConstitutionPage = lazy(() => import("@/pages/dashboard/ConstitutionPage").then(m => ({ default: m.ConstitutionPage })));
 const SettingsPage = lazy(() => import("@/pages/dashboard/SettingsPage").then(m => ({ default: m.SettingsPage })));
 const DuesPage = lazy(() => import("@/pages/dashboard/DuesPage").then(m => ({ default: m.DuesPage })));
@@ -46,6 +47,7 @@ const MemberDashboard = lazy(() => import("@/pages/member/MemberDashboard").then
 const MemberPaymentsPage = lazy(() => import("@/pages/member/MemberPaymentsPage").then(m => ({ default: m.MemberPaymentsPage })));
 const MemberDuesPage = lazy(() => import("@/pages/member/MemberDuesPage").then(m => ({ default: m.MemberDuesPage })));
 const MemberNoticesPage = lazy(() => import("@/pages/member/MemberNoticesPage").then(m => ({ default: m.MemberNoticesPage })));
+const MemberNoticeDetailPage = lazy(() => import("@/pages/member/MemberNoticeDetailPage").then(m => ({ default: m.MemberNoticeDetailPage })));
 const MemberConstitutionPage = lazy(() => import("@/pages/member/MemberConstitutionPage").then(m => ({ default: m.MemberConstitutionPage })));
 const MemberLoginPage = lazy(() => import("@/pages/member/MemberLoginPage").then(m => ({ default: m.MemberLoginPage })));
 
@@ -205,6 +207,7 @@ const App = () => (
                 <Route path="/dashboard/payments" element={<PaymentsPage />} />
                 <Route path="/dashboard/reports" element={<ReportsPage />} />
                 <Route path="/dashboard/notices" element={<NoticesPage />} />
+                <Route path="/dashboard/notices/:id" element={<NoticeDetailPage />} />
                 <Route path="/dashboard/constitution" element={<ConstitutionPage />} />
                 <Route path="/dashboard/settings" element={<SettingsPage />} />
                 <Route path="/dashboard/dues" element={<DuesPage />} />
@@ -216,6 +219,7 @@ const App = () => (
                 <Route path="/member/payments" element={<MemberPaymentsPage />} />
                 <Route path="/member/dues" element={<MemberDuesPage />} />
                 <Route path="/member/notices" element={<MemberNoticesPage />} />
+                <Route path="/member/notices/:id" element={<MemberNoticeDetailPage />} />
                 <Route path="/member/constitution" element={<MemberConstitutionPage />} />
               </Route>
           
