@@ -30,6 +30,8 @@ import { PaymentStatusBadge } from '@/components/payments/PaymentStatusBadge';
 import { PaymentMethodBadge } from '@/components/payments/PaymentMethodBadge';
 import { format } from 'date-fns';
 import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
+import { useYearlySummary } from '@/hooks/useYearlySummary';
+import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
 
 interface Member {
   id: string;
@@ -84,6 +86,12 @@ export function MemberProfileSheet({
 
   // Get advance balance for this member
   const { advanceBalance, loading: balanceLoading } = useAdvanceBalance(
+    member?.id || null,
+    member?.tenant_id || tenant?.id || null
+  );
+
+  // Get yearly summary for this member
+  const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
     member?.id || null,
     member?.tenant_id || tenant?.id || null
   );
@@ -300,6 +308,13 @@ export function MemberProfileSheet({
             >
               Edit Profile
             </Button>
+
+            {/* Yearly Summary */}
+            <YearlySummaryCard 
+              summary={yearlySummary || null} 
+              loading={yearlyLoading} 
+              variant="admin" 
+            />
           </TabsContent>
 
           <TabsContent value="payments" className="mt-4">

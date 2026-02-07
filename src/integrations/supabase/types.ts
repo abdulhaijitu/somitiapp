@@ -1272,6 +1272,10 @@ export type Database = {
         Args: { _limit_type: string; _tenant_id: string }
         Returns: Json
       }
+      get_member_yearly_summary: {
+        Args: { _member_id: string; _tenant_id: string; _year: number }
+        Returns: Json
+      }
       get_tenant_by_subdomain: {
         Args: { _subdomain: string }
         Returns: {

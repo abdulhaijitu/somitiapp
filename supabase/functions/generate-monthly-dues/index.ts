@@ -165,11 +165,45 @@ Deno.serve(async (req) => {
         if (membersToProcess.length > 0) {
           // Insert in batches of 100
           const batchSize = 100;
+          const dueYear = currentMonth.getFullYear();
+
           for (let i = 0; i < membersToProcess.length; i += batchSize) {
             const batch = membersToProcess.slice(i, i + batchSize);
             
+            // Validate yearly cap and filter members
+            const validatedMembers: typeof batch = [];
+            for (const member of batch) {
+              const { data: capSummary } = await supabase
+                .rpc('get_member_yearly_summary', {
+                  _member_id: member.id,
+                  _tenant_id: setting.tenant_id,
+                  _year: dueYear
+                });
+
+              if (capSummary && !capSummary.error) {
+                const totalDuesGenerated = Number(capSummary.total_dues_generated);
+                const yearlyCap = Number(capSummary.yearly_cap);
+                const dueAmount = Number(setting.fixed_amount);
+                if (totalDuesGenerated + dueAmount > yearlyCap) {
+                  result.dues_skipped++;
+                  result.errors.push(`Member ${member.id}: yearly cap exceeded (${totalDuesGenerated}/${yearlyCap})`);
+
+                  await supabase.from('audit_logs').insert({
+                    action: 'YEARLY_CAP_DUE_SKIPPED',
+                    entity_type: 'payment',
+                    entity_id: member.id,
+                    details: { tenant_id: setting.tenant_id, member_id: member.id, year: dueYear, amount: dueAmount, yearly_cap: yearlyCap, total_dues_generated: totalDuesGenerated }
+                  });
+                  continue;
+                }
+              }
+              validatedMembers.push(member);
+            }
+
+            if (validatedMembers.length === 0) continue;
+
             // Prepare dues with advance consideration
-            const duesToInsert = batch.map(member => {
+            const duesToInsert = validatedMembers.map(member => {
               const advanceBalance = balanceMap.get(member.id) || 0;
               const dueAmount = Number(setting.fixed_amount);
               const advanceToApply = Math.min(advanceBalance, dueAmount);

@@ -166,11 +166,49 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Determine the year from due_month for cap validation
+    const dueYear = new Date(due_month).getFullYear();
+
     // Process members in batches
     for (let i = 0; i < membersToProcess.length; i += batchSize) {
       const batch = membersToProcess.slice(i, i + batchSize);
       
-      const duesToInsert = batch.map(memberId => {
+      // Validate yearly cap for each member and filter out those who would exceed
+      const validatedBatch: string[] = [];
+      for (const memberId of batch) {
+        const { data: capSummary } = await supabase!
+          .rpc('get_member_yearly_summary', {
+            _member_id: memberId,
+            _tenant_id: tenantId,
+            _year: dueYear
+          });
+
+        if (capSummary && !capSummary.error) {
+          const totalDuesGenerated = Number(capSummary.total_dues_generated);
+          const yearlyCap = Number(capSummary.yearly_cap);
+          if (totalDuesGenerated + amount > yearlyCap) {
+            result.skipped++;
+            result.details.skipped_members.push({
+              member_id: memberId,
+              reason: `Yearly cap exceeded (cap: ${yearlyCap}, generated: ${totalDuesGenerated})`
+            });
+
+            await supabase!.from('audit_logs').insert({
+              action: 'YEARLY_CAP_DUE_SKIPPED',
+              entity_type: 'payment',
+              entity_id: memberId,
+              user_id: userId,
+              details: { tenant_id: tenantId, member_id: memberId, year: dueYear, amount, yearly_cap: yearlyCap, total_dues_generated: totalDuesGenerated }
+            });
+            continue;
+          }
+        }
+        validatedBatch.push(memberId);
+      }
+
+      if (validatedBatch.length === 0) continue;
+
+      const duesToInsert = validatedBatch.map(memberId => {
         const advanceBalance = balanceMap.get(memberId) || 0;
         const advanceToApply = Math.min(advanceBalance, amount);
         
