@@ -268,12 +268,12 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                   {language === 'bn' ? 'স্বাগতম' : t('dashboard.welcome')}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {displayTenantName} • {subscriptionStatus}
+                  <span className="font-semibold text-primary">{displayTenantName}</span> • {subscriptionStatus}
                 </p>
               </div>
               {/* Mobile title */}
               <div className="lg:hidden">
-                <span className="font-semibold text-foreground font-bengali">{displayTenantName}</span>
+                <span className="font-bold text-primary font-bengali">{displayTenantName}</span>
               </div>
             </div>
             <div className="flex items-center gap-2 lg:gap-3">
