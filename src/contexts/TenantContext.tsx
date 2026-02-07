@@ -57,7 +57,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const mountedRef = useRef(true);
-  const loadingRef = useRef(false);
+  const initialLoadDoneRef = useRef(false);
 
   // Computed properties
   const isAuthenticated = !!userId;
@@ -215,47 +215,47 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   // Single auth listener — the ONLY source of truth for auth state
   useEffect(() => {
     mountedRef.current = true;
-    // Track userId in a ref to avoid stale closure issues
     const userIdRef = { current: userId };
 
     const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
       if (!mountedRef.current) return;
 
-      console.log('[TenantContext] Auth event:', event, !!session?.user);
+      console.log('[TenantContext] Auth event:', event, !!session?.user, 'initialDone:', initialLoadDoneRef.current);
 
       if (event === 'INITIAL_SESSION') {
         if (session?.user) {
           setUserId(session.user.id);
           userIdRef.current = session.user.id;
-          setIsLoading(true);
+          if (!initialLoadDoneRef.current) setIsLoading(true);
           await loadUserData(session.user.id);
-          if (mountedRef.current) setIsLoading(false);
+          if (mountedRef.current) {
+            initialLoadDoneRef.current = true;
+            setIsLoading(false);
+          }
         } else {
           clearState();
+          initialLoadDoneRef.current = true;
           setIsLoading(false);
         }
       } else if (event === 'SIGNED_IN') {
-        if (session?.user) {
-          // Only reload if user actually changed
-          if (session.user.id !== userIdRef.current) {
-            setUserId(session.user.id);
-            userIdRef.current = session.user.id;
-            setIsLoading(true);
-            await loadUserData(session.user.id);
-            if (mountedRef.current) setIsLoading(false);
+        if (session?.user && session.user.id !== userIdRef.current) {
+          setUserId(session.user.id);
+          userIdRef.current = session.user.id;
+          if (!initialLoadDoneRef.current) setIsLoading(true);
+          await loadUserData(session.user.id);
+          if (mountedRef.current) {
+            initialLoadDoneRef.current = true;
+            setIsLoading(false);
           }
         }
       } else if (event === 'TOKEN_REFRESHED') {
-        // Silent — never show loading
+        // Silent — never show loading, never reload if user already loaded
         if (session?.user) {
           userIdRef.current = session.user.id;
-          if (!userId) {
-            setUserId(session.user.id);
-            await loadUserData(session.user.id);
-          }
         }
       } else if (event === 'SIGNED_OUT') {
         userIdRef.current = null;
+        initialLoadDoneRef.current = false;
         clearState();
         setIsLoading(false);
       }
@@ -298,28 +298,8 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [subscription?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Silent session validation on tab return — NO loading, NO state clearing unless truly signed out
-  useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && userId) {
-        try {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session && mountedRef.current) {
-            // Only clear if we're certain the session is gone (not a network blip)
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            if (!retrySession && mountedRef.current) {
-              clearState();
-            }
-          }
-        } catch {
-          // Network error on tab return — do nothing, keep current state
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [userId, clearState]);
+  // No visibilitychange handler needed — Supabase auth handles session lifecycle.
+  // The old handler caused race conditions on tab return.
 
   const value = useMemo<TenantContextValue>(() => ({
     tenant,
