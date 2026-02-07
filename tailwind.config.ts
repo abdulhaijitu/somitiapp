@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
-        bengali: ["Noto Sans Bengali", "sans-serif"],
+        bengali: ["Hind Siliguri", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

@@ -8,7 +8,7 @@
    Neutral: Cool Grays (Clean, Professional)
 */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -87,7 +87,7 @@
 
     /* Typography */
     --font-sans: 'Inter', system-ui, sans-serif;
-    --font-bengali: 'Noto Sans Bengali', sans-serif;
+    --font-bengali: 'Hind Siliguri', sans-serif;
   }
 
   .dark {
@@ -161,9 +161,16 @@
     font-family: var(--font-sans);
   }
 
-  /* Bengali text support */
+  /* Bengali text support - Hind Siliguri */
   .font-bengali {
     font-family: var(--font-bengali);
+    line-height: 1.8;
+  }
+
+  /* Ensure numbers always use Inter */
+  .tabular-nums {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
   }
 
   /* Smooth transitions only for interactive elements, not all elements */
