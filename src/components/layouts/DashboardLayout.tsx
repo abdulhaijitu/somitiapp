@@ -80,7 +80,7 @@ function PWAInstallPromptWrapper() {
 
 function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const { t, language } = useLanguage();
-  const { tenant, isLoading, isSubscriptionValid, subscription, subscriptionDaysRemaining, checkPermission, error, isSuperAdmin } = useTenant();
+  const { tenant, isLoading, isSubscriptionValid, isSubscriptionExpiringSoon, subscription, subscriptionDaysRemaining, checkPermission, error, isSuperAdmin } = useTenant();
   const { isImpersonating, target: impersonationTarget } = useImpersonation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -257,9 +257,11 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
             {!collapsed ? (
               <div className={cn(
                 "rounded-lg px-3 py-2 text-xs font-medium",
-                isSubscriptionValid 
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                  : "bg-destructive/10 text-destructive"
+                !isSubscriptionValid 
+                  ? "bg-destructive/10 text-destructive"
+                  : isSubscriptionExpiringSoon
+                    ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                    : "bg-green-500/10 text-green-600 dark:text-green-400"
               )}>
                 <div className="flex items-center gap-2">
                   <Shield className="h-4 w-4 flex-shrink-0" />
@@ -268,15 +270,17 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                       {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Free'}
                     </p>
                     <p className="text-[10px] opacity-75">
-                      {isSubscriptionValid 
-                        ? (language === 'bn' ? `${subscriptionDaysRemaining} দিন বাকি` : `${subscriptionDaysRemaining} days left`)
-                        : (language === 'bn' ? 'মেয়াদ শেষ' : 'Expired')}
+                      {!isSubscriptionValid 
+                        ? (language === 'bn' ? 'মেয়াদ শেষ' : 'Expired')
+                        : isSubscriptionExpiringSoon
+                          ? (language === 'bn' ? `⚠ ${subscriptionDaysRemaining} দিন বাকি` : `⚠ ${subscriptionDaysRemaining} days left`)
+                          : (language === 'bn' ? `${subscriptionDaysRemaining} দিন বাকি` : `${subscriptionDaysRemaining} days left`)}
                     </p>
                   </div>
                 </div>
-                {!isSubscriptionValid && (
+                {(!isSubscriptionValid || isSubscriptionExpiringSoon) && (
                   <Button
-                    variant="destructive"
+                    variant={isSubscriptionValid ? "outline" : "destructive"}
                     size="sm"
                     className="mt-2 w-full text-xs h-7"
                     onClick={() => navigate('/dashboard/settings')}
@@ -289,16 +293,21 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
               <div className="flex flex-col items-center gap-1" title={`${subscription?.plan || 'Free'} - ${isSubscriptionValid ? `${subscriptionDaysRemaining} days left` : 'Expired'}`}>
                 <div className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold",
-                  isSubscriptionValid 
-                    ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                    : "bg-destructive/10 text-destructive"
+                  !isSubscriptionValid 
+                    ? "bg-destructive/10 text-destructive"
+                    : isSubscriptionExpiringSoon
+                      ? "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
+                      : "bg-green-500/10 text-green-600 dark:text-green-400"
                 )}>
                   {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() : 'F'}
                 </div>
-                {!isSubscriptionValid && (
+                {(!isSubscriptionValid || isSubscriptionExpiringSoon) && (
                   <button
                     onClick={() => navigate('/dashboard/settings')}
-                    className="text-[9px] font-bold text-destructive hover:underline"
+                    className={cn(
+                      "text-[9px] font-bold hover:underline",
+                      isSubscriptionValid ? "text-yellow-600 dark:text-yellow-400" : "text-destructive"
+                    )}
                   >
                     {language === 'bn' ? 'রিনিউ' : 'Renew'}
                   </button>
