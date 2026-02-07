@@ -232,7 +232,7 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 p-2 overflow-y-auto scrollbar-thin">
+          <nav className="flex-1 min-h-0 space-y-1 p-2 overflow-y-auto scrollbar-thin">
             {filteredNavItems.map((item) => (
               <NavLink
                 key={item.key}
