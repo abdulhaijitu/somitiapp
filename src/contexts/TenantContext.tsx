@@ -211,22 +211,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
       setSubscription(subData);
 
-      // Show subscription warning if expiring soon
-      if (subData && subscriptionDaysRemaining <= 7 && subscriptionDaysRemaining > 0) {
-        toast({
-          title: 'Subscription Expiring Soon',
-          description: `Your subscription expires in ${subscriptionDaysRemaining} days. Please renew to avoid service interruption.`,
-          variant: 'default'
-        });
-      }
-
     } catch (err) {
       console.error('TenantContext error:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
     }
-  }, [toast, subscriptionDaysRemaining, isImpersonating, impersonationTarget]);
+  }, [isImpersonating, impersonationTarget]);
 
   const refreshTenantContext = useCallback(async () => {
     await loadTenantContext();
@@ -235,7 +226,18 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   // Initial load and reload when impersonation changes
   useEffect(() => {
     loadTenantContext();
-  }, [loadTenantContext, isImpersonating, impersonationTarget?.tenantId]);
+  }, [loadTenantContext]);
+
+  // Show subscription warning toast (runs only when subscription changes)
+  useEffect(() => {
+    if (subscription && subscriptionDaysRemaining <= 7 && subscriptionDaysRemaining > 0) {
+      toast({
+        title: 'Subscription Expiring Soon',
+        description: `Your subscription expires in ${subscriptionDaysRemaining} days. Please renew to avoid service interruption.`,
+        variant: 'default'
+      });
+    }
+  }, [subscription?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for auth changes - skip redundant reloads on TOKEN_REFRESHED
   useEffect(() => {
