@@ -26,6 +26,8 @@ import { useAdvanceBalance } from '@/hooks/useAdvanceBalance';
 import { useYearlySummary } from '@/hooks/useYearlySummary';
 import { YearlySummaryCard } from '@/components/dues/YearlySummaryCard';
 import { AdvanceBalanceCard } from '@/components/members/AdvanceBalanceCard';
+import { useMemberYears } from '@/hooks/useMemberYears';
+import { YearSelector } from '@/components/common/YearSelector';
 
 interface DueWithContribution {
   id: string;
@@ -128,10 +130,15 @@ export function MemberDuesPage() {
     tenant?.id || null
   );
 
-  // Get yearly summary
+  // Year selector
+  const { years, currentYear } = useMemberYears(memberData?.joined_at, memberData?.created_at);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // Get yearly summary for selected year
   const { data: yearlySummary, isLoading: yearlyLoading } = useYearlySummary(
     memberData?.id || null,
-    tenant?.id || null
+    tenant?.id || null,
+    selectedYear
   );
 
   const formatCurrency = (amount: number) => {
@@ -272,6 +279,25 @@ export function MemberDuesPage() {
           {/* Advance Balance Card */}
           {advanceBalance > 0 && (
             <AdvanceBalanceCard advanceBalance={advanceBalance} loading={balanceLoading} />
+          )}
+
+          {/* Year Selector */}
+          {years.length > 1 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  {language === 'bn' ? 'বছর নির্বাচন করুন' : 'Select Year'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <YearSelector
+                  years={years}
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                />
+              </CardContent>
+            </Card>
           )}
 
           {/* Yearly Summary */}
