@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
+import { PendingPaymentRequests } from '@/components/payments/PendingPaymentRequests';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 
@@ -103,6 +104,9 @@ export function DashboardOverview() {
               />
             ))}
       </div>
+
+      {/* Pending Payment Approval Queue */}
+      <PendingPaymentRequests />
 
       {/* Content grid */}
       <div className="grid gap-6 lg:grid-cols-2">
