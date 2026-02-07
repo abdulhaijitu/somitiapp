@@ -118,7 +118,9 @@ export function MemberDuesPage() {
         monthlyAmount: memberData?.monthly_amount || 0
       };
     },
-    enabled: !!memberData?.id && !!tenant?.id
+    enabled: !!memberData?.id && !!tenant?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30000
   });
 
   // Get advance balance
