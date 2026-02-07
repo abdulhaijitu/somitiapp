@@ -41,7 +41,7 @@ export interface TenantContextValue {
   isSubscriptionExpiringSoon: boolean;
   subscriptionDaysRemaining: number;
   error: string | null;
-  refreshTenantContext: () => Promise<void>;
+  refreshTenantContext: (options?: { withLoading?: boolean }) => Promise<void>;
   checkPermission: (requiredRole: string | string[]) => boolean;
 }
 
@@ -286,11 +286,31 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [isImpersonating, impersonationTarget?.tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh function for manual use — silent (no global loader) since data is already cached
-  const refreshTenantContext = useCallback(async () => {
-    if (!userId) return;
-    // Don't set isLoading — this prevents timeout guards from triggering on manual refresh
+  // Refresh function — silent by default, or with loading state for auth guard retries
+  const refreshTenantContext = useCallback(async (options?: { withLoading?: boolean }) => {
+    if (!userId) {
+      // No user — try re-checking session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && mountedRef.current) {
+          setUserId(session.user.id);
+          if (options?.withLoading) setIsLoading(true);
+          await loadUserData(session.user.id);
+          if (mountedRef.current) {
+            dataLoadedRef.current = true;
+            setIsLoading(false);
+          }
+        } else if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      } catch {
+        if (mountedRef.current) setIsLoading(false);
+      }
+      return;
+    }
+    if (options?.withLoading) setIsLoading(true);
     await loadUserData(userId);
+    if (mountedRef.current && options?.withLoading) setIsLoading(false);
   }, [userId, loadUserData]);
 
   // Show subscription warning toast
