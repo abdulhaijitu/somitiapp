@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef, useMemo } from 'react';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
@@ -214,46 +215,53 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   // Single auth listener — the ONLY source of truth for auth state
   useEffect(() => {
     mountedRef.current = true;
+    // Track userId in a ref to avoid stale closure issues
+    const userIdRef = { current: userId };
 
-    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mountedRef.current) return;
+    const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
+      if (!mountedRef.current) return;
 
-        console.log('[TenantContext] Auth event:', event, !!session?.user);
+      console.log('[TenantContext] Auth event:', event, !!session?.user);
 
-        if (event === 'INITIAL_SESSION') {
-          if (session?.user) {
-            setUserId(session.user.id);
-            setIsLoading(true);
-            await loadUserData(session.user.id);
-            if (mountedRef.current) setIsLoading(false);
-          } else {
-            clearState();
-            setIsLoading(false);
-          }
-        } else if (event === 'SIGNED_IN') {
-          if (session?.user) {
-            // Only reload if user changed (not a tab-switch re-emit)
-            if (session.user.id !== userId) {
-              setUserId(session.user.id);
-              setIsLoading(true);
-              await loadUserData(session.user.id);
-              if (mountedRef.current) setIsLoading(false);
-            }
-          }
-        } else if (event === 'TOKEN_REFRESHED') {
-          // Silent token refresh — never show loading, just update userId if missing
-          if (session?.user && !userId) {
-            setUserId(session.user.id);
-            // Load data silently without setting isLoading
-            await loadUserData(session.user.id);
-          }
-        } else if (event === 'SIGNED_OUT') {
+      if (event === 'INITIAL_SESSION') {
+        if (session?.user) {
+          setUserId(session.user.id);
+          userIdRef.current = session.user.id;
+          setIsLoading(true);
+          await loadUserData(session.user.id);
+          if (mountedRef.current) setIsLoading(false);
+        } else {
           clearState();
           setIsLoading(false);
         }
+      } else if (event === 'SIGNED_IN') {
+        if (session?.user) {
+          // Only reload if user actually changed
+          if (session.user.id !== userIdRef.current) {
+            setUserId(session.user.id);
+            userIdRef.current = session.user.id;
+            setIsLoading(true);
+            await loadUserData(session.user.id);
+            if (mountedRef.current) setIsLoading(false);
+          }
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Silent — never show loading
+        if (session?.user) {
+          userIdRef.current = session.user.id;
+          if (!userId) {
+            setUserId(session.user.id);
+            await loadUserData(session.user.id);
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        userIdRef.current = null;
+        clearState();
+        setIsLoading(false);
       }
-    );
+    };
+
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     return () => {
       mountedRef.current = false;
