@@ -256,25 +256,37 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
             {/* Subscription Badge */}
             {!collapsed ? (
               <div className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium",
+                "rounded-lg px-3 py-2 text-xs font-medium",
                 isSubscriptionValid 
                   ? "bg-green-500/10 text-green-600 dark:text-green-400" 
                   : "bg-destructive/10 text-destructive"
               )}>
-                <Shield className="h-4 w-4 flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="truncate font-semibold">
-                    {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Free'}
-                  </p>
-                  <p className="text-[10px] opacity-75">
-                    {isSubscriptionValid 
-                      ? (language === 'bn' ? `${subscriptionDaysRemaining} দিন বাকি` : `${subscriptionDaysRemaining} days left`)
-                      : (language === 'bn' ? 'মেয়াদ শেষ' : 'Expired')}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold">
+                      {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Free'}
+                    </p>
+                    <p className="text-[10px] opacity-75">
+                      {isSubscriptionValid 
+                        ? (language === 'bn' ? `${subscriptionDaysRemaining} দিন বাকি` : `${subscriptionDaysRemaining} days left`)
+                        : (language === 'bn' ? 'মেয়াদ শেষ' : 'Expired')}
+                    </p>
+                  </div>
                 </div>
+                {!isSubscriptionValid && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="mt-2 w-full text-xs h-7"
+                    onClick={() => navigate('/dashboard/settings')}
+                  >
+                    {language === 'bn' ? 'রিনিউ করুন' : 'Renew Now'}
+                  </Button>
+                )}
               </div>
             ) : (
-              <div className="flex justify-center" title={`${subscription?.plan || 'Free'} - ${isSubscriptionValid ? `${subscriptionDaysRemaining} days left` : 'Expired'}`}>
+              <div className="flex flex-col items-center gap-1" title={`${subscription?.plan || 'Free'} - ${isSubscriptionValid ? `${subscriptionDaysRemaining} days left` : 'Expired'}`}>
                 <div className={cn(
                   "flex h-8 w-8 items-center justify-center rounded-full text-[10px] font-bold",
                   isSubscriptionValid 
@@ -283,6 +295,14 @@ function DashboardLayoutContent({ children }: DashboardLayoutProps) {
                 )}>
                   {subscription?.plan ? subscription.plan.charAt(0).toUpperCase() : 'F'}
                 </div>
+                {!isSubscriptionValid && (
+                  <button
+                    onClick={() => navigate('/dashboard/settings')}
+                    className="text-[9px] font-bold text-destructive hover:underline"
+                  >
+                    {language === 'bn' ? 'রিনিউ' : 'Renew'}
+                  </button>
+                )}
               </div>
             )}
 
