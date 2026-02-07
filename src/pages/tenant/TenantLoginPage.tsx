@@ -63,38 +63,33 @@ export function TenantLoginPage() {
     setIsLoading(true);
     trackLoginAttempt();
 
-    // Timeout guard for the entire login flow
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    
     try {
-      // Sign in with timeout guard
-      const signInPromise = supabase.auth.signInWithPassword({ email, password });
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        controller.signal.addEventListener('abort', () => reject(new Error('Login request timed out. Please try again.')));
-      });
+      // Step 1: Sign in (10s timeout)
+      const signInResult = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Login timed out. Please try again.')), 10000))
+      ]);
 
-      const { data: authData, error: authError } = await Promise.race([signInPromise, timeoutPromise]);
+      if (signInResult.error) throw new Error(signInResult.error.message);
+      if (!signInResult.data.user) throw new Error('Authentication failed');
 
-      if (authError) throw new Error(authError.message);
-      if (!authData.user) throw new Error('Authentication failed');
+      // Step 2: Check role (8s timeout)
+      const roleResult = await Promise.race([
+        supabase
+          .from('user_roles')
+          .select('role, tenant_id')
+          .eq('user_id', signInResult.data.user.id)
+          .in('role', ['admin', 'manager'])
+          .maybeSingle(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Permission check timed out. Please try again.')), 8000))
+      ]);
 
-      // Check role with same abort guard
-      if (controller.signal.aborted) throw new Error('Login request timed out. Please try again.');
-
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role, tenant_id')
-        .eq('user_id', authData.user.id)
-        .in('role', ['admin', 'manager'])
-        .maybeSingle();
-
-      if (roleError) {
+      if (roleResult.error) {
         await supabase.auth.signOut();
         throw new Error('Failed to verify permissions');
       }
 
-      if (!roleData || !roleData.tenant_id) {
+      if (!roleResult.data || !roleResult.data.tenant_id) {
         await supabase.auth.signOut();
         throw new Error('Access denied. Tenant Admin privileges required.');
       }
@@ -111,7 +106,6 @@ export function TenantLoginPage() {
         variant: 'destructive',
       });
     } finally {
-      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
