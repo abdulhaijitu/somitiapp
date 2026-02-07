@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useState, useRef } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/contexts/TenantContext';
 import { useImpersonation } from '@/contexts/ImpersonationContext';
 import { Loader2, Building2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,94 +9,47 @@ interface RequireTenantAuthProps {
   children: ReactNode;
 }
 
-const AUTH_TIMEOUT_MS = 15000; // 15 second timeout
+const AUTH_TIMEOUT_MS = 15000;
 
 export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
   const navigate = useNavigate();
   const { isImpersonating, target } = useImpersonation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { isLoading, isAuthenticated, isAdmin, isManager, error, refreshTenantContext } = useTenant();
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const hasRedirected = useRef(false);
 
+  // Timeout guard for loading
   useEffect(() => {
-    // If impersonating as tenant admin, bypass auth check
-    if (isImpersonating && target?.type === 'tenant_admin') {
-      setIsAuthorized(true);
-      setIsLoading(false);
-      return;
+    if (isLoading) {
+      setHasTimedOut(false);
+      hasRedirected.current = false;
+      timeoutRef.current = setTimeout(() => {
+        setHasTimedOut(true);
+      }, AUTH_TIMEOUT_MS);
+    } else {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     }
-    checkTenantAccess();
-
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [isImpersonating, target]);
+  }, [isLoading]);
 
-  const checkTenantAccess = async () => {
-    setHasTimedOut(false);
-    setIsLoading(true);
+  // Redirect if not authorized (after loading completes)
+  useEffect(() => {
+    if (isLoading || hasTimedOut || hasRedirected.current) return;
+    
+    // If impersonating as tenant admin, skip checks
+    if (isImpersonating && target?.type === 'tenant_admin') return;
 
-    // Set timeout guard
-    timeoutRef.current = setTimeout(() => {
-      setHasTimedOut(true);
-      setIsLoading(false);
-    }, AUTH_TIMEOUT_MS);
-
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session?.user) {
-        console.log('No session found, redirecting to login');
-        navigate('/login');
-        return;
-      }
-
-      // Check if user has admin or manager role for a tenant
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role, tenant_id')
-        .eq('user_id', session.user.id)
-        .in('role', ['admin', 'manager'])
-        .maybeSingle();
-
-      if (roleError) {
-        console.error('Role check error:', roleError);
-        navigate('/login');
-        return;
-      }
-
-      if (!roleData || !roleData.tenant_id) {
-        console.log('User is not a tenant admin/manager');
-        await supabase.auth.signOut();
-        navigate('/login');
-        return;
-      }
-
-      setIsAuthorized(true);
-    } catch (error) {
-      console.error('Auth check error:', error);
+    if (!isAuthenticated) {
+      hasRedirected.current = true;
       navigate('/login');
-    } finally {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      setIsLoading(false);
+    } else if (!isAdmin && !isManager) {
+      hasRedirected.current = true;
+      navigate('/login');
     }
-  };
-
-  // Listen for auth state changes
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          navigate('/login');
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
+  }, [isLoading, isAuthenticated, isAdmin, isManager, isImpersonating, target, navigate, hasTimedOut]);
 
   if (hasTimedOut) {
     return (
@@ -113,7 +66,7 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
             <Button variant="outline" onClick={() => navigate('/login')}>
               Go to Login
             </Button>
-            <Button onClick={checkTenantAccess} className="gap-2">
+            <Button onClick={() => { setHasTimedOut(false); refreshTenantContext(); }} className="gap-2">
               <RefreshCw className="h-4 w-4" />
               Retry
             </Button>
@@ -132,14 +85,19 @@ export function RequireTenantAuth({ children }: RequireTenantAuthProps) {
           </div>
           <div className="flex items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Verifying access...</span>
+            <span>Loading your dashboard...</span>
           </div>
         </div>
       </div>
     );
   }
 
-  if (!isAuthorized) {
+  // If impersonating, allow through
+  if (isImpersonating && target?.type === 'tenant_admin') {
+    return <>{children}</>;
+  }
+
+  if (!isAuthenticated || (!isAdmin && !isManager)) {
     return null;
   }
 
