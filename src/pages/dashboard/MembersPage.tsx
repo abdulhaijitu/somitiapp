@@ -493,7 +493,7 @@ const handleCreateMember = async (data: {
         }}>
           <CardHeader className="pb-3">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <TabsList>
+              <TabsList className="tabs-scroll w-full sm:w-auto">
                 <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
                 <TabsTrigger value="active">Active ({stats.active})</TabsTrigger>
                 <TabsTrigger value="inactive">Inactive ({stats.inactive})</TabsTrigger>
