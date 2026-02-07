@@ -32,13 +32,6 @@ export function useNoticeComments(noticeId: string | null) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('manage-notice-comments', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: null,
-      });
-
-      // Use fetch directly for GET with query params
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-notice-comments?notice_id=${noticeId}&page=${pageNum}&limit=20`,
         {
