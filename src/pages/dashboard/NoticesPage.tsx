@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTenant } from '@/contexts/TenantContext';
 import { useNotices, type Notice } from '@/hooks/useNotices';
@@ -9,7 +10,7 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { NoticeFormDialog, NoticeStatusBadge } from '@/components/notices';
 import { DataTableSkeleton } from '@/components/common/DataTableSkeleton';
-import { Bell, Plus, Calendar, Pin, Edit, Trash2, Send, User } from 'lucide-react';
+import { Bell, Plus, Calendar, Pin, Edit, Trash2, Send, User, MessageSquare, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,7 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 
 export function NoticesPage() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const { isAdmin, isManager } = useTenant();
   const { notices, isLoading, isSaving, fetchNotices, saveNotice, deleteNotice } = useNotices();
@@ -230,9 +232,17 @@ export function NoticesPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground font-bengali whitespace-pre-wrap">
+                <p className="text-muted-foreground font-bengali whitespace-pre-wrap line-clamp-3">
                   {language === 'bn' && notice.content_bn ? notice.content_bn : notice.content}
                 </p>
+                <Button
+                  variant="link"
+                  className="px-0 mt-2 gap-1 text-primary"
+                  onClick={() => navigate(`/dashboard/notices/${notice.id}`)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  {language === 'bn' ? 'বিস্তারিত দেখুন ও আলোচনা করুন' : 'View Details & Discussion'}
+                </Button>
               </CardContent>
             </Card>
           ))}
