@@ -119,15 +119,7 @@ export function useNotices() {
         throw new Error('Not authenticated');
       }
 
-      const response = await supabase.functions.invoke('manage-notice', {
-        method: 'DELETE',
-        body: {},
-        headers: {
-          'x-notice-id': noticeId,
-        },
-      });
-
-      // For DELETE, we need to call with query params
+      // Single DELETE call using fetch with query param
       const deleteResponse = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-notice?id=${noticeId}`,
         {

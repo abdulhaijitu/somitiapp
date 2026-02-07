@@ -128,6 +128,11 @@ export function MembersPage() {
 
       if (error) {
         console.error('Error loading members:', error);
+        toast({
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' ? 'সদস্য তালিকা লোড করতে ব্যর্থ' : 'Failed to load members',
+          variant: 'destructive'
+        });
         return;
       }
 
@@ -164,6 +169,11 @@ export function MembersPage() {
       }
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' ? 'একটি অপ্রত্যাশিত ত্রুটি হয়েছে' : 'An unexpected error occurred',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }

@@ -162,6 +162,11 @@ export function PaymentsPage() {
 
       if (error) {
         console.error('Error loading payments:', error);
+        toast({
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' ? 'পেমেন্ট লোড করতে ব্যর্থ' : 'Failed to load payments',
+          variant: 'destructive'
+        });
         return;
       }
 
@@ -170,6 +175,11 @@ export function PaymentsPage() {
       calculateStats(paymentsData);
     } catch (error) {
       console.error('Error:', error);
+      toast({
+        title: language === 'bn' ? 'ত্রুটি' : 'Error',
+        description: language === 'bn' ? 'একটি অপ্রত্যাশিত ত্রুটি হয়েছে' : 'An unexpected error occurred',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -388,6 +398,11 @@ export function PaymentsPage() {
 
       if (error) {
         console.error('Error loading members:', error);
+        toast({
+          title: language === 'bn' ? 'ত্রুটি' : 'Error',
+          description: language === 'bn' ? 'সদস্য তালিকা লোড করতে ব্যর্থ' : 'Failed to load members list',
+          variant: 'destructive'
+        });
         return;
       }
 
